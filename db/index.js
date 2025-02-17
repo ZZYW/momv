@@ -1,12 +1,15 @@
-// File: momv/db/index.js
-
 const express = require("express");
 const fs = require("fs");
 const axios = require("axios");
+const cors = require("cors");
 
 const app = express();
 const port = 3000;
 const dbFile = "./data.json";
+
+// Enable CORS for all routes
+app.use(cors());
+app.use(express.json());
 
 // Use express.json() to parse incoming JSON bodies
 app.use(express.json());

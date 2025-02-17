@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Station 2 - Twine App</title>
+    <link rel="stylesheet" type="text/css" href="sugarcube.css" />
+  </head>
+  <body>
+    <div id="story">
+      <!-- Basic Twine story data for Station 2 -->
+      <tw-storydata
+        name="Station2Story"
+        startnode="1"
+        creator="Twine"
+        creator-version="2.x"
+        ifid="example-id-2"
+      >
+        <tw-passagedata pid="1" name="Start">
+          Welcome to Station 2. Click below to request your symbolic map from
+          the AI.<br />
+          <button onclick="callAI()">Generate Map</button>
+          <div id="ai-response" style="margin-top: 1em; color: green"></div>
+        </tw-passagedata>
+      </tw-storydata>
+    </div>
+    <script>
+      function callAI() {
+        fetch("http://localhost:3000/ai", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: "Generate my map" }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("ai-response").innerHTML =
+              data.reply || "No reply";
+          })
+          .catch((err) => {
+            console.error("Error:", err);
+            document.getElementById("ai-response").innerHTML =
+              "Error contacting AI.";
+          });
+      }
+    </script>
+  </body>
+</html>

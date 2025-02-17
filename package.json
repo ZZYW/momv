@@ -1,0 +1,16 @@
+{
+    "name": "momv",
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "node start.js",
+        "db": "STATION_ID=db node start.js",
+        "station1": "STATION_ID=station1 node start.js",
+        "station2": "STATION_ID=station2 node start.js"
+    },
+    "dependencies": {
+        "open": "^8.4.0"
+    },
+    "devDependencies": {
+        "http-server": "^14.1.1"
+    }
+}

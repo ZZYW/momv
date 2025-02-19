@@ -49,7 +49,7 @@ app.post("/ai", async (req, res) => {
         const response = await axios.post(
             "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
             {
-                model: "qwen-plus",
+                model: "qwen-turbo",
                 messages: [
                     { role: "system", content: "You are a helpful assistant." },
                     { role: "user", content: message }

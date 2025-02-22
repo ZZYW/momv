@@ -4,7 +4,7 @@ const axios = require("axios");
 const cors = require("cors");
 
 const app = express();
-const port = 3000;
+const port = process.env.BACKEND_PORT | 3001
 const dbFile = "./data.json";
 
 

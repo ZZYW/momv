@@ -7,6 +7,11 @@ const app = express();
 const port = 3000;
 const dbFile = "./data.json";
 
+
+if (process.env.DASHSCOPE_API_KEY == null) {
+    console.error("cant find llm api key. if you are using bash or zsh, run `export DASHSCOPE_API_KEY=xxxxx`, if you are using Powershell/Command Prompt, run `set DASHSCOPE_API_KEY=xxxxxx`");
+}
+
 // Enable CORS for all routes
 app.use(cors());
 app.use(express.json());

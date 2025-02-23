@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vue RWS Author Tool - Linear Block Builder</title>
+    <style>
+      /* ---------------------------------------------------
+         CSS Custom Properties (Variables)
+         --------------------------------------------------- */
+
+      :root {
+        /* --- Colors (Grouped by their usage) --- */
+        --color-bg-body: #f2f2f2;
+        --color-bg-toolbar: #e5e5e5;
+        --color-bg-scene: #eaeaea;
+        --color-bg-block: #e5e5e5;
+        --color-bg-narrative: #fff;
+        --font-size-narrative: 20px;
+        --color-text-body: #0000005b;
+        --color-text-narrative: #000;
+        --color-border-toolbar: #ffffff;
+        --color-border-block: rgba(0, 0, 0, 0.364);
+        --color-border-input: #ccc;
+        --color-bg-button-hover: #0000005b;
+        --color-text-other: #888;
+
+        /* --- Typography --- */
+        --font-family-default: monospace;
+        --font-family-narrative: serif;
+        --font-size-base: 14px;
+        --font-size-toolbar: 14px;
+        --font-size-button: 14px;
+        --line-height-base: 1.5;
+
+        /* --- Spacing & Sizing --- */
+        --padding-body: 0;
+        --padding-toolbar: 10px;
+        --padding-scene: 15px;
+        --padding-block: 10px;
+        --margin-toolbar-button: 5px;
+        --margin-block: 15px;
+        --margin-dynamic-row: 5px;
+        --margin-static-option: 5px;
+        --gap-dynamic-row: 1rem;
+        --max-width-scene: 800px;
+        --height-narrative: 6rem;
+        --margin-scene-top: 70px;
+        --margin-scene-bottom: 20px;
+
+        /* --- Borders --- */
+        --border-toolbar: 1px solid var(--color-border-toolbar);
+        --border-block: 1px solid var(--color-border-block);
+        --border-dashed: 1px dashed var(--color-border-toolbar);
+
+        /* --- Layout --- */
+        --z-index-toolbar: 1000;
+      }
+
+      /* ---------------------------------------------------
+         Global Styles and Element Resets
+         --------------------------------------------------- */
+
+      body {
+        margin: var(--padding-body);
+        padding: var(--padding-body);
+        font-family: var(--font-family-default);
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-base);
+        background: var(--color-bg-body);
+        color: var(--color-text-body);
+      }
+
+      /* Ensure textareas take full width */
+      textarea {
+        resize: vertical;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* ---------------------------------------------------
+         Toolbar Styles
+         --------------------------------------------------- */
+
+      .toolbar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--color-bg-toolbar);
+        border-bottom: var(--border-toolbar);
+        padding: var(--padding-toolbar);
+        z-index: var(--z-index-toolbar);
+      }
+
+      .toolbar button {
+        margin: var(--margin-toolbar-button);
+        padding: 10px 15px;
+        font-size: var(--font-size-button);
+        cursor: pointer;
+        border: none;
+        background: var(--color-bg-toolbar);
+      }
+
+      .toolbar button:hover {
+        background: var(--color-bg-button-hover);
+      }
+
+      /* ---------------------------------------------------
+         Scene Wrapper & Autosave Header
+         --------------------------------------------------- */
+
+      .scene-wrapper {
+        max-width: var(--max-width-scene);
+        margin: var(--margin-scene-top) auto var(--margin-scene-bottom);
+        padding: var(--padding-scene);
+        border: none;
+        background: var(--color-bg-scene);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .autosave-header {
+        text-align: center;
+        padding: 5px;
+        margin-bottom: 10px;
+        border: none;
+        background: var(--color-bg-toolbar);
+      }
+
+      #contentContainer {
+        margin-bottom: 20px;
+      }
+
+      /* ---------------------------------------------------
+         Block Styles
+         --------------------------------------------------- */
+
+      .block {
+        border: none;
+        background: var(--color-bg-block);
+        margin-bottom: var(--margin-block);
+        padding: var(--padding-block);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .block-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1em;
+        margin-bottom: 5px;
+      }
+
+      .block-body {
+        margin-top: 5px;
+      }
+
+      /* ---------------------------------------------------
+         Plain Block (Narrative Textarea)
+         --------------------------------------------------- */
+
+      .narrative-textarea {
+        font-family: var(--font-family-narrative);
+        background-color: var(--color-bg-narrative);
+        color: var(--color-text-narrative);
+        font-size: var(--font-size-narrative);
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid var(--color-border-input);
+        height: var(--height-narrative);
+        resize: vertical;
+      }
+
+      /* ---------------------------------------------------
+         Dynamic Block Input Row
+         --------------------------------------------------- */
+
+      .dynamic-input-row {
+        display: flex;
+        gap: var(--gap-dynamic-row);
+        margin-bottom: var(--margin-dynamic-row);
+      }
+
+      .dynamic-input-row > div {
+        flex: 1;
+      }
+
+      /* ---------------------------------------------------
+         Static Option Block
+         --------------------------------------------------- */
+
+      .static-options-container {
+        margin-top: 5px;
+      }
+
+      .static-options-container input {
+        margin-bottom: var(--margin-static-option);
+        padding: 5px;
+        
+        font-family: var(--font-family-narrative);
+        font-size: var(--font-size-narrative);
+        border: 1px solid var(--color-border-input);
+      }
+
+      /* ---------------------------------------------------
+         Context Items (Dynamic Block Contexts)
+         --------------------------------------------------- */
+
+      .context-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <button @click="addPlainBlock">+ Plain Block</button>
+        <button @click="addStaticOptionBlock">+ Static Option</button>
+        <button @click="addDynamicBlock">+ Dynamic Block</button>
+        <button @click="addSceneHeaderBlock">+ Scene Header Block</button>
+        <button @click="playStory">[Play]</button>
+        <button @click="exportJson">Export Project as JSON</button>
+        <button @click="saveProject">Save Project</button>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="scene-wrapper">
+        <div class="autosave-header">autosaved: {{ autosaveTime }}</div>
+        <!-- Content Container for Blocks -->
+        <div id="contentContainer">
+          <div
+            v-for="(block, index) in blocks"
+            :key="block.id"
+            class="block"
+            :data-block-type="block.type"
+          >
+            <div class="block-header">
+              <template v-if="block.type === 'plain'">
+                
+              </template>
+              <template v-if="block.type === 'static'">
+                <span>Static Option Block - UUID: {{ block.id }}</span>
+              </template>
+              <template v-if="block.type === 'dynamic'">
+                <span>Dynamic Block - UUID: {{ block.id }}</span>
+              </template>
+              <template v-if="block.type === 'scene-header'">
+                <span>Scene Header</span>
+              </template>
+              <button @click="removeBlock(index)">x</button>
+            </div>
+            <div class="block-body">
+              <!-- Plain Block -->
+              <template v-if="block.type === 'plain'">
+                <textarea
+                  v-model="block.text"
+                  class="narrative-textarea"
+                  placeholder="Your narrative..."
+                ></textarea>
+              </template>
+
+              <!-- Static Option Block -->
+              <template v-if="block.type === 'static'">
+                <label>Pre-Authored Options:</label>
+                <div class="static-options-container">
+                  <div v-for="(option, oIndex) in block.options" :key="oIndex">
+                    <input
+                      type="text"
+                      v-model="block.options[oIndex]"
+                      placeholder="Option"
+                    />
+                    <button @click="removeStaticOption(block, oIndex)">
+                      x
+                    </button>
+                  </div>
+                </div>
+                <button
+                  class="add-static-option-btn"
+                  @click="addStaticOption(block)"
+                  style="margin-top: 5px"
+                >
+                  Add Option
+                </button>
+              </template>
+
+              <!-- Dynamic Block -->
+              <template v-if="block.type === 'dynamic'">
+                <div class="dynamic-input-row">
+                  <div>
+                    Block Name:
+                    <input
+                      type="text"
+                      v-model="block.blockName"
+                      @input="updateDynamicContext"
+                    />
+                  </div>
+                  <div>
+                    Option Count:
+                    <input type="number" v-model.number="block.optionCount" />
+                  </div>
+                </div>
+                <div
+                  style="margin-bottom: 5px; display: flex; align-items: center"
+                >
+                  Context:
+                  <button
+                    @click="addDynamicContext(block)"
+                    style="margin-left: 5px"
+                  >
+                    +
+                  </button>
+                </div>
+                <div class="context-list">
+                  <div
+                    v-for="(ctx, ctxIndex) in block.context"
+                    :key="ctxIndex"
+                    class="context-item"
+                  >
+                    <select v-model="block.context[ctxIndex]">
+                      <option value="">-- none --</option>
+                      <option
+                        v-for="dyn in dynamicBlocks"
+                        :key="dyn.id"
+                        :value="dyn.id"
+                      >
+                        {{ dyn.blockName }} ({{ dyn.id }})
+                      </option>
+                    </select>
+                    <button @click="removeDynamicContext(block, ctxIndex)">
+                      x
+                    </button>
+                  </div>
+                </div>
+                <div style="margin-top: 5px">
+                  Additional Prompt:
+                  <br />
+                  <textarea
+                    v-model="block.additionalPrompt"
+                    rows="2"
+                    placeholder="Enter prompt text..."
+                  ></textarea>
+                </div>
+              </template>
+
+              <!-- Scene Header Block -->
+              <template v-if="block.type === 'scene-header'">
+                Title Name:
+                <input
+                  type="text"
+                  v-model="block.titleName"
+                  placeholder="Enter scene title"
+                />
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vue 3 via CDN -->
+    <!-- Vue 3 via CDN -->
+    <script src="https://unpkg.com/vue@3"></script>
+    <script>
+      const { createApp } = Vue;
+      createApp({
+        data() {
+          return {
+            autosaveTime: "",
+            blocks: [], // Array to hold block objects
+          };
+        },
+        computed: {
+          // Computed property for dynamic blocks used in context dropdowns.
+          dynamicBlocks() {
+            return this.blocks.filter((b) => b.type === "dynamic");
+          },
+        },
+        watch: {
+          // Watch the blocks array (and nested properties) for any change
+          blocks: {
+            handler(newVal, oldVal) {
+              this.syncUI();
+              this.debounceSaveProject();
+            },
+            deep: true,
+          },
+        },
+        methods: {
+          debounceSaveProject() {
+            clearTimeout(this._saveTimeout);
+            this._saveTimeout = setTimeout(() => {
+              this.saveProject();
+            }, 500);
+          },
+          syncUI() {
+            console.log("UI has been updated.");
+            // Add any code you want to execute on every change here.
+          },
+          updateAutosaveTime() {
+            const now = new Date();
+            this.autosaveTime =
+              now.getFullYear() +
+              "-" +
+              (now.getMonth() + 1) +
+              "-" +
+              now.getDate() +
+              " " +
+              now.getHours() +
+              ":" +
+              now.getMinutes() +
+              ":" +
+              now.getSeconds();
+          },
+          generateUUID() {
+            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+              /[xy]/g,
+              (c) => {
+                const r = (Math.random() * 16) | 0;
+                const v = c === "x" ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+              }
+            );
+          },
+          addPlainBlock() {
+            const id = this.generateUUID();
+            this.blocks.push({
+              id,
+              type: "plain",
+              text: "Your narrative...",
+            });
+          },
+          addStaticOptionBlock() {
+            const id = this.generateUUID();
+            this.blocks.push({
+              id,
+              type: "static",
+              options: [],
+            });
+          },
+          addDynamicBlock() {
+            const id = this.generateUUID();
+            this.blocks.push({
+              id,
+              type: "dynamic",
+              blockName: "xxx",
+              optionCount: 3,
+              additionalPrompt: "",
+              context: [], // Array for context selections
+            });
+          },
+          addSceneHeaderBlock() {
+            const id = this.generateUUID();
+            this.blocks.push({
+              id,
+              type: "scene-header",
+              titleName: "",
+            });
+          },
+          removeBlock(index) {
+            this.blocks.splice(index, 1);
+          },
+          addStaticOption(block) {
+            block.options.push("");
+          },
+          removeStaticOption(block, index) {
+            block.options.splice(index, 1);
+          },
+          addDynamicContext(block) {
+            block.context.push("");
+          },
+          removeDynamicContext(block, ctxIndex) {
+            block.context.splice(ctxIndex, 1);
+          },
+          updateDynamicContext() {
+            // Vue's reactivity ensures the context dropdown options remain updated.
+          },
+          playStory() {
+            this.updateAutosaveTime();
+            const compiledStory = {
+              autosave: this.autosaveTime,
+              blocks: this.blocks.map((block) => {
+                if (block.type === "plain") {
+                  return { type: "plain", text: block.text };
+                } else if (block.type === "static") {
+                  return {
+                    type: "static",
+                    uuid: block.id,
+                    options: block.options.filter((opt) => opt.trim() !== ""),
+                  };
+                } else if (block.type === "dynamic") {
+                  return {
+                    type: "dynamic",
+                    uuid: block.id,
+                    blockName: block.blockName,
+                    optionCount: block.optionCount,
+                    additionalPrompt: block.additionalPrompt.trim(),
+                    context: block.context,
+                  };
+                } else if (block.type === "scene-header") {
+                  return {
+                    type: "scene-header",
+                    titleName: block.titleName.trim(),
+                  };
+                }
+                return {};
+              }),
+            };
+            console.log("Compiled Story:", compiledStory);
+            alert("Story compiled! (Check console for details.)");
+          },
+          exportJson() {
+            this.updateAutosaveTime();
+            const project = {
+              autosave: this.autosaveTime,
+              blocks: this.blocks.map((block) => {
+                if (block.type === "plain") {
+                  return { type: "plain", text: block.text };
+                } else if (block.type === "static") {
+                  return {
+                    type: "static",
+                    uuid: block.id,
+                    options: block.options.filter((opt) => opt.trim() !== ""),
+                  };
+                } else if (block.type === "dynamic") {
+                  return {
+                    type: "dynamic",
+                    uuid: block.id,
+                    blockName: block.blockName,
+                    optionCount: block.optionCount,
+                    additionalPrompt: block.additionalPrompt.trim(),
+                    context: block.context,
+                  };
+                } else if (block.type === "scene-header") {
+                  return {
+                    type: "scene-header",
+                    titleName: block.titleName.trim(),
+                  };
+                }
+                return {};
+              }),
+            };
+            const jsonString = JSON.stringify(project, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "project_export.json";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          },
+          saveProject() {
+            this.updateAutosaveTime();
+            const project = {
+              autosave: this.autosaveTime,
+              blocks: this.blocks,
+            };
+            localStorage.setItem("vueRWSProject", JSON.stringify(project));
+            console.log("saved!");
+          },
+        },
+        mounted() {
+          // Check for saved data in localStorage and load it if available
+          const savedData = localStorage.getItem("vueRWSProject");
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              this.autosaveTime = parsedData.autosave || "";
+              this.blocks = parsedData.blocks || [];
+            } catch (error) {
+              console.error("Error parsing saved project", error);
+            }
+          }
+          this.updateAutosaveTime();
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>

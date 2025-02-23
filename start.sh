@@ -33,6 +33,7 @@ check_deps
 # Configuration
 STATION1_PORT=8764
 STATION2_PORT=8765
+EDITOR_PORT=8766
 export BACKEND_PORT=3001
 DB_PATH="db/index.js"
 
@@ -82,6 +83,7 @@ fi
 
 start_server "Station 1" "station1" $STATION1_PORT
 start_server "Station 2" "station2" $STATION2_PORT
+start_server "Editor" editor $EDITOR_PORT
 
 # Browser launch
 (
@@ -89,9 +91,11 @@ start_server "Station 2" "station2" $STATION2_PORT
     if [[ "$OSTYPE" == "msys"* ]]; then
         cmd.exe /C start "http://localhost:$STATION1_PORT"
         cmd.exe /C start "http://localhost:$STATION2_PORT"
+        cmd.exe /C start "http://localhost:$EDITOR_PORT"
     else
         open "http://localhost:$STATION1_PORT"
         open "http://localhost:$STATION2_PORT"
+        open "http://localhost:$EDITOR_PORT"
     fi
 ) &
 

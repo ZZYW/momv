@@ -43,7 +43,6 @@
         --margin-dynamic-row: 5px;
         --margin-static-option: 5px;
         --gap-dynamic-row: 1rem;
-        --max-width-scene: 800px;
         --height-narrative: 6rem;
         --margin-scene-top: 70px;
         --margin-scene-bottom: 20px;
@@ -115,7 +114,6 @@
          --------------------------------------------------- */
 
       .scene-wrapper {
-        max-width: var(--max-width-scene);
         margin: var(--margin-scene-top) auto var(--margin-scene-bottom);
         padding: var(--padding-scene);
         border: none;
@@ -132,7 +130,15 @@
         background: var(--color-bg-toolbar);
       }
 
+      /* ---------------------------------------------------
+         Flex Container for Blocks
+         --------------------------------------------------- */
+
       #contentContainer {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        gap: var(--margin-block);
         margin-bottom: 20px;
       }
 
@@ -143,10 +149,11 @@
       .block {
         border: none;
         background: var(--color-bg-block);
-        margin-bottom: var(--margin-block);
         padding: var(--padding-block);
         display: flex;
         flex-direction: column;
+        min-width: 200px;
+        flex: 1 1 400px;
       }
 
       .block-header {
@@ -202,7 +209,6 @@
       .static-options-container input {
         margin-bottom: var(--margin-static-option);
         padding: 5px;
-        
         font-family: var(--font-family-narrative);
         font-size: var(--font-size-narrative);
         border: 1px solid var(--color-border-input);
@@ -246,7 +252,7 @@
           >
             <div class="block-header">
               <template v-if="block.type === 'plain'">
-                
+                <span>Plain Block - UUID: {{ block.id }}</span>
               </template>
               <template v-if="block.type === 'static'">
                 <span>Static Option Block - UUID: {{ block.id }}</span>
@@ -367,7 +373,6 @@
       </div>
     </div>
 
-    <!-- Vue 3 via CDN -->
     <!-- Vue 3 via CDN -->
     <script src="https://unpkg.com/vue@3"></script>
     <script>

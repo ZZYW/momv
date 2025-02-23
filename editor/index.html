@@ -8,13 +8,12 @@
       /* ---------------------------------------------------
          CSS Custom Properties (Variables)
          --------------------------------------------------- */
-
       :root {
         /* --- Colors (Grouped by their usage) --- */
         --color-bg-body: #f2f2f2;
         --color-bg-toolbar: #e5e5e5;
-        --color-bg-scene: #eaeaea;
-        --color-bg-block: #e5e5e5;
+        --color-bg-scene: #ffffff;
+        --color-bg-block: #f1f1f1;
         --color-bg-narrative: #fff;
         --font-size-narrative: 20px;
         --color-text-body: #0000005b;
@@ -43,7 +42,6 @@
         --margin-dynamic-row: 5px;
         --margin-static-option: 5px;
         --gap-dynamic-row: 1rem;
-        --height-narrative: 6rem;
         --margin-scene-top: 70px;
         --margin-scene-bottom: 20px;
 
@@ -59,7 +57,6 @@
       /* ---------------------------------------------------
          Global Styles and Element Resets
          --------------------------------------------------- */
-
       body {
         margin: var(--padding-body);
         padding: var(--padding-body);
@@ -70,17 +67,16 @@
         color: var(--color-text-body);
       }
 
-      /* Ensure textareas take full width */
       textarea {
-        resize: vertical;
+        resize: none;
         width: 100%;
         box-sizing: border-box;
+        overflow: hidden;
       }
 
       /* ---------------------------------------------------
          Toolbar Styles
          --------------------------------------------------- */
-
       .toolbar {
         display: flex;
         justify-content: center;
@@ -112,11 +108,9 @@
       /* ---------------------------------------------------
          Scene Wrapper & Autosave Header
          --------------------------------------------------- */
-
       .scene-wrapper {
         margin: var(--margin-scene-top) auto var(--margin-scene-bottom);
         padding: var(--padding-scene);
-        border: none;
         background: var(--color-bg-scene);
         display: flex;
         flex-direction: column;
@@ -126,52 +120,74 @@
         text-align: center;
         padding: 5px;
         margin-bottom: 10px;
-        border: none;
         background: var(--color-bg-toolbar);
       }
 
       /* ---------------------------------------------------
-         Flex Container for Blocks
+         Grid Container for Blocks & Separating Lines
          --------------------------------------------------- */
-
       #contentContainer {
-        display: flex;
-        flex-wrap: wrap;
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
         gap: var(--margin-block);
         margin-bottom: 20px;
       }
 
-      /* ---------------------------------------------------
-         Block Styles
-         --------------------------------------------------- */
-
+      /* Each block has a minimum width of 400px and a bottom border as a divider.
+         Notice that we are not using any positioning here. */
       .block {
-        border: none;
         background: var(--color-bg-block);
         padding: var(--padding-block);
         display: flex;
         flex-direction: column;
-        min-width: 200px;
-        flex: 1 1 400px;
+        min-width: 400px;
+        border-bottom: 1px solid #ccc;
       }
 
+      /* ---------------------------------------------------
+         Block Header, Index, and Controls using Flexbox
+         --------------------------------------------------- */
       .block-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 1em;
         margin-bottom: 5px;
+      }
+
+      .block-index {
+        font-size: 10px;
+        color: #333;
+        padding: 2px 4px;
+        border-radius: 2px;
+      }
+
+      .block-controls {
+        display: flex;
+        gap: 5px;
+      }
+
+      .block-controls button {
+        background: var(--color-bg-toolbar);
+        border: none;
+        padding: 5px;
+        cursor: pointer;
+      }
+
+      .block-controls button:hover {
+        background: var(--color-bg-button-hover);
       }
 
       .block-body {
         margin-top: 5px;
       }
 
+      .block-info {
+        font-size: 8px;
+      }
+
       /* ---------------------------------------------------
          Plain Block (Narrative Textarea)
          --------------------------------------------------- */
-
       .narrative-textarea {
         font-family: var(--font-family-narrative);
         background-color: var(--color-bg-narrative);
@@ -180,14 +196,11 @@
         padding: 10px;
         margin-top: 5px;
         border: 1px solid var(--color-border-input);
-        height: var(--height-narrative);
-        resize: vertical;
       }
 
       /* ---------------------------------------------------
          Dynamic Block Input Row
          --------------------------------------------------- */
-
       .dynamic-input-row {
         display: flex;
         gap: var(--gap-dynamic-row);
@@ -201,7 +214,6 @@
       /* ---------------------------------------------------
          Static Option Block
          --------------------------------------------------- */
-
       .static-options-container {
         margin-top: 5px;
       }
@@ -217,12 +229,23 @@
       /* ---------------------------------------------------
          Context Items (Dynamic Block Contexts)
          --------------------------------------------------- */
-
       .context-item {
         display: flex;
         align-items: center;
         gap: 5px;
         margin-bottom: 5px;
+      }
+
+      /* ---------------------------------------------------
+         Special Styles for Specific Block Types
+         --------------------------------------------------- */
+      .block[data-block-type="scene-header"] {
+        grid-column: 1 / -1;
+        background-color: lightyellow;
+      }
+
+      .block[data-block-type="dynamic"] {
+        background-color: #ffcccc;
       }
     </style>
   </head>
@@ -251,19 +274,12 @@
             :data-block-type="block.type"
           >
             <div class="block-header">
-              <template v-if="block.type === 'plain'">
-                <span>Plain Block - UUID: {{ block.id }}</span>
-              </template>
-              <template v-if="block.type === 'static'">
-                <span>Static Option Block - UUID: {{ block.id }}</span>
-              </template>
-              <template v-if="block.type === 'dynamic'">
-                <span>Dynamic Block - UUID: {{ block.id }}</span>
-              </template>
-              <template v-if="block.type === 'scene-header'">
-                <span>Scene Header</span>
-              </template>
-              <button @click="removeBlock(index)">x</button>
+              <div class="block-index">{{ index + 1 }}</div>
+              <div class="block-controls">
+                <button @click="moveBlockUp(index)">↑</button>
+                <button @click="moveBlockDown(index)">↓</button>
+                <button @click="removeBlock(index)">x</button>
+              </div>
             </div>
             <div class="block-body">
               <!-- Plain Block -->
@@ -272,6 +288,7 @@
                   v-model="block.text"
                   class="narrative-textarea"
                   placeholder="Your narrative..."
+                  v-auto-resize
                 ></textarea>
               </template>
 
@@ -368,6 +385,11 @@
                 />
               </template>
             </div>
+            <!-- Block Information at the Bottom -->
+            <div class="block-info">
+              {{ block.type }}
+              <template v-if="block.id"> - UUID: {{ block.id }} </template>
+            </div>
           </div>
         </div>
       </div>
@@ -381,7 +403,7 @@
         data() {
           return {
             autosaveTime: "",
-            blocks: [], // Array to hold block objects
+            blocks: [], // Array to hold block objects.
           };
         },
         computed: {
@@ -391,13 +413,31 @@
           },
         },
         watch: {
-          // Watch the blocks array (and nested properties) for any change
+          // Watch the blocks array (and nested properties) for any change.
           blocks: {
             handler(newVal, oldVal) {
               this.syncUI();
               this.debounceSaveProject();
             },
             deep: true,
+          },
+        },
+        directives: {
+          // Custom directive for auto-resizing textareas.
+          autoResize: {
+            mounted(el) {
+              el.style.overflow = "hidden";
+              const resize = () => {
+                el.style.height = "auto";
+                el.style.height = el.scrollHeight + "px";
+              };
+              resize();
+              el.addEventListener("input", resize);
+            },
+            updated(el) {
+              el.style.height = "auto";
+              el.style.height = el.scrollHeight + "px";
+            },
           },
         },
         methods: {
@@ -409,7 +449,6 @@
           },
           syncUI() {
             console.log("UI has been updated.");
-            // Add any code you want to execute on every change here.
           },
           updateAutosaveTime() {
             const now = new Date();
@@ -438,19 +477,11 @@
           },
           addPlainBlock() {
             const id = this.generateUUID();
-            this.blocks.push({
-              id,
-              type: "plain",
-              text: "Your narrative...",
-            });
+            this.blocks.push({ id, type: "plain", text: "Your narrative..." });
           },
           addStaticOptionBlock() {
             const id = this.generateUUID();
-            this.blocks.push({
-              id,
-              type: "static",
-              options: [],
-            });
+            this.blocks.push({ id, type: "static", options: [] });
           },
           addDynamicBlock() {
             const id = this.generateUUID();
@@ -460,19 +491,27 @@
               blockName: "xxx",
               optionCount: 3,
               additionalPrompt: "",
-              context: [], // Array for context selections
+              context: [],
             });
           },
           addSceneHeaderBlock() {
             const id = this.generateUUID();
-            this.blocks.push({
-              id,
-              type: "scene-header",
-              titleName: "",
-            });
+            this.blocks.push({ id, type: "scene-header", titleName: "" });
           },
           removeBlock(index) {
             this.blocks.splice(index, 1);
+          },
+          moveBlockUp(index) {
+            if (index > 0) {
+              const movingBlock = this.blocks.splice(index, 1)[0];
+              this.blocks.splice(index - 1, 0, movingBlock);
+            }
+          },
+          moveBlockDown(index) {
+            if (index < this.blocks.length - 1) {
+              const movingBlock = this.blocks.splice(index, 1)[0];
+              this.blocks.splice(index + 1, 0, movingBlock);
+            }
           },
           addStaticOption(block) {
             block.options.push("");
@@ -487,7 +526,7 @@
             block.context.splice(ctxIndex, 1);
           },
           updateDynamicContext() {
-            // Vue's reactivity ensures the context dropdown options remain updated.
+            // Vue's reactivity handles updates.
           },
           playStory() {
             this.updateAutosaveTime();
@@ -576,7 +615,6 @@
           },
         },
         mounted() {
-          // Check for saved data in localStorage and load it if available
           const savedData = localStorage.getItem("vueRWSProject");
           if (savedData) {
             try {

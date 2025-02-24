@@ -12,7 +12,7 @@
         /* --- Colors (Grouped by their usage) --- */
         --color-bg-body: #f2f2f2;
         --color-bg-toolbar: #e5e5e5;
-        --color-bg-scene: #ffffff;
+        --color-bg-scene: #c7bcbc;
         --color-bg-block: #f1f1f1;
         --color-bg-narrative: #fff;
         --font-size-narrative: 20px;
@@ -352,11 +352,18 @@
                     <select v-model="block.context[ctxIndex]">
                       <option value="">-- none --</option>
                       <option
-                        v-for="dyn in dynamicBlocks"
-                        :key="dyn.id"
-                        :value="dyn.id"
+                        v-for="blockItem in contextBlocks"
+                        :key="blockItem.id"
+                        :value="blockItem.id"
                       >
-                        {{ dyn.blockName }} ({{ dyn.id }})
+                        <template v-if="blockItem.type === 'dynamic'">
+                          {{ blocks.indexOf(blockItem) + 1 }} - {{
+                          blockItem.blockName }} - [{{ blockItem.id }}]
+                        </template>
+                        <template v-else-if="blockItem.type === 'static'">
+                          {{ blocks.indexOf(blockItem) + 1 }} - Static Option
+                          Block - [{{ blockItem.id }}]
+                        </template>
                       </option>
                     </select>
                     <button @click="removeDynamicContext(block, ctxIndex)">
@@ -367,8 +374,10 @@
                 <div style="margin-top: 5px">
                   Additional Prompt:
                   <br />
+                  <!-- Added v-auto-resize so this textarea auto-adjusts -->
                   <textarea
                     v-model="block.additionalPrompt"
+                    v-auto-resize
                     rows="2"
                     placeholder="Enter prompt text..."
                   ></textarea>
@@ -407,9 +416,14 @@
           };
         },
         computed: {
-          // Computed property for dynamic blocks used in context dropdowns.
           dynamicBlocks() {
             return this.blocks.filter((b) => b.type === "dynamic");
+          },
+          // Computed property to include both dynamic and static option blocks.
+          contextBlocks() {
+            return this.blocks.filter(
+              (b) => b.type === "dynamic" || b.type === "static"
+            );
           },
         },
         watch: {
@@ -605,6 +619,9 @@
             URL.revokeObjectURL(url);
           },
           saveProject() {
+            // Store the current scroll position to prevent auto-scrolling to top after re-render.
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
             this.updateAutosaveTime();
             const project = {
               autosave: this.autosaveTime,
@@ -612,6 +629,9 @@
             };
             localStorage.setItem("vueRWSProject", JSON.stringify(project));
             console.log("saved!");
+            this.$nextTick(() => {
+              window.scrollTo(scrollX, scrollY);
+            });
           },
         },
         mounted() {

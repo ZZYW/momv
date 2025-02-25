@@ -1,0 +1,104 @@
+{
+  "blocks": [
+    {
+      "id": "8eac9227-cb55-4757-ab3a-41c94dacc4c7",
+      "type": "scene-header",
+      "titleName": "出发",
+      "sceneId": 1
+    },
+    {
+      "id": "72f771e4-303a-465b-8c14-465fd0308fdf",
+      "type": "plain",
+      "text": "在一个幽静的村子里，被无情的时间行进遗忘了，小吴又找到了自己。现年30岁的他，更像是从前的自己，而不是曾经在街上游荡的男孩，他回来了。\n\n2024年的第一天，家中充满了三大姑八大姨们的闲聊交响乐，嗡嗡作响着对他孤独生活的轻快哀叹，就像一张被遗忘的老唱片。\n\n关于他",
+      "sceneId": 1
+    },
+    {
+      "id": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
+      "type": "static",
+      "options": [
+        "未婚",
+        "待业",
+        "下岗"
+      ],
+      "sceneId": 1
+    },
+    {
+      "id": "5ad938a6-f251-4620-a950-bcbaccf5b353",
+      "type": "plain",
+      "text": "的生活的每一个笑话都在空气中飘荡，就像红塔山香烟冒出的烟一样空灵和短暂。",
+      "sceneId": 1
+    },
+    {
+      "id": "1642901d-13c4-4a26-b68a-e7df93fde722",
+      "type": "plain",
+      "text": "Your narrative...",
+      "sceneId": 1
+    },
+    {
+      "id": "1e725172-60cd-4820-ab89-85fa35c22b97",
+      "type": "scene-header",
+      "titleName": "小区的墙",
+      "sceneId": 2
+    },
+    {
+      "id": "d19d85b7-547a-465a-89d0-6e78b284e8f0",
+      "type": "static",
+      "options": [
+        "梨花猫",
+        "老鼠",
+        "土狗"
+      ],
+      "sceneId": 2
+    },
+    {
+      "id": "3fba8dd1-1f09-4e1f-a5e0-38bd262d0685",
+      "type": "static",
+      "options": [
+        "",
+        "",
+        ""
+      ],
+      "sceneId": 2
+    },
+    {
+      "id": "3e81dc3b-6315-434f-9290-a76374530fec",
+      "type": "dynamic-option",
+      "blockName": "xxx",
+      "optionCount": 3,
+      "additionalPrompt": "",
+      "context": [
+        {
+          "value": "3fba8dd1-1f09-4e1f-a5e0-38bd262d0685",
+          "includeAll": false
+        },
+        {
+          "value": "d19d85b7-547a-465a-89d0-6e78b284e8f0",
+          "includeAll": false
+        }
+      ],
+      "sceneId": 2
+    },
+    {
+      "id": "840b0e4b-59f2-4174-9744-5290c011fc99",
+      "type": "dynamic-text",
+      "blockName": "35324",
+      "sentenceCount": 1,
+      "context": [
+        {
+          "value": "840b0e4b-59f2-4174-9744-5290c011fc99",
+          "includeAll": false
+        }
+      ],
+      "sceneId": 2
+    },
+    {
+      "id": "41594bbd-1a28-4d83-80b7-42a64de52a0b",
+      "type": "dynamic-word",
+      "blockName": "",
+      "lexiconCategory": "noun",
+      "prompt": "",
+      "context": [],
+      "sceneId": 2
+    }
+  ]
+}

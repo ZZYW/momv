@@ -616,23 +616,27 @@
           removeContext(block, ctxIndex) {
             block.context.splice(ctxIndex, 1);
           },
+          // Replace the playStory() method in editor/index.html
           playStory() {
-            const compiledStory = {
-              blocks: this.blocks,
-            };
-            fetch("http://localhost:3001/compile-playable", {
+            this.updateSceneIds();
+
+            // Save the story JSON to station1/input/story1.json
+            fetch("http://localhost:3001/save-story-json", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ blocks: this.blocks }),
             })
-              .then((res) => res.text())
-              .then((playableHTML) => {
-                const w = window.open("", "_blank");
-                w.document.write(playableHTML);
-                w.document.close();
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success) {
+                  // Open station1/index.html in a new window
+                  window.open("http://localhost:8764", "_blank");
+                } else {
+                  console.error("Error saving story JSON:", data);
+                }
               })
               .catch((err) => {
-                console.error("Error fetching playable version:", err);
+                console.error("Error saving story JSON:", err);
               });
           },
           exportJson() {

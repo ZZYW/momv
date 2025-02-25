@@ -175,65 +175,6 @@ if [[ "$services" == *2* ]]; then
     station2Started=true
 fi
 
-# Browser launch with delay to ensure servers are ready
-(
-    sleep 2
-    log "Opening browser windows..."
-    if [[ "$OSTYPE" == "msys"* ]]; then
-        if [ "$eStarted" = true ]; then
-            cmd.exe /C start "http://localhost:$EDITOR_PORT"
-            sleep 1
-        fi
-        if [ "$station1Started" = true ]; then
-            cmd.exe /C start "http://localhost:$STATION1_PORT"
-            sleep 1
-        fi
-        if [ "$station2Started" = true ]; then
-            cmd.exe /C start "http://localhost:$STATION2_PORT"
-            sleep 1
-        fi
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        if [ "$eStarted" = true ]; then
-            open "http://localhost:$EDITOR_PORT"
-            sleep 1
-        fi
-        if [ "$station1Started" = true ]; then
-            open "http://localhost:$STATION1_PORT"
-            sleep 1
-        fi
-        if [ "$station2Started" = true ]; then
-            open "http://localhost:$STATION2_PORT"
-            sleep 1
-        fi
-    else
-        if command -v xdg-open >/dev/null; then
-            if [ "$eStarted" = true ]; then
-                xdg-open "http://localhost:$EDITOR_PORT"
-                sleep 1
-            fi
-            if [ "$station1Started" = true ]; then
-                xdg-open "http://localhost:$STATION1_PORT"
-                sleep 1
-            fi
-            if [ "$station2Started" = true ]; then
-                xdg-open "http://localhost:$STATION2_PORT"
-                sleep 1
-            fi
-        else
-            echo "Please open these URLs manually:"
-            if [ "$eStarted" = true ]; then
-                echo "  Editor: http://localhost:$EDITOR_PORT"
-            fi
-            if [ "$station1Started" = true ]; then
-                echo "  Station 1: http://localhost:$STATION1_PORT"
-            fi
-            if [ "$station2Started" = true ]; then
-                echo "  Station 2: http://localhost:$STATION2_PORT"
-            fi
-        fi
-    fi
-) &
-
 # Print summary
 echo -e "\n${BLUE}======================================${NC}"
 echo -e "${BLUE}  Interactive Story App${NC}"

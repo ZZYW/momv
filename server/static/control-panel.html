@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Control Panel</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      button {
+        margin: 5px;
+        padding: 10px;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 10px;
+        border: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Control Panel</h1>
+    <div>
+      <button onclick="testGetData()">Test GET /data</button>
+      <button onclick="testPostData()">Test POST /data</button>
+      <button onclick="testRecordChoice()">Test POST /record-choice</button>
+      <button onclick="testGenerateDynamic()">
+        Test POST /generate-dynamic
+      </button>
+      <button onclick="testCompilePlayable()">
+        Test POST /compile-playable
+      </button>
+      <button onclick="testSaveStoryJson()">Test POST /save-story-json</button>
+    </div>
+    <h2>Response:</h2>
+    <pre id="response"></pre>
+    <script>
+      function updateResponse(data) {
+        document.getElementById("response").textContent = JSON.stringify(
+          data,
+          null,
+          2
+        );
+      }
+      function testGetData() {
+        fetch("/data")
+          .then((res) => res.json())
+          .then((data) => updateResponse(data))
+          .catch((err) => updateResponse({ error: err.toString() }));
+      }
+      function testPostData() {
+        fetch("/data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sample: "data", timestamp: Date.now() }),
+        })
+          .then((res) => res.json())
+          .then((data) => updateResponse(data))
+          .catch((err) => updateResponse({ error: err.toString() }));
+      }
+      function testRecordChoice() {
+        fetch("/record-choice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playerID: "testPlayer",
+            blockUUID: "testBlock",
+            blockType: "static",
+            chosenIndex: 0,
+            availableOptions: ["Option 1", "Option 2"],
+            chosenText: "Option 1",
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => updateResponse(data))
+          .catch((err) => updateResponse({ error: err.toString() }));
+      }
+      function testGenerateDynamic() {
+        fetch("/generate-dynamic", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: "Test dynamic generation",
+            playerID: "testPlayer",
+            blockUUID: "testBlock",
+            instruction: "Test instruction",
+            contextRefs: [],
+            blockType: "dynamic-text",
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => updateResponse(data))
+          .catch((err) => updateResponse({ error: err.toString() }));
+      }
+      function testCompilePlayable() {
+        fetch("/compile-playable", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blocks: [{ type: "plain", text: "Sample text" }],
+          }),
+        })
+          .then((res) => res.text())
+          .then((data) => updateResponse({ html: data }))
+          .catch((err) => updateResponse({ error: err.toString() }));
+      }
+      function testSaveStoryJson() {
+        fetch("/save-story-json", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blocks: [{ type: "plain", text: "Sample story" }],
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => updateResponse(data))
+          .catch((err) => updateResponse({ error: err.toString() }));
+      }
+    </script>
+  </body>
+</html>

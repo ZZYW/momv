@@ -7,6 +7,10 @@ import { compilePlayable } from "./controllers/compileController.js";
 import { getData, postData } from "./controllers/dataController.js";
 import { recordChoice } from "./controllers/choiceController.js";
 import { askLLM } from "./controllers/aiController.js";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.BACKEND_PORT || 3001;
@@ -21,8 +25,8 @@ app.use(express.json());
 
 // Existing Routes
 app.post("/compile-playable", compilePlayable);
-app.get("/", function (req, res) {
-    res.send("hello world");
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "static", "control-panel.html"));
 });
 app.get("/data", getData);
 app.post("/data", postData);

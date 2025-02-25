@@ -16,9 +16,9 @@
       "id": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
       "type": "static",
       "options": [
-        "未婚",
         "待业",
-        "下岗"
+        "下岗",
+        "未婚"
       ],
       "sceneId": 1
     },
@@ -29,15 +29,15 @@
       "sceneId": 1
     },
     {
-      "id": "1642901d-13c4-4a26-b68a-e7df93fde722",
-      "type": "plain",
-      "text": "Your narrative...",
-      "sceneId": 1
-    },
-    {
       "id": "1e725172-60cd-4820-ab89-85fa35c22b97",
       "type": "scene-header",
       "titleName": "小区的墙",
+      "sceneId": 2
+    },
+    {
+      "id": "59d59115-b593-4a3b-b9aa-5b6eb168a342",
+      "type": "plain",
+      "text": "小吴的身体和记忆漂流到童年的怀抱中，就像一只",
       "sceneId": 2
     },
     {
@@ -51,53 +51,33 @@
       "sceneId": 2
     },
     {
-      "id": "3fba8dd1-1f09-4e1f-a5e0-38bd262d0685",
+      "id": "3e7a8d64-395a-45f1-a3ad-92d3f244642a",
+      "type": "plain",
+      "text": "偷偷溜进了老房子被遗忘的角落。他发现自己几乎漫无目的地地向那座红色的山走去-----一个沉默的、巨大的实体，在他不上不下，不老不小，不男不女，不土不洋的背景下若隐若现。身旁，是一个个熟悉的家属院的围墙。设计院是小学同学李媛媛的家，她家小区墙上的标语是",
+      "sceneId": 2
+    },
+    {
+      "id": "f1979d17-1fdf-488c-9641-3e683a927374",
       "type": "static",
       "options": [
-        "",
-        "",
-        ""
+        "少生孩子多种树",
+        "时间就是金钱，效率就是生命",
+        "爱护环境，人人有责"
       ],
       "sceneId": 2
     },
     {
-      "id": "3e81dc3b-6315-434f-9290-a76374530fec",
-      "type": "dynamic-option",
-      "blockName": "xxx",
-      "optionCount": 3,
-      "additionalPrompt": "",
-      "context": [
-        {
-          "value": "3fba8dd1-1f09-4e1f-a5e0-38bd262d0685",
-          "includeAll": false
-        },
-        {
-          "value": "d19d85b7-547a-465a-89d0-6e78b284e8f0",
-          "includeAll": false
-        }
-      ],
-      "sceneId": 2
-    },
-    {
-      "id": "840b0e4b-59f2-4174-9744-5290c011fc99",
+      "id": "19d99032-3156-40cd-9a9c-23de251fb7cf",
       "type": "dynamic-text",
-      "blockName": "35324",
-      "sentenceCount": 1,
+      "blockName": "测试",
+      "sentenceCount": 3,
+      "prompt": "玩家对标语的选择，反应了玩家内心的意识形态和心理状况。根据这些状况，分析成symbolism, 然后根据荣格的心理学，将这个心理状态实体化。『小吴转过头，看到_____』这个模板。",
       "context": [
         {
-          "value": "840b0e4b-59f2-4174-9744-5290c011fc99",
+          "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
           "includeAll": false
         }
       ],
-      "sceneId": 2
-    },
-    {
-      "id": "41594bbd-1a28-4d83-80b7-42a64de52a0b",
-      "type": "dynamic-word",
-      "blockName": "",
-      "lexiconCategory": "noun",
-      "prompt": "",
-      "context": [],
       "sceneId": 2
     }
   ]

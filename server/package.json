@@ -15,5 +15,8 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "lowdb": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5"
   }
 }

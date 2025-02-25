@@ -1,6 +1,4 @@
-// server/controllers/choiceController.js
 import db from '../db.js';
-
 export const recordChoice = async (req, res) => {
     const { playerID, blockUUID, blockType, availableOptions, chosenIndex, chosenText, instruction, contextBlocks } = req.body;
 
@@ -9,6 +7,15 @@ export const recordChoice = async (req, res) => {
     }
 
     await db.read();
+    // Initialize db.data if it's undefined
+    if (!db.data) {
+        db.data = { players: {}, blocks: [] };
+    }
+    // Ensure the players object exists
+    if (!db.data.players) {
+        db.data.players = {};
+    }
+    // Create player entry if it doesn't exist
     if (!db.data.players[playerID]) {
         db.data.players[playerID] = { choices: {} };
     }

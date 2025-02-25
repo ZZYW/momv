@@ -3,7 +3,6 @@ import axios from "axios";
 export const askLLM = async (req, res) => {
     const { message } = req.body;
 
-
     console.log(`sending message to llm:`)
     console.log(message)
 

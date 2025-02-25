@@ -3,123 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Interactive Story Player - Station 1</title>
-    <style>
-      body {
-        font-family: serif;
-        margin: 0 auto;
-        padding: 20px;
-        max-width: 800px;
-        background-color: #f9f9f9;
-        line-height: 1.6;
-      }
-      .passage {
-        display: none;
-        padding: 20px;
-        background-color: white;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-      }
-      .passage.active {
-        display: block;
-      }
-      .plain {
-        display: block;
-        margin-bottom: 15px;
-        font-size: 18px;
-      }
-      .static-option-container {
-        margin: 15px 0;
-      }
-      .static-option {
-        display: block;
-        padding: 10px;
-        margin: 8px 0;
-        cursor: pointer;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        transition: all 0.2s ease;
-      }
-      .static-option:hover {
-        background-color: #f0f0f0;
-      }
-      .static-option.selected {
-        background: #e6f7ff;
-        border-color: #1890ff;
-        font-weight: bold;
-      }
-      .static-option.faded {
-        opacity: 0.3;
-      }
-      .dynamic-container {
-        margin: 15px 0;
-        padding: 15px;
-        border-left: 3px solid #ccc;
-        background-color: #f9f9f9;
-      }
-      .dynamic-text-result {
-        font-style: italic;
-        font-size: 18px;
-      }
-      .dynamic-word {
-        font-weight: bold;
-        border-bottom: 1px dotted #666;
-      }
-      .next-link {
-        display: inline-block;
-        margin-top: 20px;
-        padding: 8px 16px;
-        background-color: #1890ff;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-      .next-link:hover {
-        background-color: #096dd9;
-      }
-      .loading {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(0, 0, 0, 0.2);
-        border-radius: 50%;
-        border-top-color: #1890ff;
-        animation: spin 1s ease-in-out infinite;
-        margin-left: 10px;
-        vertical-align: middle;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      #status-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 10px;
-        background-color: #f8f8f8;
-        border-top: 1px solid #ddd;
-        font-size: 12px;
-        text-align: center;
-        color: #666;
-      }
-      .error {
-        color: red;
-        padding: 20px;
-        text-align: center;
-        font-weight: bold;
-      }
-      h2 {
-        margin-top: 0;
-        color: #333;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-      }
-    </style>
+    <link rel="stylesheet" href="station1.css" />
   </head>
   <body>
     <div id="player-data"></div>
@@ -163,8 +47,10 @@
           groupBlocksIntoPassages();
           renderPassage(0);
           const firstPassage = document.getElementById("passage-0");
-          if (firstPassage) firstPassage.classList.add("active");
-          loadDynamicContent();
+          if (firstPassage) {
+            firstPassage.classList.add("active");
+            loadDynamicContentForPassage(firstPassage);
+          }
         }
 
         // Group blocks into passages based on scene headers.
@@ -241,7 +127,7 @@
           // Add Continue link or End message.
           if (passageIndex < passages.length - 1) {
             const link = document.createElement("div");
-            link.innerHTML = `<a href="#" class="next-link" onclick="goToNextPassage(${passageIndex})">Continue</a>`;
+            link.innerHTML = `<a href="#" class="next-link" onclick="goToNextPassage(${passageIndex}); return false;">Continue</a>`;
             passageEl.appendChild(link);
           } else {
             const end = document.createElement("div");
@@ -255,45 +141,21 @@
           container.appendChild(passageEl);
         }
 
-        // Helper to handle option selection (static or dynamic)
-        window.selectOption = function (elem, blockID, type) {
-          const container = elem.parentElement;
-          const allOpts = container.querySelectorAll(".static-option");
-          allOpts.forEach((o) => {
-            o.classList.add("faded");
-            o.onclick = null;
-          });
-          elem.classList.remove("faded");
-          elem.classList.add("selected");
-          const chosenText = elem.textContent;
-          const chosenIndex =
-            type === "static" ? parseInt(elem.dataset.idx) : undefined;
-
-          fetch(SERVER_URL + "/record-choice", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              playerID,
-              blockUUID: blockID,
-              blockType: type,
-              chosenIndex: chosenIndex,
-              chosenText,
-              availableOptions: Array.from(allOpts).map((x) => x.textContent),
-            }),
-          });
-        };
-
-        // Load dynamic content for dynamic blocks.
-        function loadDynamicContent() {
-          const containers = [
-            { selector: ".dynamic-options-container", type: "dynamic-option" },
-            { selector: ".dynamic-text-container", type: "dynamic-text" },
-            { selector: ".dynamic-word-container", type: "dynamic-word" },
-          ];
-          containers.forEach(({ selector, type }) => {
-            document.querySelectorAll(selector).forEach((c) => {
-              fetchDynamicBlock(c.dataset.uuid, type, c);
-            });
+        // Load dynamic content for the given passage element only.
+        function loadDynamicContentForPassage(passageElement) {
+          const dynamicContainers = passageElement.querySelectorAll(
+            ".dynamic-options-container, .dynamic-text-container, .dynamic-word-container"
+          );
+          dynamicContainers.forEach((container) => {
+            let blockType = "";
+            if (container.classList.contains("dynamic-options-container")) {
+              blockType = "dynamic-option";
+            } else if (container.classList.contains("dynamic-text-container")) {
+              blockType = "dynamic-text";
+            } else if (container.classList.contains("dynamic-word-container")) {
+              blockType = "dynamic-word";
+            }
+            fetchDynamicBlock(container.dataset.uuid, blockType, container);
           });
         }
 
@@ -360,7 +222,36 @@
             nextEl.classList.add("active");
             currentPassageIndex = nextIndex;
             window.scrollTo(0, 0);
+            loadDynamicContentForPassage(nextEl);
           }
+        };
+
+        // Helper to handle option selection (static or dynamic)
+        window.selectOption = function (elem, blockID, type) {
+          const container = elem.parentElement;
+          const allOpts = container.querySelectorAll(".static-option");
+          allOpts.forEach((o) => {
+            o.classList.add("faded");
+            o.onclick = null;
+          });
+          elem.classList.remove("faded");
+          elem.classList.add("selected");
+          const chosenText = elem.textContent;
+          const chosenIndex =
+            type === "static" ? parseInt(elem.dataset.idx) : undefined;
+
+          fetch(SERVER_URL + "/record-choice", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              playerID,
+              blockUUID: blockID,
+              blockType: type,
+              chosenIndex: chosenIndex,
+              chosenText,
+              availableOptions: Array.from(allOpts).map((x) => x.textContent),
+            }),
+          });
         };
       })();
     </script>

@@ -1,42 +1,34 @@
 # @ Mountain of Many Voices 众鸣山 @ official code repo
 
-This repository contains a multi-service project that includes:
+This repository contains a multi-service project for creating, editing, and playing interactive stories with dynamic AI-driven content:
 
-- A **DB/AI Server**: A Node.js Express server acting as a proxy to an AI API and handling simple data storage (`/db/index.js`).
-- **Station 1**: A Twine-based web application served from the `/station1` directory.
-- **Station 2**: A second Twine-based web application served from the `/station2` directory.
-- A **Node.js Bootstrapper**: A root-level script (`start.js`) that starts the appropriate service(s) based on the environment.
-
-In development, you can run all three services on a single machine. In production, you can deploy the entire repository to three different machines and start only the desired service by setting an environment variable.
-
----
+- A **Backend Server**: A Node.js Express server providing AI integration and data persistence (`server/server.js`).
+- **Station 1**: A web application for playing compiled stories.
+- **Station 2**: A secondary interface with basic AI interaction functionality.
+- An **Editor**: A visual block-based authoring tool for creating interactive narratives.
 
 ## Project Structure
 
 ```
-momv/
-├── db/
-│   └── index.js         # Express server (DB/AI service)
+./
+├── start.sh           # Bash script to start all services 
+├── server/
+│   └── server.js      # Express server with AI/DB functionality
 ├── station1/
-│   ├── index.html       # Twine app for Station 1
-│   └── sugarcube.css    # CSS file for Twine (ensure this file exists)
+│   └── index.html     # Story player interface
 ├── station2/
-│   ├── index.html       # Twine app for Station 2
-│   └── sugarcube.css    # CSS file for Twine (ensure this file exists)
-├── start.js             # Node bootstrapper script
-├── package.json         # NPM scripts and dependency definitions
-└── README.md            # This file
+│   └── index.html     # Secondary interface with AI interaction
+├── editor/
+│   ├── index.html     # Block-based story editor
+│   └── playable/      # Contains compiler for playable stories
+└── README.md          # This file
 ```
-
----
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v14+ recommended)
-- npm (comes with Node.js)
-- [npx](https://www.npmjs.com/package/npx)
-
----
+- [pnpm](https://pnpm.io/) (preferred package manager)
+- Bash or Zsh shell (Git Bash for Windows users)
 
 ## Installation
 
@@ -44,104 +36,131 @@ momv/
 
    ```bash
    git clone <repository_url>
-   cd momv
+   cd interactive-story-tool
    ```
 
-2. **Install dependencies:**
+2. **Start the application:**
 
    ```bash
-   npm install
+   ./start.sh
    ```
 
-   This installs the required dependencies such as:
-   - [open](https://www.npmjs.com/package/open) — used to open URLs in your default browser.
-   - [http-server](https://www.npmjs.com/package/http-server) — used to serve your static files.
+   This script will:
+   - Check for required dependencies and install them if needed
+   - Start the backend server on port **3001**
+   - Start Station 1 on port **8764**
+   - Start Station 2 on port **8765**
+   - Start the Editor on port **8766**
+   - Open all interfaces in your default browser
 
----
+## If you do not want to use start.sh...
+
+You can start each component separately using the following commands:
+
+1. **Install dependencies first:**
+
+   ```bash
+   # Install http-server globally
+   pnpm add -g http-server
+   
+   # Install backend dependencies
+   cd server
+   pnpm install
+   cd ..
+   ```
+
+2. **Start the backend server:**
+
+   ```bash
+   # Set the API key (required for AI functionality)
+   export DASHSCOPE_API_KEY=your-api-key-here
+   
+   # Start the server
+   node server/server.js
+   ```
+
+3. **In separate terminal windows, start each frontend service:**
+
+   ```bash
+   # Start Station 1
+   http-server station1 -p 8764
+   
+   # Start Station 2
+   http-server station2 -p 8765
+   
+   # Start Editor
+   http-server editor -p 8766
+   ```
+
+4. **Manually open the following URLs in your browser:**
+   - Editor: http://localhost:8766
+   - Station 1: http://localhost:8764
+   - Station 2: http://localhost:8765
+
+Note: When starting services manually, you'll need to ensure that all required environment variables are set in each terminal session.
 
 ## Environment Variables
 
 - **DASHSCOPE_API_KEY**:  
-  The DB/AI server requires this API key to authenticate with the AI backend. Set this variable before starting the server:
+  Required for AI functionality. Set this variable before starting the server:
 
   ```bash
   export DASHSCOPE_API_KEY=your-api-key-here
   ```
 
-- **STATION_ID**:  
-  Used in production to determine which service should run. Allowed values are:
-  - `db` – for the DB/AI server
-  - `station1` – for Station 1 (Twine app)
-  - `station2` – for Station 2 (Twine app)
+## Features
 
-  In development, leave this variable unset to start all services simultaneously.
+### Editor
 
----
+The block-based editor allows you to:
+- Create plain narrative text blocks
+- Add static options for player choices
+- Create dynamic AI-generated options based on context
+- Generate dynamic text and words through AI
+- Organize content with scene headers
+- Preview and test your story
+- Export projects as JSON
 
-## Scripts & Usage
+### Story Player
 
-### Development Mode (All Services)
+The compiled story player supports:
+- Linear narrative progression
+- Player choices (static and dynamic)
+- AI-generated content based on previous player choices
+- A responsive, mobile-friendly interface
 
-Run all services on one development machine:
+### Backend Server
 
-```bash
-npm run dev
-```
+The server provides:
+- AI content generation via the Dashscope API
+- Data persistence for player choices and story state
+- Story compilation services
+- Context tracking for dynamic content generation
 
-This command will:
-- Start the DB/AI server on port **3000**
-- Start Station 1 on port **8001**
-- Start Station 2 on port **8002**
-- Open the corresponding URLs in your default browser
+## Usage
 
-### Production Mode (Single Service per Machine)
+1. **Creating a Story**:
+   - Open the Editor at http://localhost:8766
+   - Add blocks to create your narrative
+   - Use dynamic blocks to incorporate AI-generated content
 
-In production each machine will clone the entire `momv` repo but only run the required service by setting the `STATION_ID` variable:
+2. **Testing Your Story**:
+   - Click the [Play] button in the editor
+   - A new window will open with your compiled story
 
-- **For DB/AI Server:**
-
-  ```bash
-  npm run db
-  ```
-
-- **For Station 1:**
-
-  ```bash
-  npm run station1
-  ```
-
-- **For Station 2:**
-
-  ```bash
-  npm run station2
-  ```
-
-> **Note for Windows users:**  
-> If you encounter issues setting environment variables on Windows, consider using the [cross-env](https://www.npmjs.com/package/cross-env) package. For example, update your `package.json` scripts like:
-> ```json
-> "station1": "cross-env STATION_ID=station1 node start.js",
-> ```
-
----
-
-## Accessing the Services
-
-- **DB/AI Server:**  
-  [http://localhost:3000](http://localhost:3000) – for API usage or debugging.
-
-- **Station 1 (Twine App):**  
-  [http://localhost:8001](http://localhost:8001)
-
-- **Station 2 (Twine App):**  
-  [http://localhost:8002](http://localhost:8002)
-
----
+3. **Exporting**:
+   - Use the "Export Project as JSON" button to save your work
 
 ## Troubleshooting
 
-- **CORS Issues:**  
-  If you encounter CORS issues when your static files try to reach the DB/AI server, consider enabling [CORS](https://www.npmjs.com/package/cors) in your Express app (in `db/index.js`). For example:
-  ```js
-  const cors = require('cors');
-  app.use(cors());
-  ```
+- **Git Bash (Windows)**: If you encounter issues on Windows, ensure you're using Git Bash as specified in the error message.
+
+- **Port Conflicts**: If any services fail to start, check if the ports are already in use.
+
+- **Missing API Key**: If AI functionality isn't working, ensure the DASHSCOPE_API_KEY environment variable is set.
+
+## Development Notes
+
+- The backend server stores data in a `data.json` file in the server directory.
+- All services are started using the http-server package for static file serving.
+- The editor uses localStorage for autosaving your project.

@@ -249,6 +249,88 @@
           "timestamp": "2025-02-25T19:03:37.413Z"
         }
       }
+    },
+    "player_1740510669349_ipyv4hj": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-25T19:11:10.238Z"
+        }
+      }
+    },
+    "player_1740510753608_dvck2at": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-25T19:12:34.704Z"
+        }
+      }
+    },
+    "player_1740510812681_iglfsm2": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "timestamp": "2025-02-25T19:13:33.735Z"
+        }
+      }
+    },
+    "player_1740511253876_ip3icu4": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 0,
+          "chosenText": "待业",
+          "timestamp": "2025-02-25T19:20:56.651Z"
+        },
+        "f1979d17-1fdf-488c-9641-3e683a927374": {
+          "blockType": "static",
+          "availableOptions": [
+            "少生孩子多种树",
+            "时间就是金钱，效率就是生命",
+            "爱护环境，人人有责"
+          ],
+          "chosenIndex": 0,
+          "chosenText": "少生孩子多种树",
+          "timestamp": "2025-02-25T19:21:23.398Z"
+        },
+        "d19d85b7-547a-465a-89d0-6e78b284e8f0": {
+          "blockType": "static",
+          "availableOptions": [
+            "梨花猫",
+            "老鼠",
+            "土狗"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "土狗",
+          "timestamp": "2025-02-25T19:21:23.917Z"
+        }
+      }
     }
   }
 }

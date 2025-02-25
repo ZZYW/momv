@@ -178,13 +178,11 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              message: blockData.prompt || "No prompt",
+              message: blockData.prompt || "",
               playerID,
               blockUUID: blockID,
-              instruction: blockData.prompt || "No prompt",
-              contextRefs: (blockData.context || [])
-                .map((ctx) => ctx.value)
-                .filter((v) => v),
+              instruction: blockData.prompt || "",
+              contextRefs: (blockData.context || []).filter((ctx) => ctx.value),
               blockType,
             }),
           })

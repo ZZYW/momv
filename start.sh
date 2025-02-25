@@ -35,7 +35,7 @@ STATION1_PORT=8764
 STATION2_PORT=8765
 EDITOR_PORT=8766
 export BACKEND_PORT=3001
-DB_PATH="db/index.js"
+SERVER_PATH="server/index.js"
 
 # Windows path conversion
 win_path() {
@@ -67,17 +67,17 @@ cleanup() {
 trap cleanup SIGINT
 
 # Database setup
-if [ -f "db/package.json" ]; then
+if [ -f "server/package.json" ]; then
     echo "Installing DB dependencies..."
-    (cd "$(win_path "db")" && npm install) || error "DB setup failed"
+    (cd "$(win_path "server")" && npm install) || error "DB setup failed"
 fi
 
 # Service initialization
 declare -a SERVER_PIDS=()
 
-if [ -f "$DB_PATH" ]; then
+if [ -f "$SERVER_PATH" ]; then
     echo "Starting DB server..."
-    node "$(win_path "$DB_PATH")" &
+    node "$(win_path "$SERVER_PATH")" &
     SERVER_PIDS+=($!)
 fi
 

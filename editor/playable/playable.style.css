@@ -1,0 +1,56 @@
+/* Basic styling for the playable page */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+.passage {
+    display: none;
+    padding: 20px;
+}
+
+.passage.active {
+    display: block;
+}
+
+/* Plain block styling */
+span.plain {
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* Static options: each option appears as a clickable line */
+.static-options span.static-option {
+    display: block;
+    padding: 5px;
+    margin: 5px 0;
+    cursor: pointer;
+    border: 1px solid #ccc;
+}
+
+.static-option.selected {
+    background: #ddd;
+}
+
+.static-option.faded {
+    opacity: 0.3;
+}
+
+/* Dynamic blocks wrappers for later styling */
+span.dynamic-options,
+span.dynamic-text-result,
+span.dynamic-word-result {
+    display: block;
+    margin: 10px 0;
+    font-style: italic;
+}
+
+/* Link styling for the navigation "Proceed" link */
+a.next-link {
+    display: block;
+    margin-top: 20px;
+    font-weight: bold;
+    text-decoration: none;
+    color: blue;
+}

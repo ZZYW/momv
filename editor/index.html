@@ -435,6 +435,7 @@
 
               <!-- Scene Header Block -->
               <template v-if="block.type === 'scene-header'">
+                Scene ID: {{ block.sceneId }}<br />
                 Title Name:
                 <input
                   type="text"
@@ -461,11 +462,10 @@
         data() {
           return {
             autosaveTime: "",
-            blocks: [], // Array to hold block objects.
+            blocks: [],
           };
         },
         computed: {
-          // Available context blocks include dynamic-option, static, dynamic-text, and dynamic-word blocks.
           contextBlocks() {
             return this.blocks.filter((b) =>
               [
@@ -478,17 +478,16 @@
           },
         },
         watch: {
-          // Watch the blocks array (and nested properties) for any change.
           blocks: {
             handler(newVal, oldVal) {
               this.syncUI();
+              this.updateSceneIds();
               this.debounceSaveProject();
             },
             deep: true,
           },
         },
         directives: {
-          // Custom directive for auto-resizing textareas.
           autoResize: {
             mounted(el) {
               el.style.overflow = "hidden";
@@ -583,7 +582,12 @@
           },
           addSceneHeaderBlock() {
             const id = this.generateUUID();
-            this.blocks.push({ id, type: "scene-header", titleName: "" });
+            this.blocks.push({
+              id,
+              type: "scene-header",
+              titleName: "",
+              sceneId: null,
+            });
           },
           removeBlock(index) {
             this.blocks.splice(index, 1);
@@ -606,7 +610,6 @@
           removeStaticOption(block, index) {
             block.options.splice(index, 1);
           },
-          // Unified context methods for dynamic blocks.
           addContext(block) {
             block.context.push({ value: "", includeAll: false });
           },
@@ -616,10 +619,8 @@
           playStory() {
             const compiledStory = {
               blocks: this.blocks,
-              // plus any additional metadata your server expects
             };
             fetch("http://localhost:3001/compile-playable", {
-              // Adjust port and URL if needed
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(compiledStory),
@@ -636,59 +637,54 @@
           },
           exportJson() {
             this.updateAutosaveTime();
+            this.updateSceneIds();
+            const exportedBlocks = this.blocks.map((block) => {
+              const baseBlock = {
+                type: block.type,
+                uuid: block.id,
+                sceneId: block.sceneId,
+              };
+
+              if (block.type === "plain") {
+                return { ...baseBlock, text: block.text };
+              } else if (block.type === "static") {
+                return { ...baseBlock, options: [...block.options] };
+              } else if (block.type === "dynamic-option") {
+                return {
+                  ...baseBlock,
+                  blockName: block.blockName,
+                  optionCount: block.optionCount,
+                  prompt: block.prompt,
+                  context: JSON.parse(JSON.stringify(block.context)),
+                };
+              } else if (block.type === "dynamic-text") {
+                return {
+                  ...baseBlock,
+                  blockName: block.blockName,
+                  sentenceCount: block.sentenceCount,
+                  prompt: block.prompt,
+                  context: JSON.parse(JSON.stringify(block.context)),
+                };
+              } else if (block.type === "dynamic-word") {
+                return {
+                  ...baseBlock,
+                  blockName: block.blockName,
+                  lexiconCategory: block.lexiconCategory,
+                  prompt: block.prompt,
+                  context: JSON.parse(JSON.stringify(block.context)),
+                };
+              } else if (block.type === "scene-header") {
+                return {
+                  ...baseBlock,
+                  titleName: block.titleName,
+                };
+              }
+              return baseBlock;
+            });
+
             const project = {
               autosave: this.autosaveTime,
-              blocks: this.blocks.map((block) => {
-                // Create a base object with common properties
-                const baseBlock = {
-                  type: block.type,
-                  uuid: block.id, // Preserve UUID for all block types
-                };
-
-                // Add type-specific properties
-                if (block.type === "plain") {
-                  return {
-                    ...baseBlock,
-                    text: block.text,
-                  };
-                } else if (block.type === "static") {
-                  return {
-                    ...baseBlock,
-                    options: [...block.options], // Clone the array to avoid reference issues
-                  };
-                } else if (block.type === "dynamic-option") {
-                  return {
-                    ...baseBlock,
-                    blockName: block.blockName,
-                    optionCount: block.optionCount,
-                    prompt: block.prompt,
-                    context: JSON.parse(JSON.stringify(block.context)), // Deep clone to avoid reference issues
-                  };
-                } else if (block.type === "dynamic-text") {
-                  return {
-                    ...baseBlock,
-                    blockName: block.blockName,
-                    sentenceCount: block.sentenceCount,
-                    prompt: block.prompt,
-                    context: JSON.parse(JSON.stringify(block.context)),
-                  };
-                } else if (block.type === "dynamic-word") {
-                  return {
-                    ...baseBlock,
-                    blockName: block.blockName,
-                    lexiconCategory: block.lexiconCategory,
-                    prompt: block.prompt,
-                    context: JSON.parse(JSON.stringify(block.context)),
-                  };
-                } else if (block.type === "scene-header") {
-                  return {
-                    ...baseBlock,
-                    titleName: block.titleName,
-                  };
-                }
-                // Return the base object if type is not recognized
-                return baseBlock;
-              }),
+              blocks: exportedBlocks,
             };
 
             const jsonString = JSON.stringify(project, null, 2);
@@ -703,7 +699,6 @@
             URL.revokeObjectURL(url);
           },
           saveProject() {
-            // Store the current scroll position to prevent auto-scrolling.
             const scrollX = window.scrollX;
             const scrollY = window.scrollY;
             this.updateAutosaveTime();
@@ -716,6 +711,18 @@
             this.$nextTick(() => {
               window.scrollTo(scrollX, scrollY);
             });
+          },
+          updateSceneIds() {
+            let currentSceneId = 1;
+            for (let i = 0; i < this.blocks.length; i++) {
+              if (this.blocks[i].type === "scene-header") {
+                this.blocks[i].sceneId = currentSceneId;
+                currentSceneId++;
+              } else {
+                this.blocks[i].sceneId =
+                  currentSceneId === 1 ? 1 : currentSceneId - 1;
+              }
+            }
           },
         },
         mounted() {
@@ -733,7 +740,6 @@
         },
       });
 
-      // Register the dynamic-block component.
       app.component("dynamic-block", {
         template: "#dynamic-block-template",
         props: ["block"],
@@ -748,7 +754,6 @@
             return this.block.type === "dynamic-word";
           },
           parentContextBlocks() {
-            // Access parent's contextBlocks.
             return this.$parent.contextBlocks;
           },
         },

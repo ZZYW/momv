@@ -36,7 +36,7 @@ This repository contains a multi-service project for creating, editing, and play
 
    ```bash
    git clone <repository_url>
-   cd interactive-story-tool
+   cd momv
    ```
 
 2. **Start the application:**

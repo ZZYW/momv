@@ -2,27 +2,11 @@
 
 This repository contains a multi-service project for creating, editing, and playing interactive stories with dynamic AI-driven content:
 
-- A **Backend Server**: A Node.js Express server providing AI integration and data persistence (`server/server.js`).
+- A **Backend Server**: A Node.js Express server providing AI integration and data persistence (`server/index.js`).
 - **Station 1**: A web application for playing compiled stories.
 - **Station 2**: A secondary interface with basic AI interaction functionality.
 - An **Editor**: A visual block-based authoring tool for creating interactive narratives.
 
-## Project Structure
-
-```
-./
-├── start.sh           # Bash script to start all services 
-├── server/
-│   └── server.js      # Express server with AI/DB functionality
-├── station1/
-│   └── index.html     # Story player interface
-├── station2/
-│   └── index.html     # Secondary interface with AI interaction
-├── editor/
-│   ├── index.html     # Block-based story editor
-│   └── playable/      # Contains compiler for playable stories
-└── README.md          # This file
-```
 
 ## Prerequisites
 
@@ -76,7 +60,7 @@ You can start each component separately using the following commands:
    export DASHSCOPE_API_KEY=your-api-key-here
    
    # Start the server
-   node server/server.js
+   node server/index.js
    ```
 
 3. **In separate terminal windows, start each frontend service:**

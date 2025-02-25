@@ -6,10 +6,9 @@
     <style>
       body {
         font-family: serif;
-        margin: 0;
+        margin: 0 auto;
         padding: 20px;
         max-width: 800px;
-        margin: 0 auto;
         background-color: #f9f9f9;
         line-height: 1.6;
       }
@@ -121,241 +120,203 @@
     <div id="passage-container"></div>
     <div id="status-bar"></div>
     <script>
-      // Replace this with the actual blocks array from your server:
-      const projectBlocks = <!--PROJECT_BLOCKS_PLACEHOLDER-->;
+      (function () {
+        // Configuration and Initialization
+        const SERVER_URL = window.location.origin.replace(/\d+$/, "3001");
+        const projectBlocks = <!--PROJECT_BLOCKS_PLACEHOLDER-->;
+        const playerID = "player_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+        document.getElementById("status-bar").innerText = "Story Player ID: " + playerID;
 
-      // The server URL for dynamic AI or choice endpoints:
-      const SERVER_URL = window.location.origin.replace(/\d+$/, "3001");
-      // If you have a different setup, set SERVER_URL explicitly, e.g. "http://localhost:3001"
+        let passages = [];
+        let currentPassageIndex = 0;
 
-      // Player ID generation:
-      const playerID = "player_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
-      document.getElementById("status-bar").innerText = "Story Player ID: " + playerID;
-
-      // Passages are arrays of blocks separated by scene-headers:
-      let passages = [];
-      let currentPassageIndex = 0;
-
-      function groupBlocksIntoPassages() {
-        let current = [];
-        projectBlocks.forEach((block) => {
-          if (block.type === "scene-header" && current.length > 0) {
-            passages.push(current);
-            current = [];
-          }
-          current.push(block);
-        });
-        if (current.length > 0) {
-          passages.push(current);
-        }
-      }
-
-      function renderPassage(passageIndex) {
-        if (passageIndex >= passages.length) return;
-
-        const container = document.getElementById("passage-container");
-        const blocks = passages[passageIndex];
-        const passageEl = document.createElement("div");
-        passageEl.className = "passage";
-        passageEl.id = "passage-" + passageIndex;
-
-        blocks.forEach((block) => {
-          const blockEl = document.createElement("div");
-          blockEl.className = "block-" + block.type;
-          blockEl.style.marginBottom = "20px";
-          switch (block.type) {
-            case "plain":
-              blockEl.innerHTML = '<div class="plain">' + (block.text || "") + "</div>";
-              break;
-            case "static":
-              if (Array.isArray(block.options)) {
-                const opts = block.options.map(
-                  (opt, i) => `<div class="static-option" data-idx="${i}" onclick="selectStaticOption(this, '${block.id}')">${opt}</div>`
-                );
-                blockEl.innerHTML = `<div class="static-option-container">${opts.join("")}</div>`;
-              }
-              break;
-            case "dynamic-option":
-              blockEl.innerHTML = `
-                <div class="dynamic-container">
-                  <div class="loading-indicator">Loading dynamic options... <span class="loading"></span></div>
-                  <div class="dynamic-options-container" data-uuid="${block.id}"></div>
-                </div>`;
-              break;
-            case "dynamic-text":
-              blockEl.innerHTML = `
-                <div class="dynamic-container">
-                  <div class="loading-indicator">Generating text... <span class="loading"></span></div>
-                  <div class="dynamic-text-container" data-uuid="${block.id}"></div>
-                </div>`;
-              break;
-            case "dynamic-word":
-              blockEl.innerHTML = `
-                <div class="dynamic-container">
-                  <div class="loading-indicator">Generating word... <span class="loading"></span></div>
-                  <div class="dynamic-word-container" data-uuid="${block.id}"></div>
-                </div>`;
-              break;
-            case "scene-header":
-              blockEl.innerHTML = `<h2>${block.titleName || "Scene"}</h2>`;
-              break;
-          }
-          passageEl.appendChild(blockEl);
-        });
-
-        if (passageIndex < passages.length - 1) {
-          // Add "Continue" link
-          const link = document.createElement("div");
-          link.innerHTML = `<a href="#" class="next-link" onclick="goToNextPassage(${passageIndex})">Continue</a>`;
-          passageEl.appendChild(link);
-        } else {
-          // Last passage
-          const end = document.createElement("div");
-          end.style.marginTop = "30px";
-          end.style.textAlign = "center";
-          end.style.fontStyle = "italic";
-          end.innerText = "The End";
-          passageEl.appendChild(end);
-        }
-
-        container.appendChild(passageEl);
-      }
-
-      function goToNextPassage(currIndex) {
-        const currentEl = document.getElementById("passage-" + currIndex);
-        const nextIndex = currIndex + 1;
-        if (currentEl) currentEl.classList.remove("active");
-        renderPassage(nextIndex);
-        const nextEl = document.getElementById("passage-" + nextIndex);
-        if (nextEl) {
-          nextEl.classList.add("active");
-          currentPassageIndex = nextIndex;
-          window.scrollTo(0, 0);
-        }
-      }
-
-      // Static option selection
-      window.selectStaticOption = function (elem, blockID) {
-        const container = elem.parentElement;
-        const allOpts = container.querySelectorAll(".static-option");
-        allOpts.forEach((o) => {
-          o.classList.add("faded");
-          o.onclick = null;
-        });
-        elem.classList.remove("faded");
-        elem.classList.add("selected");
-        const idx = elem.dataset.idx;
-        const chosenText = elem.textContent;
-
-        fetch(SERVER_URL + "/record-choice", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            playerID,
-            blockUUID: blockID,
-            blockType: "static",
-            chosenIndex: parseInt(idx),
-            chosenText,
-            availableOptions: Array.from(allOpts).map((x) => x.textContent)
-          })
-        });
-      };
-
-      // Load dynamic blocks
-      function loadDynamicContent() {
-        const optContainers = document.querySelectorAll(".dynamic-options-container");
-        optContainers.forEach((c) => {
-          fetchDynamicBlock(c.dataset.uuid, "dynamic-option", c);
-        });
-
-        const textContainers = document.querySelectorAll(".dynamic-text-container");
-        textContainers.forEach((c) => {
-          fetchDynamicBlock(c.dataset.uuid, "dynamic-text", c);
-        });
-
-        const wordContainers = document.querySelectorAll(".dynamic-word-container");
-        wordContainers.forEach((c) => {
-          fetchDynamicBlock(c.dataset.uuid, "dynamic-word", c);
-        });
-      }
-
-      function fetchDynamicBlock(blockID, blockType, container) {
-        // The original prompt/context would have been in the Editor's "blocks" array.
-        // For a real environment, you'd pass that from the server or store it in DB.
-        // This example does a simplified call with just the block ID.
-        const blockData = projectBlocks.find((b) => b.id === blockID);
-        if (!blockData) {
-          container.innerText = "No block data found";
-          return;
-        }
-
-        const loadingIndicator = container.closest(".dynamic-container").querySelector(".loading-indicator");
-        fetch(SERVER_URL + "/generate-dynamic", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            playerID,
-            blockUUID: blockID,
-            instruction: blockData.prompt || "No prompt",
-            contextRefs: (blockData.context || []).map((ctx) => ctx.value).filter((v) => v),
-            blockType
-          })
-        })
-          .then((r) => r.json())
-          .then((data) => {
-            if (loadingIndicator) loadingIndicator.style.display = "none";
-            if (blockType === "dynamic-option") {
-              const opts = (data.data.options || []).map(
-                (opt, i) => `<div class="static-option" data-index="${i}" onclick="selectDynamicOption(this, '${blockID}', ${i})">${opt}</div>`
-              );
-              container.innerHTML = opts.join("");
-            } else if (blockType === "dynamic-text") {
-              container.innerHTML = `<div class="dynamic-text-result">${data.data.text || ""}</div>`;
-            } else if (blockType === "dynamic-word") {
-              container.innerHTML = `<span class="dynamic-word">${data.data.text || ""}</span>`;
+        // Group blocks into passages based on scene headers.
+        function groupBlocksIntoPassages() {
+          let current = [];
+          projectBlocks.forEach((block) => {
+            if (block.type === "scene-header" && current.length > 0) {
+              passages.push(current);
+              current = [];
             }
-          })
-          .catch((err) => {
-            console.error("Error in fetchDynamicBlock:", err);
-            container.innerText = "Error loading dynamic content.";
-            if (loadingIndicator) loadingIndicator.style.display = "none";
+            current.push(block);
           });
-      }
+          if (current.length > 0) passages.push(current);
+        }
 
-      // Dynamic option selection
-      window.selectDynamicOption = function (elem, blockUUID, chosenIndex) {
-        const container = elem.parentElement;
-        const allOpts = container.querySelectorAll(".static-option");
-        allOpts.forEach((o) => {
-          o.classList.add("faded");
-          o.onclick = null;
-        });
-        elem.classList.remove("faded");
-        elem.classList.add("selected");
-        const chosenText = elem.textContent;
+        // Render a passage with its blocks.
+        function renderPassage(passageIndex) {
+          if (passageIndex >= passages.length) return;
 
-        fetch(SERVER_URL + "/record-choice", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            playerID,
-            blockUUID,
-            blockType: "dynamic-option",
-            chosenIndex,
-            chosenText,
-            availableOptions: Array.from(allOpts).map((x) => x.textContent)
+          const container = document.getElementById("passage-container");
+          const blocks = passages[passageIndex];
+          const passageEl = document.createElement("div");
+          passageEl.className = "passage";
+          passageEl.id = "passage-" + passageIndex;
+
+          blocks.forEach((block) => {
+            const blockEl = document.createElement("div");
+            blockEl.className = "block-" + block.type;
+            blockEl.style.marginBottom = "20px";
+            switch (block.type) {
+              case "plain":
+                blockEl.innerHTML = '<div class="plain">' + (block.text || "") + "</div>";
+                break;
+              case "static":
+                if (Array.isArray(block.options)) {
+                  const opts = block.options.map((opt, i) =>
+                    `<div class="static-option" data-idx="${i}" onclick="selectOption(this, '${block.id}', 'static')">${opt}</div>`
+                  );
+                  blockEl.innerHTML = `<div class="static-option-container">${opts.join("")}</div>`;
+                }
+                break;
+              case "dynamic-option":
+                blockEl.innerHTML = `
+                  <div class="dynamic-container">
+                    <div class="loading-indicator">Loading dynamic options... <span class="loading"></span></div>
+                    <div class="dynamic-options-container" data-uuid="${block.id}"></div>
+                  </div>`;
+                break;
+              case "dynamic-text":
+                blockEl.innerHTML = `
+                  <div class="dynamic-container">
+                    <div class="loading-indicator">Generating text... <span class="loading"></span></div>
+                    <div class="dynamic-text-container" data-uuid="${block.id}"></div>
+                  </div>`;
+                break;
+              case "dynamic-word":
+                blockEl.innerHTML = `
+                  <div class="dynamic-container">
+                    <div class="loading-indicator">Generating word... <span class="loading"></span></div>
+                    <div class="dynamic-word-container" data-uuid="${block.id}"></div>
+                  </div>`;
+                break;
+              case "scene-header":
+                blockEl.innerHTML = `<h2>${block.titleName || "Scene"}</h2>`;
+                break;
+            }
+            passageEl.appendChild(blockEl);
+          });
+
+          // Add Continue link or End message.
+          if (passageIndex < passages.length - 1) {
+            const link = document.createElement("div");
+            link.innerHTML = `<a href="#" class="next-link" onclick="goToNextPassage(${passageIndex})">Continue</a>`;
+            passageEl.appendChild(link);
+          } else {
+            const end = document.createElement("div");
+            end.style.marginTop = "30px";
+            end.style.textAlign = "center";
+            end.style.fontStyle = "italic";
+            end.innerText = "The End";
+            passageEl.appendChild(end);
+          }
+
+          container.appendChild(passageEl);
+        }
+
+        // Helper to handle option selection (static or dynamic)
+        window.selectOption = function (elem, blockID, type) {
+          const container = elem.parentElement;
+          const allOpts = container.querySelectorAll(".static-option");
+          allOpts.forEach((o) => {
+            o.classList.add("faded");
+            o.onclick = null;
+          });
+          elem.classList.remove("faded");
+          elem.classList.add("selected");
+          const chosenText = elem.textContent;
+          const chosenIndex = type === "static" ? parseInt(elem.dataset.idx) : undefined;
+
+          fetch(SERVER_URL + "/record-choice", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              playerID,
+              blockUUID: blockID,
+              blockType: type,
+              chosenIndex: chosenIndex,
+              chosenText,
+              availableOptions: Array.from(allOpts).map((x) => x.textContent)
+            })
+          });
+        };
+
+        // Load dynamic content for dynamic blocks.
+        function loadDynamicContent() {
+          const containers = [
+            { selector: ".dynamic-options-container", type: "dynamic-option" },
+            { selector: ".dynamic-text-container", type: "dynamic-text" },
+            { selector: ".dynamic-word-container", type: "dynamic-word" }
+          ];
+          containers.forEach(({ selector, type }) => {
+            document.querySelectorAll(selector).forEach((c) => {
+              fetchDynamicBlock(c.dataset.uuid, type, c);
+            });
+          });
+        }
+
+        function fetchDynamicBlock(blockID, blockType, container) {
+          const blockData = projectBlocks.find((b) => b.id === blockID);
+          if (!blockData) {
+            container.innerText = "No block data found";
+            return;
+          }
+          const loadingIndicator = container.closest(".dynamic-container").querySelector(".loading-indicator");
+          fetch(SERVER_URL + "/generate-dynamic", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              playerID,
+              blockUUID: blockID,
+              instruction: blockData.prompt || "No prompt",
+              contextRefs: (blockData.context || []).map(ctx => ctx.value).filter(v => v),
+              blockType
+            })
           })
-        });
-      };
+            .then((r) => r.json())
+            .then((data) => {
+              if (loadingIndicator) loadingIndicator.style.display = "none";
+              if (blockType === "dynamic-option") {
+                const opts = (data.data.options || []).map((opt, i) =>
+                  `<div class="static-option" data-index="${i}" onclick="selectOption(this, '${blockID}', 'dynamic-option')">${opt}</div>`
+                );
+                container.innerHTML = opts.join("");
+              } else if (blockType === "dynamic-text") {
+                container.innerHTML = `<div class="dynamic-text-result">${data.data.text || ""}</div>`;
+              } else if (blockType === "dynamic-word") {
+                container.innerHTML = `<span class="dynamic-word">${data.data.text || ""}</span>`;
+              }
+            })
+            .catch((err) => {
+              console.error("Error in fetchDynamicBlock:", err);
+              container.innerText = "Error loading dynamic content.";
+              if (loadingIndicator) loadingIndicator.style.display = "none";
+            });
+        }
 
-      // Initialize
-      document.addEventListener("DOMContentLoaded", () => {
-        groupBlocksIntoPassages();
-        renderPassage(0);
-        const firstPassage = document.getElementById("passage-0");
-        if (firstPassage) firstPassage.classList.add("active");
-        loadDynamicContent();
-      });
+        // Move to the next passage.
+        window.goToNextPassage = function (currIndex) {
+          const currentEl = document.getElementById("passage-" + currIndex);
+          const nextIndex = currIndex + 1;
+          if (currentEl) currentEl.classList.remove("active");
+          renderPassage(nextIndex);
+          const nextEl = document.getElementById("passage-" + nextIndex);
+          if (nextEl) {
+            nextEl.classList.add("active");
+            currentPassageIndex = nextIndex;
+            window.scrollTo(0, 0);
+          }
+        };
+
+        // Initialization on DOMContentLoaded.
+        document.addEventListener("DOMContentLoaded", () => {
+          groupBlocksIntoPassages();
+          renderPassage(0);
+          const firstPassage = document.getElementById("passage-0");
+          if (firstPassage) firstPassage.classList.add("active");
+          loadDynamicContent();
+        });
+      })();
     </script>
   </body>
 </html>

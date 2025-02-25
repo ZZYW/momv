@@ -110,9 +110,9 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Find backend server file
-if [ ! -f "$SERVER_PATH" ] && [ -f "$SERVER_DIR/server.js" ]; then
-    SERVER_PATH="$SERVER_DIR/server.js"
-    log "Using server.js as the main server file"
+if [ ! -f "$SERVER_PATH" ] && [ -f "$SERVER_DIR/index.js" ]; then
+    SERVER_PATH="$SERVER_DIR/index.js"
+    log "Using index.js as the main server file"
 fi
 
 # Database setup
@@ -130,6 +130,7 @@ fi
 # Service initialization
 declare -a SERVER_PIDS=()
 
+# Start backend server (always started)
 if [ -f "$SERVER_PATH" ]; then
     log "Starting backend server on port $BACKEND_PORT..."
     node "$(win_path "$SERVER_PATH")" &
@@ -146,42 +147,89 @@ if [ -f "$SERVER_PATH" ]; then
     fi
 fi
 
-# Start frontend servers
-start_server "Station 1" "station1" $STATION1_PORT
-start_server "Station 2" "station2" $STATION2_PORT
-start_server "Editor" "editor" $EDITOR_PORT
+# Read argument for launching frontend services.
+# "e" launches Editor, "1" launches Station 1, "2" launches Station 2.
+# Default is "e12" (launch all three) if no argument is provided.
+services="$1"
+if [ -z "$services" ]; then
+    services="e12"
+fi
+
+# Flags to track which services are started
+eStarted=false
+station1Started=false
+station2Started=false
+
+if [[ "$services" == *e* ]]; then
+    start_server "Editor" "editor" $EDITOR_PORT
+    eStarted=true
+fi
+
+if [[ "$services" == *1* ]]; then
+    start_server "Station 1" "station1" $STATION1_PORT
+    station1Started=true
+fi
+
+if [[ "$services" == *2* ]]; then
+    start_server "Station 2" "station2" $STATION2_PORT
+    station2Started=true
+fi
 
 # Browser launch with delay to ensure servers are ready
 (
     sleep 2
     log "Opening browser windows..."
     if [[ "$OSTYPE" == "msys"* ]]; then
-        # Windows
-        cmd.exe /C start "http://localhost:$EDITOR_PORT"
-        sleep 1
-        cmd.exe /C start "http://localhost:$STATION1_PORT"
-        sleep 1
-        cmd.exe /C start "http://localhost:$STATION2_PORT"
+        if [ "$eStarted" = true ]; then
+            cmd.exe /C start "http://localhost:$EDITOR_PORT"
+            sleep 1
+        fi
+        if [ "$station1Started" = true ]; then
+            cmd.exe /C start "http://localhost:$STATION1_PORT"
+            sleep 1
+        fi
+        if [ "$station2Started" = true ]; then
+            cmd.exe /C start "http://localhost:$STATION2_PORT"
+            sleep 1
+        fi
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
-        open "http://localhost:$EDITOR_PORT"
-        sleep 1
-        open "http://localhost:$STATION1_PORT"
-        sleep 1
-        open "http://localhost:$STATION2_PORT"
+        if [ "$eStarted" = true ]; then
+            open "http://localhost:$EDITOR_PORT"
+            sleep 1
+        fi
+        if [ "$station1Started" = true ]; then
+            open "http://localhost:$STATION1_PORT"
+            sleep 1
+        fi
+        if [ "$station2Started" = true ]; then
+            open "http://localhost:$STATION2_PORT"
+            sleep 1
+        fi
     else
-        # Linux and others
         if command -v xdg-open >/dev/null; then
-            xdg-open "http://localhost:$EDITOR_PORT"
-            sleep 1
-            xdg-open "http://localhost:$STATION1_PORT"
-            sleep 1
-            xdg-open "http://localhost:$STATION2_PORT"
+            if [ "$eStarted" = true ]; then
+                xdg-open "http://localhost:$EDITOR_PORT"
+                sleep 1
+            fi
+            if [ "$station1Started" = true ]; then
+                xdg-open "http://localhost:$STATION1_PORT"
+                sleep 1
+            fi
+            if [ "$station2Started" = true ]; then
+                xdg-open "http://localhost:$STATION2_PORT"
+                sleep 1
+            fi
         else
             echo "Please open these URLs manually:"
-            echo "  Editor: http://localhost:$EDITOR_PORT"
-            echo "  Station 1: http://localhost:$STATION1_PORT"
-            echo "  Station 2: http://localhost:$STATION2_PORT"
+            if [ "$eStarted" = true ]; then
+                echo "  Editor: http://localhost:$EDITOR_PORT"
+            fi
+            if [ "$station1Started" = true ]; then
+                echo "  Station 1: http://localhost:$STATION1_PORT"
+            fi
+            if [ "$station2Started" = true ]; then
+                echo "  Station 2: http://localhost:$STATION2_PORT"
+            fi
         fi
     fi
 ) &
@@ -191,9 +239,15 @@ echo -e "\n${BLUE}======================================${NC}"
 echo -e "${BLUE}  Interactive Story App${NC}"
 echo -e "${BLUE}======================================${NC}"
 echo -e "Backend server: ${GREEN}http://localhost:$BACKEND_PORT${NC}"
-echo -e "Editor: ${GREEN}http://localhost:$EDITOR_PORT${NC}"
-echo -e "Station 1: ${GREEN}http://localhost:$STATION1_PORT${NC}"
-echo -e "Station 2: ${GREEN}http://localhost:$STATION2_PORT${NC}"
+if [ "$eStarted" = true ]; then
+    echo -e "Editor: ${GREEN}http://localhost:$EDITOR_PORT${NC}"
+fi
+if [ "$station1Started" = true ]; then
+    echo -e "Station 1: ${GREEN}http://localhost:$STATION1_PORT${NC}"
+fi
+if [ "$station2Started" = true ]; then
+    echo -e "Station 2: ${GREEN}http://localhost:$STATION2_PORT${NC}"
+fi
 echo -e "${BLUE}======================================${NC}"
 echo -e "Press ${YELLOW}Ctrl+C${NC} to stop all services\n"
 

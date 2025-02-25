@@ -218,6 +218,37 @@
           "timestamp": "2025-02-25T18:57:41.019Z"
         }
       }
+    },
+    "player_1740510189169_yv2j990": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚",
+            "离婚"
+          ],
+          "chosenIndex": 3,
+          "chosenText": "离婚",
+          "timestamp": "2025-02-25T19:03:10.199Z"
+        }
+      }
+    },
+    "player_1740510210451_08f8lp0": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-25T19:03:37.413Z"
+        }
+      }
     }
   }
 }

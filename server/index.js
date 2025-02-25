@@ -22,6 +22,16 @@ if (!apiKey) {
 
 app.use(cors());
 app.use(express.json());
+// Add this near the top of your middleware section, before your routes
+app.use((req, res, next) => {
+    res.set({
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store'
+    });
+    next();
+});
 
 // Existing Routes
 app.post("/compile-playable", compilePlayable);

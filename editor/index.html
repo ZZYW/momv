@@ -623,7 +623,7 @@
             fetch("http://localhost:3001/compile-playable", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(compiledStory),
+              body: JSON.stringify({ blocks: this.blocks }),
             })
               .then((res) => res.text())
               .then((playableHTML) => {

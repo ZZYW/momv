@@ -1,0 +1,35 @@
+{
+  "players": {
+    "player_1740501014805_dkk7iwi": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "未婚",
+            "待业",
+            "下岗"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "待业",
+          "timestamp": "2025-02-25T16:30:20.626Z"
+        }
+      }
+    },
+    "player_1740501057871_i0rbu2j": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "未婚",
+            "待业",
+            "下岗"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "待业",
+          "timestamp": "2025-02-25T16:31:13.219Z"
+        }
+      }
+    }
+  },
+  "blocks": []
+}

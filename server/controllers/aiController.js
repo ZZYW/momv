@@ -2,10 +2,30 @@ import axios from "axios";
 import db from '../db.js';
 
 export const askLLM = async (req, res) => {
-    const { message, playerID, blockUUID, contextRefs, blockType } = req.body;
+    const {
+        message,
+        playerID,
+        blockUUID,
+        contextRefs,
+        blockType,
+        // Extract these properties from the request
+        optionCount,
+        sentenceCount,
+        lexiconCategory
+    } = req.body;
 
     // Build enhanced prompt with context from previous choices
     let enhancedPrompt = message;
+
+    // Add block-specific instructions based on type and properties
+    if (blockType === 'dynamic-option' && optionCount) {
+        enhancedPrompt += `\n\nPlease generate ${optionCount} distinct options.`;
+    } else if (blockType === 'dynamic-text' && sentenceCount) {
+        enhancedPrompt += `\n\nPlease generate a response of approximately ${sentenceCount} sentences.`;
+    } else if (blockType === 'dynamic-word' && lexiconCategory) {
+        enhancedPrompt += `\n\nPlease generate a single ${lexiconCategory}.`;
+    }
+
 
     if (contextRefs && contextRefs.length > 0) {
         await db.read();

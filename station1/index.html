@@ -297,6 +297,9 @@
               instruction: blockData.prompt || "",
               contextRefs: (blockData.context || []).filter((ctx) => ctx.value),
               blockType,
+              optionCount: blockData.optionCount,
+              sentenceCount: blockData.sentenceCount,
+              lexiconCategory: blockData.lexiconCategory,
             };
 
             return fetch(`${this.config.serverUrl}/generate-dynamic`, {

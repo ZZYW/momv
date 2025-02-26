@@ -70,8 +70,36 @@
       "id": "19d99032-3156-40cd-9a9c-23de251fb7cf",
       "type": "dynamic-text",
       "blockName": "测试",
-      "sentenceCount": 3,
+      "sentenceCount": 2,
       "prompt": "玩家对标语的选择，反应了玩家内心的意识形态和心理状况。根据这些状况，分析成symbolism, 然后根据荣格的心理学，将这个心理状态实体化。『小吴转过头，看到_____』这个模板。",
+      "context": [
+        {
+          "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
+          "includeAll": false
+        }
+      ],
+      "sceneId": 2
+    },
+    {
+      "id": "3180c8e3-27e0-4883-a1ae-f34c581ae4d5",
+      "type": "dynamic-word",
+      "blockName": "",
+      "lexiconCategory": "noun",
+      "prompt": "根据这个选择",
+      "context": [
+        {
+          "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
+          "includeAll": false
+        }
+      ],
+      "sceneId": 2
+    },
+    {
+      "id": "33dd99b1-2325-4b56-bbb2-32492d2c6dbb",
+      "type": "dynamic-option",
+      "blockName": "xxx",
+      "optionCount": 3,
+      "prompt": "每个选择都是玩家心灵的镜子",
       "context": [
         {
           "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",

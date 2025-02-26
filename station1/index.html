@@ -14,46 +14,73 @@
       defer
       src="https://unpkg.com/alpinejs@3.11.1/dist/cdn.min.js"
     ></script>
+    <style>
+      /* Override the transition time specifically for static options */
+      .static-option {
+        transition: opacity 3s ease, background-color 0.2s ease,
+          border-color 0.2s ease;
+      }
+    </style>
   </head>
   <body>
     <div x-data="storyPlayer" x-init="init()">
       <div id="player-data"></div>
-
       <div id="passage-container">
         <!-- Passages will be rendered here -->
       </div>
-
-      <div id="status-bar" x-text="'Story Player ID: ' + playerId"></div>
+      <div id="status-bar" x-text="'Story Player ID: ' + config.playerId"></div>
     </div>
 
     <script>
       document.addEventListener("alpine:init", () => {
         Alpine.data("storyPlayer", () => ({
-          // Configuration
-          serverUrl: window.location.origin.replace(/:\d+$/, ":3001"),
-          playerId:
-            "player_" +
-            Date.now() +
-            "_" +
-            Math.random().toString(36).substring(2, 9),
+          // ===== CONFIGURATION =====
+          config: {
+            serverUrl: window.location.origin.replace(/:\d+$/, ":3001"),
+            playerId:
+              "player_" +
+              Date.now() +
+              "_" +
+              Math.random().toString(36).substring(2, 9),
+            storyPath: "input/story1.json",
+            debug: false,
+          },
 
-          // State variables
-          projectBlocks: [],
-          passages: [],
-          currentPassageIndex: 0,
+          // ===== STATE =====
+          state: {
+            projectBlocks: [],
+            passages: [],
+            currentPassageIndex: 0,
+            isLoading: false,
+            error: null,
+            pendingOptionSelections: 0,
+          },
 
-          // Initialize the player
+          // ===== INITIALIZATION =====
           init() {
             this.loadStory();
           },
 
-          // Load story JSON
+          // ===== LOGGING =====
+          log(...args) {
+            if (this.config.debug) {
+              console.log(...args);
+            }
+          },
+
+          // ===== STORY LOADING & PARSING =====
           loadStory() {
-            fetch("input/story1.json?nocache=" + new Date().getTime())
-              .then((response) => response.json())
+            this.state.isLoading = true;
+            fetch(`${this.config.storyPath}?nocache=${new Date().getTime()}`)
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error(`Failed to load story (${response.status})`);
+                }
+                return response.json();
+              })
               .then((data) => {
                 if (data.blocks && Array.isArray(data.blocks)) {
-                  this.projectBlocks = data.blocks;
+                  this.state.projectBlocks = data.blocks;
                   this.groupBlocksIntoPassages();
                   this.renderPassage(0);
 
@@ -61,163 +88,174 @@
                   const firstPassage = document.getElementById("passage-0");
                   if (firstPassage) {
                     firstPassage.classList.add("active");
-                    this.loadDynamicContentForPassage(firstPassage);
+                    this.loadDynamicContentForPassage(firstPassage).then(() => {
+                      this.setupContinueButton(firstPassage);
+                    });
                   }
                 } else {
-                  document.getElementById("passage-container").innerHTML =
-                    "<div class='error'>Error: Invalid story data</div>";
+                  throw new Error(
+                    "Invalid story data: missing or invalid blocks array"
+                  );
                 }
               })
               .catch((error) => {
-                console.error("Error loading story:", error);
-                document.getElementById("passage-container").innerHTML =
-                  "<div class='error'>Error loading story. Please make sure story1.json exists.</div>";
+                this.log("Error loading story:", error);
+                this.state.error = error.message;
+                document.getElementById(
+                  "passage-container"
+                ).innerHTML = `<div class='error'>Error loading story: ${error.message}</div>`;
+              })
+              .finally(() => {
+                this.state.isLoading = false;
               });
           },
 
-          // Group blocks into passages based on scene headers
           groupBlocksIntoPassages() {
             let current = [];
-            this.passages = [];
+            this.state.passages = [];
 
-            this.projectBlocks.forEach((block) => {
+            this.state.projectBlocks.forEach((block) => {
               if (block.type === "scene-header" && current.length > 0) {
-                this.passages.push(current);
+                this.state.passages.push(current);
                 current = [];
               }
               current.push(block);
             });
 
-            if (current.length > 0) this.passages.push(current);
+            if (current.length > 0) {
+              this.state.passages.push(current);
+            }
+
+            this.log(
+              `Grouped ${this.state.projectBlocks.length} blocks into ${this.state.passages.length} passages`
+            );
           },
 
-          // Render a passage with its blocks
+          // ===== RENDERING =====
           renderPassage(passageIndex) {
-            if (passageIndex >= this.passages.length) return;
+            if (passageIndex >= this.state.passages.length) return;
 
             const container = document.getElementById("passage-container");
-            const blocks = this.passages[passageIndex];
+            const blocks = this.state.passages[passageIndex];
             const passageEl = document.createElement("div");
 
             passageEl.className = "passage";
-            passageEl.id = "passage-" + passageIndex;
+            passageEl.id = `passage-${passageIndex}`;
 
             // Create elements for each block
             blocks.forEach((block) => {
               const blockEl = document.createElement("div");
-              blockEl.className = "block-" + block.type;
+              blockEl.className = `block-${block.type}`;
               blockEl.style.marginBottom = "20px";
 
-              // Render different block types
-              switch (block.type) {
-                case "plain":
-                  blockEl.innerHTML = `<div class="plain">${
-                    block.text || ""
-                  }</div>`;
-                  break;
-
-                case "static":
-                  if (Array.isArray(block.options)) {
-                    const optionsHTML = block.options
-                      .map(
-                        (opt, i) =>
-                          `<div class="static-option" data-idx="${i}">${opt}</div>`
-                      )
-                      .join("");
-
-                    blockEl.innerHTML = `<div class="static-option-container">${optionsHTML}</div>`;
-
-                    // Add click handlers after rendering
-                    setTimeout(() => {
-                      const options =
-                        blockEl.querySelectorAll(".static-option");
-                      options.forEach((opt) => {
-                        opt.addEventListener("click", () => {
-                          this.selectOption(opt, block.id, "static");
-                        });
-                      });
-                    }, 0);
-                  }
-                  break;
-
-                case "dynamic-option":
-                  blockEl.innerHTML = `
-                  <div class="dynamic-container">
-                    <div class="loading-indicator">Loading dynamic options... <span class="loading"></span></div>
-                    <div class="dynamic-options-container" data-uuid="${block.id}"></div>
-                  </div>`;
-                  break;
-
-                case "dynamic-text":
-                  blockEl.innerHTML = `
-                  <div class="dynamic-container">
-                    <div class="loading-indicator">Generating text... <span class="loading"></span></div>
-                    <div class="dynamic-text-container" data-uuid="${block.id}"></div>
-                  </div>`;
-                  break;
-
-                case "dynamic-word":
-                  blockEl.innerHTML = `
-                  <div class="dynamic-container">
-                    <div class="loading-indicator">Generating word... <span class="loading"></span></div>
-                    <div class="dynamic-word-container" data-uuid="${block.id}"></div>
-                  </div>`;
-                  break;
-
-                case "scene-header":
-                  blockEl.innerHTML = `<h2>${block.titleName || "Scene"}</h2>`;
-                  break;
-              }
-
+              // Render block based on its type
+              blockEl.innerHTML = this.renderBlockContent(block);
               passageEl.appendChild(blockEl);
+
+              // Add event listeners for interactive blocks
+              if (block.type === "static") {
+                setTimeout(
+                  () => this.attachStaticOptionHandlers(blockEl, block.id),
+                  0
+                );
+              }
             });
 
-            // Add Continue link or End message
-            if (passageIndex < this.passages.length - 1) {
-              const link = document.createElement("div");
+            // Add navigation elements
+            this.addNavigationToPassage(passageEl, passageIndex);
+            container.appendChild(passageEl);
+          },
+
+          renderBlockContent(block) {
+            // Block renderers by type
+            const renderers = {
+              plain: (b) => `<div class="plain">${b.text || ""}</div>`,
+
+              static: (b) => {
+                if (!Array.isArray(b.options))
+                  return '<div class="error">No options provided</div>';
+
+                const optionsHTML = b.options
+                  .map(
+                    (opt, i) =>
+                      `<div class="static-option" data-idx="${i}">${opt}</div>`
+                  )
+                  .join("");
+
+                return `<div class="static-option-container">${optionsHTML}</div>`;
+              },
+
+              "dynamic-option": (b) => `
+                <div class="dynamic-container">
+                  <div class="loading-indicator">Loading dynamic options... <span class="loading"></span></div>
+                  <div class="dynamic-options-container" data-uuid="${b.id}"></div>
+                </div>`,
+
+              "dynamic-text": (b) => `
+                <div class="dynamic-container">
+                  <div class="loading-indicator">Generating text... <span class="loading"></span></div>
+                  <div class="dynamic-text-container" data-uuid="${b.id}"></div>
+                </div>`,
+
+              "dynamic-word": (b) => `
+                <div class="dynamic-container">
+                  <div class="loading-indicator">Generating word... <span class="loading"></span></div>
+                  <div class="dynamic-word-container" data-uuid="${b.id}"></div>
+                </div>`,
+
+              "scene-header": (b) => `<h2>${b.titleName || "Scene"}</h2>`,
+            };
+
+            // Use the appropriate renderer or return an error message
+            const renderer = renderers[block.type];
+            return renderer
+              ? renderer(block)
+              : `<div class="error">Unknown block type: ${block.type}</div>`;
+          },
+
+          attachStaticOptionHandlers(blockEl, blockId) {
+            const options = blockEl.querySelectorAll(".static-option");
+            options.forEach((opt) => {
+              opt.addEventListener("click", () => {
+                this.selectOption(opt, blockId, "static");
+              });
+            });
+          },
+
+          addNavigationToPassage(passageEl, passageIndex) {
+            if (passageIndex < this.state.passages.length - 1) {
+              const navContainer = document.createElement("div");
+              navContainer.className = "navigation-container";
+
               const continueLink = document.createElement("a");
               continueLink.href = "#";
               continueLink.className = "next-link";
               continueLink.innerText = "Continue";
+              continueLink.style.display = "none"; // Initially hidden
+
               continueLink.addEventListener("click", (e) => {
                 e.preventDefault();
                 this.goToNextPassage(passageIndex);
               });
-              link.appendChild(continueLink);
-              passageEl.appendChild(link);
-            } else {
-              const end = document.createElement("div");
-              end.style.marginTop = "30px";
-              end.style.textAlign = "center";
-              end.style.fontStyle = "italic";
-              end.innerText = "The End";
-              passageEl.appendChild(end);
-            }
 
-            container.appendChild(passageEl);
+              navContainer.appendChild(continueLink);
+              passageEl.appendChild(navContainer);
+            } else {
+              const endMessage = document.createElement("div");
+              endMessage.className = "end-message";
+              endMessage.innerText = "The End";
+              passageEl.appendChild(endMessage);
+            }
           },
 
-          // Load dynamic content for a passage
+          // ===== DYNAMIC CONTENT =====
           loadDynamicContentForPassage(passageElement) {
             const dynamicContainers = passageElement.querySelectorAll(
               ".dynamic-options-container, .dynamic-text-container, .dynamic-word-container"
             );
 
             const promises = Array.from(dynamicContainers).map((container) => {
-              let blockType = "";
-
-              if (container.classList.contains("dynamic-options-container")) {
-                blockType = "dynamic-option";
-              } else if (
-                container.classList.contains("dynamic-text-container")
-              ) {
-                blockType = "dynamic-text";
-              } else if (
-                container.classList.contains("dynamic-word-container")
-              ) {
-                blockType = "dynamic-word";
-              }
-
+              let blockType = this.getDynamicContainerType(container);
               return this.fetchDynamicBlock(
                 container.dataset.uuid,
                 blockType,
@@ -228,9 +266,20 @@
             return Promise.all(promises);
           },
 
-          // Fetch dynamic content from server
+          getDynamicContainerType(container) {
+            if (container.classList.contains("dynamic-options-container"))
+              return "dynamic-option";
+            if (container.classList.contains("dynamic-text-container"))
+              return "dynamic-text";
+            if (container.classList.contains("dynamic-word-container"))
+              return "dynamic-word";
+            return "";
+          },
+
           fetchDynamicBlock(blockID, blockType, container) {
-            const blockData = this.projectBlocks.find((b) => b.id === blockID);
+            const blockData = this.state.projectBlocks.find(
+              (b) => b.id === blockID
+            );
 
             if (!blockData) {
               container.innerText = "No block data found";
@@ -241,80 +290,115 @@
               .closest(".dynamic-container")
               .querySelector(".loading-indicator");
 
-            return fetch(this.serverUrl + "/generate-dynamic", {
+            const payload = {
+              message: blockData.prompt || "",
+              playerID: this.config.playerId,
+              blockUUID: blockID,
+              instruction: blockData.prompt || "",
+              contextRefs: (blockData.context || []).filter((ctx) => ctx.value),
+              blockType,
+            };
+
+            return fetch(`${this.config.serverUrl}/generate-dynamic`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                message: blockData.prompt || "",
-                playerID: this.playerId,
-                blockUUID: blockID,
-                instruction: blockData.prompt || "",
-                contextRefs: (blockData.context || []).filter(
-                  (ctx) => ctx.value
-                ),
-                blockType,
-              }),
+              body: JSON.stringify(payload),
             })
-              .then((r) => r.json())
+              .then((response) => {
+                if (!response.ok)
+                  throw new Error(`Server error: ${response.status}`);
+                return response.json();
+              })
               .then((data) => {
                 // Hide loading indicator
                 if (loadingIndicator) loadingIndicator.style.display = "none";
+                this.renderDynamicContent(container, data, blockType, blockID);
 
-                // Handle different dynamic content types
-                if (blockType === "dynamic-option") {
-                  const options = data.reply
-                    .split("\n")
-                    .filter((line) => line.trim() !== "");
-
-                  const optionElements = [];
-
-                  options.forEach((opt, i) => {
-                    const optEl = document.createElement("div");
-                    optEl.className = "static-option";
-                    optEl.dataset.index = i;
-                    optEl.textContent = opt;
-
-                    // Add click event handler
-                    optEl.addEventListener("click", () => {
-                      this.selectOption(optEl, blockID, "dynamic-option");
-                    });
-
-                    optionElements.push(optEl);
-                  });
-
-                  // Clear and append new options
-                  container.innerHTML = "";
-                  optionElements.forEach((opt) => container.appendChild(opt));
-                } else if (blockType === "dynamic-text") {
-                  container.innerHTML = `<div class="dynamic-text-result">${
-                    data.reply || ""
-                  }</div>`;
-                } else if (blockType === "dynamic-word") {
-                  container.innerHTML = `<span class="dynamic-word">${
-                    data.reply || ""
-                  }</span>`;
-                }
+                // After rendering dynamic content, check if we should update continue button
+                this.checkPassageChoicesStatus();
               })
               .catch((err) => {
                 console.error("Error in fetchDynamicBlock:", err);
-                container.innerText = "Error loading dynamic content.";
+                container.innerText = `Error loading dynamic content: ${err.message}`;
                 if (loadingIndicator) loadingIndicator.style.display = "none";
               });
           },
 
-          // Handle option selection (static or dynamic)
+          renderDynamicContent(container, data, blockType, blockID) {
+            const renderers = {
+              "dynamic-option": (container, data, blockID) => {
+                const options = data.reply
+                  .split("\n")
+                  .filter((line) => line.trim() !== "");
+                container.innerHTML = "";
+
+                options.forEach((opt, i) => {
+                  const optEl = document.createElement("div");
+                  optEl.className = "static-option";
+                  optEl.dataset.index = i;
+                  optEl.textContent = opt;
+
+                  optEl.addEventListener("click", () => {
+                    this.selectOption(optEl, blockID, "dynamic-option");
+                  });
+
+                  container.appendChild(optEl);
+                });
+              },
+
+              "dynamic-text": (container, data) => {
+                container.innerHTML = `<div class="dynamic-text-result">${
+                  data.reply || ""
+                }</div>`;
+              },
+
+              "dynamic-word": (container, data) => {
+                container.innerHTML = `<span class="dynamic-word">${
+                  data.reply || ""
+                }</span>`;
+              },
+            };
+
+            const renderer = renderers[blockType];
+            if (renderer) {
+              renderer(container, data, blockID);
+            } else {
+              container.innerHTML = `<div class="error">Unknown dynamic block type: ${blockType}</div>`;
+            }
+          },
+
+          // ===== INTERACTION HANDLING =====
           selectOption(elem, blockID, type) {
             const container = elem.parentElement;
             const allOpts = container.querySelectorAll(".static-option");
 
-            // Update UI
-            allOpts.forEach((o) => {
-              o.classList.add("faded");
-              o.onclick = null; // Disable further clicks
-            });
+            // Mark this selection as already processed
+            if (elem.classList.contains("selected")) {
+              return; // Already processed this selection
+            }
 
-            elem.classList.remove("faded");
+            // Update UI - first mark the selected element
             elem.classList.add("selected");
+
+            // Then fade the other options
+            allOpts.forEach((o) => {
+              if (o !== elem) {
+                o.classList.add("faded");
+                o.onclick = null; // Disable further clicks
+
+                // Listen for the end of the fade animation and remove the element
+                o.addEventListener(
+                  "transitionend",
+                  function () {
+                    if (o.parentElement) {
+                      // Check if still in DOM
+                      o.remove();
+                    }
+                  },
+                  { once: true }
+                );
+              }
+            });
 
             // Extract data
             const chosenText = elem.textContent;
@@ -322,33 +406,127 @@
               type === "static" ? parseInt(elem.dataset.idx) : undefined;
 
             // Record choice on server
-            fetch(this.serverUrl + "/record-choice", {
+            this.recordChoice(
+              blockID,
+              type,
+              chosenIndex,
+              chosenText,
+              Array.from(allOpts).map((x) => x.textContent)
+            );
+
+            // Immediately check if we should show the continue button
+            // Mark the selection as completed right away in the DOM
+            container.dataset.selectionComplete = "true";
+
+            // Force an immediate check for Continue button visibility
+            setTimeout(() => this.checkPassageChoicesStatus(), 0);
+          },
+
+          recordChoice(
+            blockID,
+            blockType,
+            chosenIndex,
+            chosenText,
+            availableOptions
+          ) {
+            fetch(`${this.config.serverUrl}/record-choice`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                playerID: this.playerId,
+                playerID: this.config.playerId,
                 blockUUID: blockID,
-                blockType: type,
-                chosenIndex: chosenIndex,
+                blockType,
+                chosenIndex,
                 chosenText,
-                availableOptions: Array.from(allOpts).map((x) => x.textContent),
+                availableOptions,
               }),
+            }).catch((err) => {
+              this.log("Error recording choice:", err);
             });
           },
 
-          // Navigate to next passage
+          // ===== CONTINUE BUTTON MANAGEMENT =====
+          setupContinueButton(passageEl) {
+            const continueLink = passageEl.querySelector(".next-link");
+            if (!continueLink) return;
+
+            // Check if passage has any option elements
+            const hasOptions = this.passageHasUnselectedOptions(passageEl);
+
+            if (hasOptions) {
+              // Has options - continue will be shown when all are selected
+              // (handled by checkPassageChoicesStatus)
+              continueLink.style.display = "none";
+            } else {
+              // No options to select, show continue after delay
+              setTimeout(() => {
+                continueLink.style.display = "inline-block";
+              }, 5000);
+            }
+          },
+
+          passageHasUnselectedOptions(passageEl) {
+            // Check all option containers
+            const optionContainers = passageEl.querySelectorAll(
+              ".static-option-container, .dynamic-options-container"
+            );
+
+            for (const container of optionContainers) {
+              // Skip containers where a selection has already been made
+              if (container.dataset.selectionComplete === "true") {
+                continue;
+              }
+
+              // If there are any options that haven't been selected
+              const options = container.querySelectorAll(".static-option");
+              if (
+                options.length > 0 &&
+                !container.querySelector(".static-option.selected")
+              ) {
+                return true;
+              }
+            }
+
+            return false;
+          },
+
+          checkPassageChoicesStatus() {
+            const passageEl = document.getElementById(
+              `passage-${this.state.currentPassageIndex}`
+            );
+            if (!passageEl) return;
+
+            const continueLink = passageEl.querySelector(".next-link");
+            if (!continueLink) return;
+
+            // Check if there are any unselected options left
+            const anyUnselectedOptions =
+              this.passageHasUnselectedOptions(passageEl);
+
+            // If no unselected options, show the continue button
+            if (!anyUnselectedOptions) {
+              continueLink.style.display = "inline-block";
+            }
+          },
+
+          // ===== NAVIGATION =====
           goToNextPassage(currIndex) {
-            const currentEl = document.getElementById("passage-" + currIndex);
+            const currentEl = document.getElementById(`passage-${currIndex}`);
             const nextIndex = currIndex + 1;
 
             // Render next passage if it doesn't exist yet
-            if (!document.getElementById("passage-" + nextIndex)) {
+            if (!document.getElementById(`passage-${nextIndex}`)) {
               this.renderPassage(nextIndex);
             }
 
-            const nextEl = document.getElementById("passage-" + nextIndex);
+            const nextEl = document.getElementById(`passage-${nextIndex}`);
             nextEl.style.display = "none";
 
+            // Handle transition
+            this.transitionToNextPassage(currentEl, nextEl, nextIndex);
+          },
+
+          transitionToNextPassage(currentEl, nextEl, nextIndex) {
             // Start fade-out animation on current passage
             if (currentEl) {
               currentEl.classList.add("fade-out");
@@ -377,8 +555,11 @@
               // Show and fade-in next passage
               nextEl.style.display = "";
               nextEl.classList.add("active", "fade-in");
-              this.currentPassageIndex = nextIndex;
+              this.state.currentPassageIndex = nextIndex;
               window.scrollTo(0, 0);
+
+              // Set up the continue button after dynamic content is loaded
+              this.setupContinueButton(nextEl);
 
               // Remove animation class when complete
               nextEl.addEventListener("animationend", function handler() {

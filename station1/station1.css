@@ -100,7 +100,7 @@ h2 {
 }
 
 .static-option {
-    display: block;
+    display: inline;
     padding: 10px;
     margin: 8px 0;
     cursor: pointer;
@@ -110,17 +110,15 @@ h2 {
 }
 
 .static-option:hover {
-    background-color: #f0f0f0;
+    /* background-color: #f0f0f0; */
 }
 
 .static-option.selected {
-    background: var(--selected-bg);
-    border-color: var(--primary-color);
-    font-weight: bold;
+    /* background: var(--selected-bg); */
 }
 
-.static-option.faded {
-    opacity: 0.3;
+.static-option.faded {    
+    opacity: 0;
 }
 
 /* =================== */

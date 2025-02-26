@@ -570,6 +570,290 @@
           "timestamp": "2025-02-26T03:15:43.955Z"
         }
       }
+    },
+    "player_1740540598807_oqf8gfx": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "timestamp": "2025-02-26T03:30:00.437Z"
+        }
+      }
+    },
+    "player_1740540627116_c97zuvv": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 0,
+          "chosenText": "待业",
+          "timestamp": "2025-02-26T03:30:28.131Z"
+        }
+      }
+    },
+    "player_1740540713609_beat0yw": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "timestamp": "2025-02-26T03:31:54.809Z"
+        }
+      }
+    },
+    "player_1740540722921_mj20cs1": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:32:26.646Z"
+        }
+      }
+    },
+    "player_1740541116674_94239dw": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:38:37.780Z"
+        }
+      }
+    },
+    "player_1740541171003_34o5z61": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:39:31.785Z"
+        }
+      }
+    },
+    "player_1740541181970_f7zfqit": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "timestamp": "2025-02-26T03:39:43.122Z"
+        }
+      }
+    },
+    "player_1740541188820_mozavr8": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业"
+          ],
+          "chosenIndex": 0,
+          "chosenText": "待业",
+          "timestamp": "2025-02-26T03:40:02.783Z"
+        }
+      }
+    },
+    "player_1740541205358_32l8cas": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业"
+          ],
+          "chosenIndex": 0,
+          "chosenText": "待业",
+          "timestamp": "2025-02-26T03:40:07.075Z"
+        },
+        "d19d85b7-547a-465a-89d0-6e78b284e8f0": {
+          "blockType": "static",
+          "availableOptions": [
+            "梨花猫",
+            "老鼠",
+            "土狗"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "土狗",
+          "timestamp": "2025-02-26T03:41:04.516Z"
+        },
+        "f1979d17-1fdf-488c-9641-3e683a927374": {
+          "blockType": "static",
+          "availableOptions": [
+            "少生孩子多种树",
+            "时间就是金钱，效率就是生命",
+            "爱护环境，人人有责"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "时间就是金钱，效率就是生命",
+          "timestamp": "2025-02-26T03:41:05.658Z"
+        }
+      }
+    },
+    "player_1740541282190_rtk6i7n": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:41:23.182Z"
+        }
+      }
+    },
+    "player_1740541292629_zgsgnfq": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "timestamp": "2025-02-26T03:41:33.412Z"
+        }
+      }
+    },
+    "player_1740541302635_ox7rgw2": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:41:43.848Z"
+        }
+      }
+    },
+    "player_1740541309491_r3efdag": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:41:50.266Z"
+        }
+      }
+    },
+    "player_1740541329268_7rll8iy": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "下岗"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:42:13.095Z"
+        }
+      }
+    },
+    "player_1740541365081_a2hfw8g": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "timestamp": "2025-02-26T03:42:46.369Z"
+        }
+      }
+    },
+    "player_1740541372261_gnidkdl": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "下岗"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:42:56.714Z"
+        }
+      }
+    },
+    "player_1740541414676_oh9r8g5": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:43:59.461Z"
+        }
+      }
+    },
+    "player_1740541468979_51c4f6b": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "timestamp": "2025-02-26T03:44:30.431Z"
+        }
+      }
     }
   }
 }

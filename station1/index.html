@@ -376,7 +376,12 @@
             if (elem.classList.contains("selected")) {
               return; // Already processed this selection
             }
-
+            // Immediately disable ALL options (including the selected one)
+            allOpts.forEach((opt) => {
+              opt.style.pointerEvents = "none"; // This prevents clicking
+              opt.style.cursor = "default"; // Visual indicator that it's not clickable
+              opt.onclick = null; // Remove click handlers
+            });
             // Update UI - first mark the selected element
             elem.classList.add("selected");
 
@@ -392,7 +397,6 @@
                   function () {
                     if (o.parentElement) {
                       // Check if still in DOM
-                      o.remove();
                     }
                   },
                   { once: true }

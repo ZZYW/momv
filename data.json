@@ -555,6 +555,21 @@
           "timestamp": "2025-02-26T02:24:00.840Z"
         }
       }
+    },
+    "player_1740539743142_gc1urh7": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "timestamp": "2025-02-26T03:15:43.955Z"
+        }
+      }
     }
   }
 }

@@ -1,16 +1,37 @@
+/**
+ * station1.css - Interactive Story Player Styles
+ *
+ * This stylesheet contains all the visual styling for the story player,
+ * including animations, interactive elements, and layout.
+ */
+
+/* ================= */
+/* = CONFIGURATION = */
+/* ================= */
 :root {
+    /* Animation timings */
     --fade-duration: 4s;
-    /* fade-out duration */
     --fade-in-duration: 3s;
-    /* fade-in duration */
+
+    /* Colors */
+    --bg-color: #f9f9f9;
+    --text-color: #333;
+    --primary-color: #1890ff;
+    --primary-hover: #096dd9;
+    --border-color: #ccc;
+    --selected-bg: #e6f7ff;
+    --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
+/* ============== */
+/* = CORE LAYOUT = */
+/* ============== */
 body {
     font-family: serif;
     margin: 0 auto;
     padding: 20px;
     max-width: 800px;
-    background-color: #f9f9f9;
+    background-color: var(--bg-color);
     line-height: 1.6;
 }
 
@@ -19,7 +40,7 @@ body {
     padding: 20px;
     background-color: white;
     border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px var(--shadow-color);
     margin-bottom: 20px;
     transition: opacity var(--fade-duration) ease;
 }
@@ -28,7 +49,9 @@ body {
     display: block;
 }
 
-/* New fade classes */
+/* ============== */
+/* = ANIMATIONS = */
+/* ============== */
 .fade-out {
     opacity: 0;
 }
@@ -47,12 +70,31 @@ body {
     }
 }
 
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================ */
+/* = TEXT CONTENT = */
+/* ================ */
 .plain {
     display: block;
     margin-bottom: 15px;
     font-size: 18px;
 }
 
+h2 {
+    margin-top: 0;
+    color: var(--text-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* ===================== */
+/* = INTERACTIVE OPTIONS = */
+/* ===================== */
 .static-option-container {
     margin: 15px 0;
 }
@@ -62,7 +104,7 @@ body {
     padding: 10px;
     margin: 8px 0;
     cursor: pointer;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     transition: all 0.2s ease;
 }
@@ -72,8 +114,8 @@ body {
 }
 
 .static-option.selected {
-    background: #e6f7ff;
-    border-color: #1890ff;
+    background: var(--selected-bg);
+    border-color: var(--primary-color);
     font-weight: bold;
 }
 
@@ -81,11 +123,14 @@ body {
     opacity: 0.3;
 }
 
+/* =================== */
+/* = DYNAMIC CONTENT = */
+/* =================== */
 .dynamic-container {
     margin: 15px 0;
     padding: 15px;
     border-left: 3px solid #ccc;
-    background-color: #f9f9f9;
+    background-color: var(--bg-color);
 }
 
 .dynamic-text-result {
@@ -98,11 +143,14 @@ body {
     border-bottom: 1px dotted #666;
 }
 
+/* ============== */
+/* = NAVIGATION = */
+/* ============== */
 .next-link {
     display: inline-block;
     margin-top: 20px;
     padding: 8px 16px;
-    background-color: #1890ff;
+    background-color: var(--primary-color);
     color: white;
     text-decoration: none;
     border-radius: 4px;
@@ -111,25 +159,22 @@ body {
 }
 
 .next-link:hover {
-    background-color: #096dd9;
+    background-color: var(--primary-hover);
 }
 
+/* ============== */
+/* = UI ELEMENTS = */
+/* ============== */
 .loading {
     display: inline-block;
     width: 20px;
     height: 20px;
     border: 3px solid rgba(0, 0, 0, 0.2);
     border-radius: 50%;
-    border-top-color: #1890ff;
+    border-top-color: var(--primary-color);
     animation: spin 1s ease-in-out infinite;
     margin-left: 10px;
     vertical-align: middle;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 #status-bar {
@@ -150,11 +195,4 @@ body {
     padding: 20px;
     text-align: center;
     font-weight: bold;
-}
-
-h2 {
-    margin-top: 0;
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
 }

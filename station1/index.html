@@ -113,15 +113,13 @@
                 blockEl.innerHTML = `
                   <div class="dynamic-container">
                     <div class="loading-indicator">Generating text... <span class="loading"></span></div>
-                    <div class="dynamic-text-container" data-uuid="${block.id}"></div>
-                  </div>`;
+                    <div class="dynamic-text-container" data-uuid="${block.id}"></div>`;
                 break;
               case "dynamic-word":
                 blockEl.innerHTML = `
                   <div class="dynamic-container">
                     <div class="loading-indicator">Generating word... <span class="loading"></span></div>
-                    <div class="dynamic-word-container" data-uuid="${block.id}"></div>
-                  </div>`;
+                    <div class="dynamic-word-container" data-uuid="${block.id}"></div>`;
                 break;
               case "scene-header":
                 blockEl.innerHTML = `<h2>${block.titleName || "Scene"}</h2>`;
@@ -152,7 +150,7 @@
           const dynamicContainers = passageElement.querySelectorAll(
             ".dynamic-options-container, .dynamic-text-container, .dynamic-word-container"
           );
-          dynamicContainers.forEach((container) => {
+          const promises = Array.from(dynamicContainers).map((container) => {
             let blockType = "";
             if (container.classList.contains("dynamic-options-container")) {
               blockType = "dynamic-option";
@@ -161,20 +159,25 @@
             } else if (container.classList.contains("dynamic-word-container")) {
               blockType = "dynamic-word";
             }
-            fetchDynamicBlock(container.dataset.uuid, blockType, container);
+            return fetchDynamicBlock(
+              container.dataset.uuid,
+              blockType,
+              container
+            );
           });
+          return Promise.all(promises);
         }
 
         function fetchDynamicBlock(blockID, blockType, container) {
           const blockData = projectBlocks.find((b) => b.id === blockID);
           if (!blockData) {
             container.innerText = "No block data found";
-            return;
+            return Promise.resolve();
           }
           const loadingIndicator = container
             .closest(".dynamic-container")
             .querySelector(".loading-indicator");
-          fetch(SERVER_URL + "/generate-dynamic", {
+          return fetch(SERVER_URL + "/generate-dynamic", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -219,15 +222,35 @@
         window.goToNextPassage = function (currIndex) {
           const currentEl = document.getElementById("passage-" + currIndex);
           const nextIndex = currIndex + 1;
-          if (currentEl) currentEl.classList.remove("active");
-          renderPassage(nextIndex);
+          if (!document.getElementById("passage-" + nextIndex)) {
+            renderPassage(nextIndex);
+          }
           const nextEl = document.getElementById("passage-" + nextIndex);
-          if (nextEl) {
-            nextEl.classList.add("active");
+          nextEl.style.display = "none";
+          if (currentEl) {
+            currentEl.classList.add("fade-out");
+          }
+          // Load dynamic content and then reveal next passage once all fetches return.
+          loadDynamicContentForPassage(nextEl).then(() => {
+            if (currentEl) {
+              currentEl.addEventListener(
+                "transitionend",
+                function handler() {
+                  currentEl.classList.remove("active", "fade-out");
+                  currentEl.style.display = "none";
+                },
+                { once: true }
+              );
+            }
+            nextEl.style.display = "";
+            nextEl.classList.add("active", "fade-in");
             currentPassageIndex = nextIndex;
             window.scrollTo(0, 0);
-            loadDynamicContentForPassage(nextEl);
-          }
+            nextEl.addEventListener("animationend", function handler() {
+              nextEl.classList.remove("fade-in");
+              nextEl.removeEventListener("animationend", handler);
+            });
+          });
         };
 
         // Helper to handle option selection (static or dynamic)

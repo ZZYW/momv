@@ -104,7 +104,35 @@ export const askLLM = async (req, res) => {
         res.json(parsed.final_printed_text);
     } catch (error) {
         console.error("Error calling AI API:", error.message);
-        res.json("Simulated response: I am the AI, but an error occurred.");
+        console.error("Full error details:", error);
+        console.error("Stack trace:", error.stack);
+
+        // For JSON parsing errors, include the problematic text
+        let problematicText = "";
+        if (error instanceof SyntaxError && error.message.includes('JSON')) {
+            try {
+                // 'reply' might not be defined in this scope if the error happened earlier
+                problematicText = typeof reply !== 'undefined' ? reply : "Reply not available";
+                console.error("JSON parsing error. Problematic text:", problematicText);
+            } catch (e) {
+                console.error("Could not access problematic JSON text:", e.message);
+            }
+        }
+
+        // Include response data if available (for API errors)
+        if (error.response) {
+            console.error("API response data:", error.response.data);
+            console.error("API response status:", error.response.status);
+            console.error("API response headers:", error.response.headers);
+        }
+
+        // Return detailed error information to the client
+        res.status(500).json({
+            error: "AI API Error",
+            message: error.message,
+            stack: error.stack,
+            details: error.response?.data || "No additional details available"
+        });
     }
 };
 

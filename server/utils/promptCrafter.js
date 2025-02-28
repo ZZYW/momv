@@ -1,27 +1,62 @@
 import db from '../db.js';
 
 /**
- * Prompt templates for different block types.
+ * Prompt templates for different block types with XML tags.
  * These templates provide the structure for AI prompts and can be easily modified.
  */
 export const PROMPT_TEMPLATES = {
-    "dynamic-option": `You are a creative storyteller. Please generate {optionCount} distinct and compelling options for a story choice. 
-These options should be interesting, diverse, and appropriate for the context.`,
+    "dynamic-option": `<role>你是一位富有创意的故事讲述者</role>
+<task>请生成 {optionCount} 个不同且引人入胜的故事选项。</task>
+<requirements>
+  - 这些选项应该有趣、多样化，并且适合上下文
+  - 每个选项应该简短明了
+  - 每个选项应该代表一个不同的可能性
+  - 所有选项都应该用中文表达
+</requirements>`,
 
-    "dynamic-text": `You are a creative storyteller. Please generate a passage of approximately {sentenceCount} sentences.
-The text should be vivid, engaging, and should fit naturally within the story context.`,
+    "dynamic-text": `<role>你是一位富有创意的故事讲述者</role>
+<task>请生成一段大约 {sentenceCount} 个句子的文本段落。</task>
+<requirements>
+  - 文本应该生动、引人入胜，并且自然地融入故事上下文
+  - 语言应该流畅、富有表现力
+  - 叙述应该符合整体故事的风格和基调
+  - 所有内容都应该用中文表达
+</requirements>`,
 
-    "dynamic-word": `You are a creative storyteller. Please generate a single {lexiconCategory} that fits the story context.
-The word should be expressive, evocative, and relevant to the narrative situation.`
+    "dynamic-word": `<role>你是一位富有创意的故事讲述者</role>
+<task>请生成一个适合故事上下文的 {lexiconCategory}。</task>
+<requirements>
+  - 词语应该表达丰富、富有暗示性，并且与叙述情境相关
+  - 应该选择能够增强故事氛围的词语
+  - 所选词语应该是中文
+</requirements>`
 };
 
 /**
- * JSON response format templates
+ * JSON response format templates with XML instruction tags
  */
 export const FORMAT_TEMPLATES = {
-    "dynamic-option": `{"thinking_process": "your reasoning process here...", "final_printed_text": ["option1", "option2", ...]}`,
-    "dynamic-text": `{"thinking_process": "your reasoning process here...", "final_printed_text": "passage text"}`,
-    "dynamic-word": `{"thinking_process": "your reasoning process here...", "final_printed_text": "word"}`
+    "dynamic-option": `<response_format>
+  请一定要以JSON格式回复。请使用中文！请严格遵循以下格式:
+  {
+    "thinking_process": "你的思考过程...",
+    "final_printed_text": ["选项1", "选项2", ...]
+  }
+</response_format>`,
+    "dynamic-text": `<response_format>
+  请一定要以JSON格式回复。请使用中文！请严格遵循以下格式:
+  {
+    "thinking_process": "你的思考过程...",
+    "final_printed_text": "正文内容"
+  }
+</response_format>`,
+    "dynamic-word": `<response_format>
+  请一定要以JSON格式回复。请使用中文！请严格遵循以下格式:
+  {
+    "thinking_process": "你的思考过程...",
+    "final_printed_text": "词语"
+  }
+</response_format>`
 };
 
 /**
@@ -46,10 +81,9 @@ export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, le
     }
 
     // Add the JSON format instruction
-    const formatPrefix = "\n\n请一定要以JSON格式回复。请使用中文！请严格遵循以下格式:\n\n";
-    const returnFormat = FORMAT_TEMPLATES[blockType] ? `${formatPrefix}${FORMAT_TEMPLATES[blockType]}` : "";
+    const returnFormat = FORMAT_TEMPLATES[blockType] || "";
 
-    return baseInstruction + returnFormat;
+    return baseInstruction + "\n\n" + returnFormat;
 };
 
 /**
@@ -85,28 +119,36 @@ export const fetchContextInfo = async (contextRefs, currentPlayerID) => {
 };
 
 /**
- * Context formatting template
+ * Context formatting template with XML tags
  */
 export const CONTEXT_TEMPLATE = {
-    prefix: "关于玩家之前的一些选择，你需要通过这些来揣测与分析:\n",
-    itemWithChoice: `信息 {index}: 玩家从多个选项中选择了 "{chosenText}"{optionsInfo}`,
-    optionsPrefix: "\n可选项: ",
-    noChoice: `上下文 {index}: 无选择记录`
+    prefix: "\n\n<player_choices>\n  <instruction>关于玩家之前的一些选择，你需要通过这些来揣测与分析:</instruction>",
+    itemWithChoice: `  <choice id="{index}">
+    <selected_option>{chosenText}</selected_option>{optionsInfo}
+  </choice>`,
+    optionsPrefix: "\n    <available_options>",
+    optionsSuffix: "</available_options>",
+    noChoice: `  <choice id="{index}">
+    <no_selection>无选择记录</no_selection>
+  </choice>`,
+    suffix: "\n</player_choices>"
 };
 
 /**
- * Formats context information into a readable string
+ * Formats context information into a readable string with XML tags
  * @param {Array} contextInfo - Array of context objects
- * @returns {string} - Formatted context string
+ * @returns {string} - Formatted context string with XML structure
  */
 export const formatContextString = (contextInfo) => {
     if (!contextInfo || contextInfo.length === 0) return "";
 
-    return CONTEXT_TEMPLATE.prefix + contextInfo.map((ctx, index) => {
+    const formattedItems = contextInfo.map((ctx, index) => {
         if (ctx.chosenText) {
             let optionsInfo = "";
             if (ctx.availableOptions && Array.isArray(ctx.availableOptions)) {
-                optionsInfo = CONTEXT_TEMPLATE.optionsPrefix + ctx.availableOptions.join(", ");
+                optionsInfo = CONTEXT_TEMPLATE.optionsPrefix + 
+                    ctx.availableOptions.join(", ") + 
+                    CONTEXT_TEMPLATE.optionsSuffix;
             }
             return CONTEXT_TEMPLATE.itemWithChoice
                 .replace('{index}', String(index + 1))
@@ -115,26 +157,35 @@ export const formatContextString = (contextInfo) => {
         }
         return CONTEXT_TEMPLATE.noChoice.replace('{index}', String(index + 1));
     }).join("\n");
+    
+    return CONTEXT_TEMPLATE.prefix + "\n" + formattedItems + CONTEXT_TEMPLATE.suffix;
 };
 
 /**
- * Full prompt structure template
+ * Full prompt structure template with XML tags
  */
-export const FULL_PROMPT_TEMPLATE = `{message}
-{contextString}
-
-{instructions}`;
+export const FULL_PROMPT_TEMPLATE = `<prompt>
+  <task>{message}</task>
+  {contextString}
+  <instructions>{instructions}</instructions>
+</prompt>`;
 
 /**
- * Extended prompt structure template with passage context
+ * Extended prompt structure template with passage context and XML tags
  */
-export const EXTENDED_PROMPT_TEMPLATE = `{message}
-
-这是你需要的上下文: {textBeforeDynamic} [!!!!!!final_printed_text will be placed here!!!!!] {textAfterDynamic}
-
-{contextString}
-
-{instructions}`;
+export const EXTENDED_PROMPT_TEMPLATE = `<prompt>
+  <task>{message}</task>
+  
+  <passage_context>
+    <text_before>{textBeforeDynamic}</text_before>
+    <dynamic_placeholder>[!!!!!!final_printed_text will be placed here!!!!!]</dynamic_placeholder>
+    <text_after>{textAfterDynamic}</text_after>
+  </passage_context>
+  
+  {contextString}
+  
+  <instructions>{instructions}</instructions>
+</prompt>`;
 
 /**
  * Crafts a complete prompt for the AI using message, context and instructions

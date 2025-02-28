@@ -12,7 +12,7 @@ This repository contains a multi-service project for creating, editing, and play
 
 - [Node.js](https://nodejs.org/) (v14+ recommended)
 - [pnpm](https://pnpm.io/) (preferred package manager)
-- Bash or Zsh shell (Git Bash for Windows users)
+- For Windows users: [Git Bash](https://gitforwindows.org/) (required for running the start script)
 
 ## Installation
 
@@ -25,7 +25,17 @@ This repository contains a multi-service project for creating, editing, and play
 
 2. **Start the application:**
 
+   **For macOS/Linux users:**
    ```bash
+   ./start.sh
+   ```
+
+   **For Windows users:**
+   ```bash
+   # Open Git Bash and navigate to the project directory
+   cd path/to/momv
+   
+   # Run the start script
    ./start.sh
    ```
 
@@ -37,13 +47,67 @@ This repository contains a multi-service project for creating, editing, and play
    - Start the Editor on port **8766**
    - Open all interfaces in your default browser
 
-## If you do not want to use start.sh...
+## Manual Setup (Windows & macOS/Linux)
 
-You can start each component separately using the following commands:
+If you prefer not to use the start script, you can set up and run each component manually:
 
-1. **Install dependencies first:**
+### For Windows Users
+
+1. **Install dependencies:**
 
    ```bash
+   # Install pnpm (if not already installed)
+   npm install -g pnpm
+
+   # Install http-server globally
+   pnpm add -g http-server
+   
+   # Install backend dependencies
+   cd server
+   pnpm install
+   cd ..
+   ```
+
+2. **Start the backend server:**
+
+   ```bash
+   # Set the API key (required for AI functionality)
+   # In Command Prompt:
+   set DASHSCOPE_API_KEY=your-api-key-here
+   
+   # OR in PowerShell:
+   $env:DASHSCOPE_API_KEY="your-api-key-here"
+   
+   # Start the server
+   node server/index.js
+   ```
+
+3. **In separate terminal windows, start each frontend service:**
+
+   ```bash
+   # Start Editor
+   http-server editor -p 8766
+
+   # Start Station 1
+   http-server station1 -p 8764
+   
+   # Start Station 2
+   http-server station2 -p 8765
+   ```
+
+4. **Manually open the following URLs in your browser:**
+   - Editor: http://localhost:8766
+   - Station 1: http://localhost:8764
+   - Station 2: http://localhost:8765
+
+### For macOS/Linux Users
+
+1. **Install dependencies:**
+
+   ```bash
+   # Install pnpm (if not already installed)
+   npm install -g pnpm
+
    # Install http-server globally
    pnpm add -g http-server
    
@@ -92,34 +156,6 @@ Note: When starting services manually, you'll need to ensure that all required e
   export DASHSCOPE_API_KEY=your-api-key-here
   ```
 
-## Features
-
-### Editor
-
-The block-based editor allows you to:
-- Create plain narrative text blocks
-- Add static options for player choices
-- Create dynamic AI-generated options based on context
-- Generate dynamic text and words through AI
-- Organize content with scene headers
-- Preview and test your story
-- Export projects as JSON
-
-### Story Player
-
-The compiled story player supports:
-- Linear narrative progression
-- Player choices (static and dynamic)
-- AI-generated content based on previous player choices
-- A responsive, mobile-friendly interface
-
-### Backend Server
-
-The server provides:
-- AI content generation via the Dashscope API
-- Data persistence for player choices and story state
-- Story compilation services
-- Context tracking for dynamic content generation
 
 ## Usage
 
@@ -133,15 +169,53 @@ The server provides:
    - A new window will open with your compiled story
 
 3. **Exporting**:
+   - Stuff inside of Editor is saved automatically but if you want to transfer your story to a different browser or machine. then...
    - Use the "Export Project as JSON" button to save your work
 
 ## Troubleshooting
 
-- **Git Bash (Windows)**: If you encounter issues on Windows, ensure you're using Git Bash as specified in the error message.
+### Windows-Specific Issues
 
-- **Port Conflicts**: If any services fail to start, check if the ports are already in use.
+- **Script Won't Run**: If you see "Permission denied" or the script won't run, make sure you're using Git Bash (not Command Prompt or PowerShell) and the script has execute permissions:
+  ```bash
+  chmod +x start.sh
+  ```
+
+- **Environment Variable Not Working**: If AI functionality isn't working on Windows, make sure the environment variable is set correctly:
+  ```
+  # In Command Prompt
+  set DASHSCOPE_API_KEY=your-api-key-here
+  
+  # In PowerShell
+  $env:DASHSCOPE_API_KEY="your-api-key-here"
+  
+  # In Git Bash
+  export DASHSCOPE_API_KEY=your-api-key-here
+  ```
+
+- **Path Issues**: Windows uses backslashes for paths, but the application expects forward slashes. When manually navigating directories, use forward slashes (/) in Git Bash.
+
+### General Issues
+
+- **Port Conflicts**: If any services fail to start, check if the ports are already in use. You can find and kill the processes using these ports:
+  ```bash
+  # Windows (in Command Prompt)
+  netstat -ano | findstr :3001
+  taskkill /PID <PID> /F
+  
+  # macOS/Linux
+  lsof -i :3001
+  kill -9 <PID>
+  ```
 
 - **Missing API Key**: If AI functionality isn't working, ensure the DASHSCOPE_API_KEY environment variable is set.
+
+- **Dependency Issues**: If you see "command not found" errors, make sure Node.js, pnpm, and http-server are properly installed:
+  ```bash
+  node --version
+  pnpm --version
+  http-server --version
+  ```
 
 ## Development Notes
 

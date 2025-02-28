@@ -22,7 +22,7 @@ export const sendPromptToLLM = async (prompt, blockType) => {
     console.log(prompt);
 
     const response = await openai.chat.completions.create({
-        model: "qwen-plus-latest", // Change as needed
+        model: "qwen-max", // Change as needed
         messages: [
             { role: "system", content: "You are a great, nuanced story writer who specializes in creative writing in Chinese." },
             { role: "user", content: prompt }

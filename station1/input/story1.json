@@ -91,7 +91,21 @@
     {
       "id": "bbaa1176-b375-4d8a-bb2d-49478287faca",
       "type": "plain",
-      "text": "近一些的地方好像是个儿童游乐场，里面的旋转木马，碰碰车，溜冰鞋的声音夹杂着电子版老儿歌",
+      "text": "近一些的地方好像是个儿童游乐场，里面的旋转木马，碰碰车，溜冰鞋的声音夹杂着电子版老儿歌与",
+      "sceneId": 3
+    },
+    {
+      "id": "bac12eb4-5648-4423-91e5-28b1a28d82a7",
+      "type": "dynamic-word",
+      "blockName": "",
+      "lexiconCategory": "noun",
+      "prompt": "",
+      "context": [
+        {
+          "value": "d19d85b7-547a-465a-89d0-6e78b284e8f0",
+          "includeAll": false
+        }
+      ],
       "sceneId": 3
     },
     {

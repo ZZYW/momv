@@ -67,46 +67,79 @@
       "sceneId": 2
     },
     {
-      "id": "19d99032-3156-40cd-9a9c-23de251fb7cf",
+      "id": "018504ec-195c-4c49-bc67-ad1c51bca7a5",
+      "type": "scene-header",
+      "titleName": "儿童游乐园",
+      "sceneId": 3
+    },
+    {
+      "id": "faba953c-fba9-4520-a786-c1cb5fb1d125",
+      "type": "plain",
+      "text": "路上的声音似乎也保持着某种介于熟悉和陌生之间的距离。远处传来",
+      "sceneId": 3
+    },
+    {
+      "id": "6e36bd57-6dc1-4800-bbe9-a0efb5fafdc9",
+      "type": "static",
+      "options": [
+        "磨剪子磨菜刀",
+        "破烂儿——换钱",
+        "西瓜包熟包甜，不甜不要钱"
+      ],
+      "sceneId": 3
+    },
+    {
+      "id": "bbaa1176-b375-4d8a-bb2d-49478287faca",
+      "type": "plain",
+      "text": "近一些的地方好像是个儿童游乐场，里面的旋转木马，碰碰车，溜冰鞋的声音夹杂着电子版老儿歌",
+      "sceneId": 3
+    },
+    {
+      "id": "8d5c3f00-2162-4aff-96fc-0a04e7a50ea8",
+      "type": "static",
+      "options": [
+        "眼睛大的像铜铃，散发出，智慧般的精明",
+        "葫芦娃，葫芦娃，一根藤上七朵花",
+        "春天在哪里呀？春天在哪里"
+      ],
+      "sceneId": 3
+    },
+    {
+      "id": "2f799061-29a0-40a7-a01f-206c9542157d",
+      "type": "scene-header",
+      "titleName": "眼保健操",
+      "sceneId": 4
+    },
+    {
+      "id": "4c7620e6-9e72-4028-be0a-8ff442e72bf3",
+      "type": "plain",
+      "text": "马路对面，小吴上过的中学，",
+      "sceneId": 4
+    },
+    {
+      "id": "ade3a2b7-fc86-449e-9312-dce641a388b4",
+      "type": "static",
+      "options": [
+        "实验中学",
+        "第一中学",
+        "第十八中学"
+      ],
+      "sceneId": 4
+    },
+    {
+      "id": "f75ae29e-05d6-4e91-bf80-45224b0e8ae2",
+      "type": "plain",
+      "text": "课间眼保健操那清澈有力的旋律又再耳边响起 “为健康，保护视力，眼保健操，现在开始！第一节，柔精明穴。。。。小吴的思绪回到了中学时期。",
+      "sceneId": 4
+    },
+    {
+      "id": "ef02bd6a-56b1-4f54-9b43-cd92ed4ad2d5",
       "type": "dynamic-text",
-      "blockName": "测试",
-      "sentenceCount": 2,
-      "prompt": "玩家对标语的选择，反应了玩家内心的意识形态和心理状况。根据这些状况，分析成symbolism, 然后根据荣格的心理学，将这个心理状态实体化。『小吴转过头，看到_____』这个模板。",
-      "context": [
-        {
-          "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
-          "includeAll": false
-        }
-      ],
-      "sceneId": 2
-    },
-    {
-      "id": "3180c8e3-27e0-4883-a1ae-f34c581ae4d5",
-      "type": "dynamic-word",
       "blockName": "",
-      "lexiconCategory": "noun",
-      "prompt": "根据这个选择",
-      "context": [
-        {
-          "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
-          "includeAll": false
-        }
-      ],
-      "sceneId": 2
-    },
-    {
-      "id": "33dd99b1-2325-4b56-bbb2-32492d2c6dbb",
-      "type": "dynamic-option",
-      "blockName": "xxx",
-      "optionCount": 3,
-      "prompt": "写三个选项，每个选项是根据语境加上德勒兹和挂塔里的理论分析出来的新的symbolism。",
-      "context": [
-        {
-          "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
-          "includeAll": false
-        }
-      ],
-      "sceneId": 2
+      "sentenceCount": 6,
+      "prompt": "因为目前没有真实的玩家，请你假设玩家做出了某些选择。\n根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n结合对玩家的分析，用白描的方式，陈述出主人公回忆中中学时期的一系列行为，以及它周围的可能出现的人的行为，和环境的变化。\n",
+      "context": [],
+      "sceneId": 4
     }
   ]
 }

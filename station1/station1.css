@@ -16,6 +16,7 @@
     /* Colors */
     --bg-color: #f9f9f9;
     --text-color: #333;
+    --option-color: #69801d;
     --primary-color: #1890ff;
     --primary-hover: #096dd9;
     --border-color: #ccc;
@@ -31,6 +32,7 @@ body {
     margin: 0 auto;
     padding: 20px;
     max-width: 800px;
+    font-size: 18px;
     background-color: var(--bg-color);
     line-height: 1.6;
 }
@@ -82,7 +84,6 @@ body {
 .plain {
     display: block;
     margin-bottom: 15px;
-    font-size: 18px;
 }
 
 h2 {
@@ -97,27 +98,64 @@ h2 {
 /* ===================== */
 .static-option-container {
     margin: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 5px;
 }
 
+/* Options with glow effect */
 .static-option {
     display: inline;
-    padding: 10px;
     margin: 8px 0;
     cursor: pointer;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    transition: all 0.2s ease;
+    color: var(--option-color);
+    text-decoration: underline;
+    transition: all 0.2s ease, opacity 3s ease, text-shadow 0.3s ease;
+    /* Add subtle glow effect */
+    text-shadow: 0 0 2px rgba(105, 128, 29, 0.3);
+    /* Add a slight pulse animation */
+    animation: gentle-pulse 2s infinite alternate;
+}
+
+@keyframes gentle-pulse {
+    from {
+        text-shadow: 0 0 2px rgba(105, 128, 29, 0.3);
+    }
+    to {
+        text-shadow: 0 0 8px rgba(105, 128, 29, 0.6);
+    }
 }
 
 .static-option:hover {
-    /* background-color: #f0f0f0; */
+    color: var(--text-color);
+    text-shadow: 0 0 10px rgba(105, 128, 29, 0.8);
 }
 
+/* When selected, make it look like normal text */
 .static-option.selected {
-    /* background: var(--selected-bg); */
+    color: var(--text-color);
+    text-decoration: none;
+    text-shadow: none;
+    animation: none;
 }
 
-.static-option.faded {    
+.static-option.faded {
+    opacity: 0;
+}
+
+/* Style for the divider between options */
+.option-divider {
+    display: inline;
+    margin: 0 5px;
+    color: var(--text-color);
+    opacity: 0.5;
+    font-weight: normal;
+    transition: opacity 3s ease;
+}
+
+/* Make dividers fade out when options are selected */
+.option-divider.faded {
     opacity: 0;
 }
 

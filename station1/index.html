@@ -175,12 +175,15 @@
                 if (!Array.isArray(b.options))
                   return '<div class="error">No options provided</div>';
 
-                const optionsHTML = b.options
-                  .map(
-                    (opt, i) =>
-                      `<div class="static-option" data-idx="${i}">${opt}</div>`
-                  )
-                  .join("");
+                // Create options with dividers
+                let optionsHTML = '';
+                b.options.forEach((opt, i) => {
+                  if (i > 0) {
+                    // Add a divider before all options except the first one
+                    optionsHTML += `<div class="option-divider">/</div>`;
+                  }
+                  optionsHTML += `<div class="static-option" data-idx="${i}">${opt}</div>`;
+                });
 
                 return `<div class="static-option-container">${optionsHTML}</div>`;
               },
@@ -334,6 +337,14 @@
                 container.innerHTML = "";
 
                 options.forEach((opt, i) => {
+                  // Add divider before all options except the first one
+                  if (i > 0) {
+                    const dividerEl = document.createElement("div");
+                    dividerEl.className = "option-divider";
+                    dividerEl.textContent = "/";
+                    container.appendChild(dividerEl);
+                  }
+                  
                   const optEl = document.createElement("div");
                   optEl.className = "static-option";
                   optEl.dataset.index = i;
@@ -386,7 +397,7 @@
             // Update UI - first mark the selected element
             elem.classList.add("selected");
 
-            // Then fade the other options
+            // Then fade the other options and dividers
             allOpts.forEach((o) => {
               if (o !== elem) {
                 o.classList.add("faded");
@@ -403,6 +414,12 @@
                   { once: true }
                 );
               }
+            });
+            
+            // Find and fade all dividers
+            const dividers = container.querySelectorAll(".option-divider");
+            dividers.forEach(divider => {
+              divider.classList.add("faded");
             });
 
             // Extract data

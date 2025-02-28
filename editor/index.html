@@ -72,6 +72,26 @@
         width: 100%;
         box-sizing: border-box;
         overflow: hidden;
+        min-height: 40px; /* Minimum height for all textareas */
+      }
+
+      /* Auto-expanding textarea style */
+      .auto-resize {
+        overflow: hidden;
+        height: auto;
+      }
+      
+      /* Scrollable textarea style for dynamic blocks */
+      .scrollable-textarea {
+        overflow-y: auto !important;
+        resize: vertical !important;
+        min-height: 120px;
+        font-family: var(--font-family-narrative);
+        font-size: 14px;
+        line-height: 1.4;
+        padding: 8px;
+        border: 1px solid var(--color-border-input);
+        border-radius: 4px;
       }
 
       /* ---------------------------------------------------
@@ -301,9 +321,10 @@
           <br />
           <textarea
             v-model="block.prompt"
-            v-auto-resize
-            rows="2"
+            class="scrollable-textarea"
+            rows="8"
             placeholder="Enter prompt text..."
+            style="overflow-y: auto; resize: vertical; height: 120px;"
           ></textarea>
         </div>
         <!-- Unified Context Section -->
@@ -494,6 +515,11 @@
         directives: {
           autoResize: {
             mounted(el) {
+              // Don't auto-resize if it's a scrollable textarea
+              if (el.classList.contains('scrollable-textarea')) {
+                return;
+              }
+              
               el.style.overflow = "hidden";
               const resize = () => {
                 el.style.height = "auto";
@@ -503,6 +529,11 @@
               el.addEventListener("input", resize);
             },
             updated(el) {
+              // Don't auto-resize if it's a scrollable textarea
+              if (el.classList.contains('scrollable-textarea')) {
+                return;
+              }
+              
               el.style.height = "auto";
               el.style.height = el.scrollHeight + "px";
             },

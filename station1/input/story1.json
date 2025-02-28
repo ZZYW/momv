@@ -99,7 +99,7 @@
       "type": "dynamic-option",
       "blockName": "xxx",
       "optionCount": 3,
-      "prompt": "每个选择都是玩家心灵的镜子",
+      "prompt": "写三个选项，每个选项是根据语境加上德勒兹和挂塔里的理论分析出来的新的symbolism。",
       "context": [
         {
           "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",

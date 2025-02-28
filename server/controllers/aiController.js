@@ -1,123 +1,110 @@
 import axios from "axios";
-import db from '../db.js';
+import db from "../db.js";
+
+// Generate instructions based on block type and properties.
+const getBlockInstructions = ({ blockType, optionCount, sentenceCount, lexiconCategory }) => {
+    let baseInstruction = "";
+    if (blockType === "dynamic-option" && optionCount) {
+        baseInstruction = `Generate ${optionCount} distinct options.`;
+    } else if (blockType === "dynamic-text" && sentenceCount) {
+        baseInstruction = `Generate a passage of approximately ${sentenceCount} sentences.`;
+    } else if (blockType === "dynamic-word" && lexiconCategory) {
+        baseInstruction = `Generate a single ${lexiconCategory}.`;
+    }
+    // Append expected JSON return format instruction.
+    let returnFormat = "";
+    const formatPrefix = "请把结果作为一个JSON Object返回. 请说中文！请严格的遵从这个schema\n\n"
+    if (blockType === "dynamic-option") {
+        returnFormat = `${formatPrefix}{"thinking_process": "since...", "final_printed_text": ["option1", "option2", ...]}.`;
+    } else if (blockType === "dynamic-word") {
+        returnFormat = `${formatPrefix}{"thinking_process": "since...", "final_printed_text": "word"}.`;
+    } else if (blockType === "dynamic-text") {
+        returnFormat = `${formatPrefix}{"thinking_process": "since...", "final_printed_text": "passage text"}.`;
+    }
+    return baseInstruction + returnFormat;
+};
+
+// Retrieve context information in a human-friendly format.
+const fetchContextInfo = async (contextRefs, currentPlayerID) => {
+    await db.read();
+    const contextInfo = [];
+    const players = db.data.players || {};
+
+    for (const contextRef of contextRefs) {
+        const blockId = contextRef.value;
+        const includeAll = contextRef.includeAll === true;
+        if (!blockId) continue;
+
+        if (includeAll) {
+            for (const playerId in players) {
+                const playerChoices = players[playerId].choices || {};
+                if (playerChoices[blockId]) {
+                    const { availableOptions, chosenText } = playerChoices[blockId];
+                    contextInfo.push({ availableOptions, chosenText });
+                }
+            }
+        } else if (players[currentPlayerID]?.choices?.[blockId]) {
+            const { availableOptions, chosenText } = players[currentPlayerID].choices[blockId];
+            contextInfo.push({ availableOptions, chosenText });
+        }
+    }
+    return contextInfo;
+};
 
 export const askLLM = async (req, res) => {
     const {
         message,
         playerID,
-        blockUUID,
         contextRefs,
         blockType,
-        // Extract these properties from the request
         optionCount,
         sentenceCount,
         lexiconCategory
     } = req.body;
 
-    // Build enhanced prompt with context from previous choices
-    let enhancedPrompt = message;
+    // Construct the payload as a JSON object with a human-friendly structure.
+    const payload = {
+        message,
+        instructions: getBlockInstructions({ blockType, optionCount, sentenceCount, lexiconCategory })
+    };
 
-    // Add block-specific instructions based on type and properties
-    if (blockType === 'dynamic-option' && optionCount) {
-        enhancedPrompt += `\n\nPlease generate ${optionCount} distinct options.`;
-    } else if (blockType === 'dynamic-text' && sentenceCount) {
-        enhancedPrompt += `\n\nPlease generate a response of approximately ${sentenceCount} sentences.`;
-    } else if (blockType === 'dynamic-word' && lexiconCategory) {
-        enhancedPrompt += `\n\nPlease generate a single ${lexiconCategory}.`;
-    }
-
-
+    // Append human-friendly context if available.
     if (contextRefs && contextRefs.length > 0) {
-        await db.read();
-        let contextInfo = [];
-
-        for (const contextRef of contextRefs) {
-            // Extract the block ID and includeAll flag
-            const blockId = contextRef.value;
-            const includeAll = contextRef.includeAll === true;
-
-            if (!blockId) continue; // Skip if no valid block ID
-
-            const players = db.data.players || {};
-
-            if (includeAll) {
-                // Include choices from all players for this block
-                for (const playerId in players) {
-                    const playerChoices = players[playerId].choices || {};
-                    if (playerChoices[blockId]) {
-                        const choice = playerChoices[blockId];
-                        contextInfo.push({
-                            playerId,
-                            blockId,
-                            availableOptions: choice.availableOptions,
-                            chosenIndex: choice.chosenIndex,
-                            chosenText: choice.chosenText
-                        });
-                    }
-                }
-            } else {
-                // Only include the current player's choice
-                if (players[playerID] && players[playerID].choices && players[playerID].choices[blockId]) {
-                    const choice = players[playerID].choices[blockId];
-                    contextInfo.push({
-                        playerId: playerID,
-                        blockId,
-                        availableOptions: choice.availableOptions,
-                        chosenIndex: choice.chosenIndex,
-                        chosenText: choice.chosenText
-                    });
-                }
-            }
-        }
-
-        // Add context information to the prompt
+        const contextInfo = await fetchContextInfo(contextRefs, playerID);
         if (contextInfo.length > 0) {
-            enhancedPrompt += "\n\n--- PLAYER CHOICE CONTEXT ---\n";
-
-            if (contextInfo.length === 1) {
-                const ctx = contextInfo[0];
-                enhancedPrompt += `When presented with choices: ${ctx.availableOptions.join(", ")}, the player chose "${ctx.chosenText}" (option ${ctx.chosenIndex + 1}).\n`;
-            } else {
-                enhancedPrompt += "Multiple player choices:\n";
-                contextInfo.forEach((ctx, index) => {
-                    enhancedPrompt += `Player ${index + 1}: When presented with choices: ${ctx.availableOptions.join(", ")}, chose "${ctx.chosenText}" (option ${ctx.chosenIndex + 1}).\n`;
-                });
-            }
-
-            enhancedPrompt += "--- END CONTEXT ---\n\nPlease consider this context in your response.";
+            payload.context = contextInfo;
         }
     }
 
-    console.log(`sending message to llm:`)
-    console.log(enhancedPrompt)
+    console.log("Sending payload to LLM:");
+    console.log(JSON.stringify(payload, null, 2));
 
     try {
         const apiKey = process.env.DASHSCOPE_API_KEY;
-
         const response = await axios.post(
             "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
             {
                 model: "qwen-turbo",
                 messages: [
                     { role: "system", content: "You are a great, nuanced story writer" },
-                    { role: "user", content: enhancedPrompt }
+                    // Send the payload as a JSON string.
+                    { role: "user", content: JSON.stringify(payload) }
                 ]
             },
             {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`
+                    Authorization: `Bearer ${apiKey}`
                 }
             }
         );
-
         const reply =
-            response.data?.choices &&
-            response.data.choices[0].message?.content ||
-            "No reply received";
-        res.json({ reply });
+            response.data?.choices?.[0]?.message?.content || "No reply received";
+        console.log(`returned result:----\n${reply}\n----\n\n`)
+        const parsed = JSON.parse(reply)
+        res.json(parsed.final_printed_text);
     } catch (error) {
         console.error("Error calling AI API:", error.message);
-        res.json({ reply: "Simulated response: I am the AI, but an error occurred." });
+        res.json("Simulated response: I am the AI, but an error occurred.");
     }
 };

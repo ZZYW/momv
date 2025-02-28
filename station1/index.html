@@ -330,9 +330,7 @@
           renderDynamicContent(container, data, blockType, blockID) {
             const renderers = {
               "dynamic-option": (container, data, blockID) => {
-                const options = data.reply
-                  .split("\n")
-                  .filter((line) => line.trim() !== "");
+                const options = Array.isArray(data) ? data : ["?", "?", "?"];
                 container.innerHTML = "";
 
                 options.forEach((opt, i) => {
@@ -351,13 +349,13 @@
 
               "dynamic-text": (container, data) => {
                 container.innerHTML = `<div class="dynamic-text-result">${
-                  data.reply || ""
+                  data || ""
                 }</div>`;
               },
 
               "dynamic-word": (container, data) => {
                 container.innerHTML = `<span class="dynamic-word">${
-                  data.reply || ""
+                  data || ""
                 }</span>`;
               },
             };

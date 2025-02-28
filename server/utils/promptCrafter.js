@@ -5,7 +5,7 @@ import db from '../db.js';
  * These templates provide the structure for AI prompts and can be easily modified.
  */
 export const PROMPT_TEMPLATES = {
-    "dynamic-option": `<role>你是一位富有创意的故事讲述者</role>
+    "dynamic-option": `<role>你是一位擅长隐喻，符号主义，神秘学和心理分析的当代小说家</role>
 <task>请生成 {optionCount} 个不同且引人入胜的故事选项。</task>
 <requirements>
   - 这些选项应该有趣、多样化，并且适合上下文
@@ -14,7 +14,7 @@ export const PROMPT_TEMPLATES = {
   - 所有选项都应该用中文表达
 </requirements>`,
 
-    "dynamic-text": `<role>你是一位富有创意的故事讲述者</role>
+    "dynamic-text": `<role>你是一位擅长隐喻，符号主义，神秘学和心理分析的当代小说家</role>
 <task>请生成一段大约 {sentenceCount} 个句子的文本段落。</task>
 <requirements>
   - 文本应该生动、引人入胜，并且自然地融入故事上下文
@@ -23,7 +23,7 @@ export const PROMPT_TEMPLATES = {
   - 所有内容都应该用中文表达
 </requirements>`,
 
-    "dynamic-word": `<role>你是一位富有创意的故事讲述者</role>
+    "dynamic-word": `<role>你是一位擅长隐喻，符号主义，神秘学和心理分析的当代小说家</role>
 <task>请生成一个适合故事上下文的 {lexiconCategory}。</task>
 <requirements>
   - 词语应该表达丰富、富有暗示性，并且与叙述情境相关
@@ -122,7 +122,7 @@ export const fetchContextInfo = async (contextRefs, currentPlayerID) => {
  * Context formatting template with XML tags
  */
 export const CONTEXT_TEMPLATE = {
-    prefix: "\n\n<player_choices>\n  <instruction>关于玩家之前的一些选择，你需要通过这些来揣测与分析:</instruction>",
+    prefix: "\n\n<player_choices>\n  <instruction>关于玩家之前的一些选择。这些选择永远不是字面的意思。它们都是隐喻与符号主义。所以请深入的去解构再重构。请记住，千万不要在你最终的写作中原封不动的出现这些选择！！！</instruction>",
     itemWithChoice: `  <choice id="{index}">
     <selected_option>{chosenText}</selected_option>{optionsInfo}
   </choice>`,
@@ -146,8 +146,8 @@ export const formatContextString = (contextInfo) => {
         if (ctx.chosenText) {
             let optionsInfo = "";
             if (ctx.availableOptions && Array.isArray(ctx.availableOptions)) {
-                optionsInfo = CONTEXT_TEMPLATE.optionsPrefix + 
-                    ctx.availableOptions.join(", ") + 
+                optionsInfo = CONTEXT_TEMPLATE.optionsPrefix +
+                    ctx.availableOptions.join(", ") +
                     CONTEXT_TEMPLATE.optionsSuffix;
             }
             return CONTEXT_TEMPLATE.itemWithChoice
@@ -157,7 +157,7 @@ export const formatContextString = (contextInfo) => {
         }
         return CONTEXT_TEMPLATE.noChoice.replace('{index}', String(index + 1));
     }).join("\n");
-    
+
     return CONTEXT_TEMPLATE.prefix + "\n" + formattedItems + CONTEXT_TEMPLATE.suffix;
 };
 

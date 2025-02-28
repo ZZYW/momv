@@ -98,8 +98,7 @@ export const askLLM = async (req, res) => {
                 }
             }
         );
-        const reply =
-            response.data?.choices?.[0]?.message?.content || "No reply received";
+        const reply = cleanMessage(response.data?.choices?.[0]?.message?.content || "No reply received");
         console.log(`returned result:----\n${reply}\n----\n\n`)
         const parsed = JSON.parse(reply)
         res.json(parsed.final_printed_text);
@@ -108,3 +107,14 @@ export const askLLM = async (req, res) => {
         res.json("Simulated response: I am the AI, but an error occurred.");
     }
 };
+
+/**
+ * Removes markdown code fences (including optional language names) from the input text.
+ * @param {string} message - The text potentially containing markdown code fences.
+ * @returns {string} - The cleaned text without markdown code fences.
+ */
+function cleanMessage(message) {
+    // Remove lines that start with triple backticks followed optionally by a language name.
+    // This regex matches the opening code fence (e.g., ```javascript) and the closing fence (```).
+    return message.replace(/```[\w]*\n?/g, "").replace(/```/g, "");
+}

@@ -19,7 +19,7 @@ export const sendPromptToLLM = async (prompt, blockType) => {
     const response = await axios.post(
         "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
         {
-            model: "qwen-turbo",
+            model: "qwen-max",
             messages: [
                 { role: "system", content: "You are a great, nuanced story writer who specializes in creative writing in Chinese." },
                 { role: "user", content: prompt }

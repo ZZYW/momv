@@ -296,13 +296,15 @@
             const payload = {
               message: blockData.prompt || "",
               playerID: this.config.playerId,
-              blockUUID: blockID,
+              blockId: blockID,
+              blockUUID: blockID, // keeping for backward compatibility
               instruction: blockData.prompt || "",
               contextRefs: (blockData.context || []).filter((ctx) => ctx.value),
               blockType,
               optionCount: blockData.optionCount,
               sentenceCount: blockData.sentenceCount,
               lexiconCategory: blockData.lexiconCategory,
+              storyId: "1" // Currently hard-coded for story1.json
             };
 
             return fetch(`${this.config.serverUrl}/generate-dynamic`, {

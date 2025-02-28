@@ -88,8 +88,8 @@ export const fetchContextInfo = async (contextRefs, currentPlayerID) => {
  * Context formatting template
  */
 export const CONTEXT_TEMPLATE = {
-    prefix: "\n\n上下文信息:\n",
-    itemWithChoice: `上下文 {index}: 玩家从多个选项中选择了 "{chosenText}"{optionsInfo}`,
+    prefix: "关于玩家之前的一些选择，你需要通过这些来揣测与分析:\n",
+    itemWithChoice: `信息 {index}: 玩家从多个选项中选择了 "{chosenText}"{optionsInfo}`,
     optionsPrefix: "\n可选项: ",
     noChoice: `上下文 {index}: 无选择记录`
 };
@@ -126,13 +126,36 @@ export const FULL_PROMPT_TEMPLATE = `{message}
 {instructions}`;
 
 /**
+ * Extended prompt structure template with passage context
+ */
+export const EXTENDED_PROMPT_TEMPLATE = `{message}
+
+这是你需要的上下文: {textBeforeDynamic} [!!!!!!final_printed_text will be placed here!!!!!] {textAfterDynamic}
+
+{contextString}
+
+{instructions}`;
+
+/**
  * Crafts a complete prompt for the AI using message, context and instructions
  * @param {string} message - The main message/prompt
  * @param {string} contextString - Formatted context string
  * @param {string} instructions - Block-specific instructions
+ * @param {Object} [passageContext] - The surrounding passage context (optional)
+ * @param {string} passageContext.textBeforeDynamic - Text that comes before the dynamic block
+ * @param {string} passageContext.textAfterDynamic - Text that comes after the dynamic block
  * @returns {string} - Complete prompt for the AI
  */
-export const craftPrompt = (message, contextString, instructions) => {
+export const craftPrompt = (message, contextString, instructions, passageContext) => {
+    if (passageContext && passageContext.textBeforeDynamic !== undefined) {
+        return EXTENDED_PROMPT_TEMPLATE
+            .replace('{message}', message || "")
+            .replace('{textBeforeDynamic}', passageContext.textBeforeDynamic || "")
+            .replace('{textAfterDynamic}', passageContext.textAfterDynamic || "")
+            .replace('{contextString}', contextString)
+            .replace('{instructions}', instructions);
+    }
+
     return FULL_PROMPT_TEMPLATE
         .replace('{message}', message || "")
         .replace('{contextString}', contextString)

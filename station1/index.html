@@ -407,8 +407,9 @@
 
             // Extract data
             const chosenText = elem.textContent;
-            const chosenIndex =
-              type === "static" ? parseInt(elem.dataset.idx) : undefined;
+            const chosenIndex = type === "static" 
+              ? parseInt(elem.dataset.idx) 
+              : parseInt(elem.dataset.index);
 
             // Record choice on server
             this.recordChoice(
@@ -434,6 +435,11 @@
             chosenText,
             availableOptions
           ) {
+            // Find the block data to get instruction and context blocks
+            const blockData = this.state.projectBlocks.find(b => b.id === blockID);
+            const instruction = blockData?.prompt || "";
+            const contextBlocks = (blockData?.context || []).filter(ctx => ctx.value);
+            
             fetch(`${this.config.serverUrl}/record-choice`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -444,6 +450,8 @@
                 chosenIndex,
                 chosenText,
                 availableOptions,
+                instruction,
+                contextBlocks
               }),
             }).catch((err) => {
               this.log("Error recording choice:", err);

@@ -37,6 +37,10 @@ body {
     line-height: 1.6;
 }
 
+#passage-container {
+    position: relative;
+}
+
 .passage {
     display: none;
     padding: 20px;
@@ -60,6 +64,8 @@ body {
 
 .fade-in {
     animation: fadeIn var(--fade-in-duration) forwards;
+    position: relative;
+    z-index: 2;
 }
 
 @keyframes fadeIn {

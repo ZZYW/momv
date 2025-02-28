@@ -564,38 +564,31 @@
 
             // Load dynamic content and handle transition
             this.loadDynamicContentForPassage(nextEl).then(() => {
-              // Complete fade-out of current passage
-              if (currentEl) {
-                const handleTransitionEnd = () => {
-                  currentEl.classList.remove("active", "fade-out");
-                  currentEl.style.display = "none";
-                  currentEl.removeEventListener(
-                    "transitionend",
-                    handleTransitionEnd
-                  );
-                };
-
-                currentEl.addEventListener(
-                  "transitionend",
-                  handleTransitionEnd,
-                  { once: true }
-                );
-              }
-
-              // Show and fade-in next passage
-              nextEl.style.display = "";
-              nextEl.classList.add("active", "fade-in");
-              this.state.currentPassageIndex = nextIndex;
+              // Scroll to top immediately
               window.scrollTo(0, 0);
-
-              // Set up the continue button after dynamic content is loaded
-              this.setupContinueButton(nextEl);
-
-              // Remove animation class when complete
-              nextEl.addEventListener("animationend", function handler() {
-                nextEl.classList.remove("fade-in");
-                nextEl.removeEventListener("animationend", handler);
-              });
+              
+              // Simple approach: After fade-out completes, hide current and show next
+              setTimeout(() => {
+                if (currentEl) {
+                  // Hide current passage
+                  currentEl.classList.remove("active");
+                  currentEl.style.display = "none";
+                  currentEl.classList.remove("fade-out");
+                }
+                
+                // Show next passage with fade-in
+                nextEl.style.display = "block";
+                nextEl.classList.add("active", "fade-in");
+                this.state.currentPassageIndex = nextIndex;
+                
+                // Set up the continue button
+                this.setupContinueButton(nextEl);
+                
+                // Clean up animation classes after fade-in completes
+                setTimeout(() => {
+                  nextEl.classList.remove("fade-in");
+                }, 3000); // Match the CSS animation duration (3s)
+              }, 1000); // Wait for fade-out to complete (adjust if needed)
             });
           },
         }));

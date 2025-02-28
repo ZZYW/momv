@@ -1154,6 +1154,131 @@
           "timestamp": "2025-02-28T03:11:12.700Z"
         }
       }
+    },
+    "player_1740715631475_18obl0q": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 0,
+          "chosenText": "待业",
+          "instruction": "",
+          "contextBlocks": [],
+          "timestamp": "2025-02-28T04:07:12.731Z"
+        }
+      }
+    },
+    "player_1740715643682_7se3g6y": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "instruction": "",
+          "contextBlocks": [],
+          "timestamp": "2025-02-28T04:07:24.583Z"
+        },
+        "f1979d17-1fdf-488c-9641-3e683a927374": {
+          "blockType": "static",
+          "availableOptions": [
+            "少生孩子多种树",
+            "时间就是金钱，效率就是生命",
+            "爱护环境，人人有责"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "时间就是金钱，效率就是生命",
+          "instruction": "",
+          "contextBlocks": [],
+          "timestamp": "2025-02-28T04:08:08.069Z"
+        }
+      }
+    },
+    "player_1740715689634_jlapbh4": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 2,
+          "chosenText": "未婚",
+          "instruction": "",
+          "contextBlocks": [],
+          "timestamp": "2025-02-28T04:08:18.073Z"
+        }
+      }
+    },
+    "player_1740715733605_qn4pyrs": {
+      "choices": {
+        "068eb2e8-8bbf-4490-8648-b3a3d427fbf0": {
+          "blockType": "static",
+          "availableOptions": [
+            "待业",
+            "下岗",
+            "未婚"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "下岗",
+          "instruction": "",
+          "contextBlocks": [],
+          "timestamp": "2025-02-28T04:08:54.116Z"
+        },
+        "f1979d17-1fdf-488c-9641-3e683a927374": {
+          "blockType": "static",
+          "availableOptions": [
+            "少生孩子多种树",
+            "时间就是金钱，效率就是生命",
+            "爱护环境，人人有责"
+          ],
+          "chosenIndex": 0,
+          "chosenText": "少生孩子多种树",
+          "instruction": "",
+          "contextBlocks": [],
+          "timestamp": "2025-02-28T04:09:05.735Z"
+        },
+        "d19d85b7-547a-465a-89d0-6e78b284e8f0": {
+          "blockType": "static",
+          "availableOptions": [
+            "梨花猫",
+            "老鼠",
+            "土狗"
+          ],
+          "chosenIndex": 1,
+          "chosenText": "老鼠",
+          "instruction": "",
+          "contextBlocks": [],
+          "timestamp": "2025-02-28T04:09:06.301Z"
+        },
+        "33dd99b1-2325-4b56-bbb2-32492d2c6dbb": {
+          "blockType": "dynamic-option",
+          "availableOptions": [
+            "解域化的工人：象征着一个从固定社会结构中解放出来的个体，开始探索新的可能性。",
+            "流浪的信号：象征着一个不断移动、寻找新定位的个体，不再被固定的职位所限制。",
+            "无根的游牧者：象征着一个脱离了传统社会秩序的个体，寻求在新的环境中建立新的身份和联系。"
+          ],
+          "chosenIndex": 0,
+          "chosenText": "解域化的工人：象征着一个从固定社会结构中解放出来的个体，开始探索新的可能性。",
+          "instruction": "写三个选项，每个选项是根据语境加上德勒兹和挂塔里的理论分析出来的新的symbolism。",
+          "contextBlocks": [
+            {
+              "value": "068eb2e8-8bbf-4490-8648-b3a3d427fbf0",
+              "includeAll": false
+            }
+          ],
+          "timestamp": "2025-02-28T04:09:07.267Z"
+        }
+      }
     }
   }
 }

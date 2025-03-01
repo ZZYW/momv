@@ -137,7 +137,7 @@ if [ -f "$SERVER_PATH" ]; then
     SERVER_PIDS+=($!)
     
     # Give the backend server time to start
-    sleep 2
+    sleep 1
     
     # Check if backend started successfully
     if ! check_port $BACKEND_PORT; then

@@ -160,8 +160,7 @@ export const formatContextString = (contextInfo) => {
  * @param {string} contextString - Formatted context string
  * @param {string} instructions - Block-specific instructions
  * @param {Object} [passageContext] - The surrounding passage context (optional)
- * @param {string} passageContext.textBeforeDynamic - Text that comes before the dynamic block
- * @param {string} passageContext.textAfterDynamic - Text that comes after the dynamic block
+ * @param {string} passageContext.textBeforeDynamic - All text from the story shown before this dynamic block (from all previous scenes/passages)
  * @returns {string} - Complete prompt in natural language
  */
 export const craftPrompt = (message, contextString, instructions, passageContext) => {
@@ -169,7 +168,6 @@ export const craftPrompt = (message, contextString, instructions, passageContext
     return EXTENDED_PROMPT_TEMPLATE
       .replace('{message}', message || "")
       .replace('{textBeforeDynamic}', passageContext.textBeforeDynamic || "")
-      .replace('{textAfterDynamic}', passageContext.textAfterDynamic || "")
       .replace('{contextString}', contextString)
       .replace('{instructions}', instructions);
   }
@@ -203,5 +201,10 @@ export const previewPrompt = ({
 
   const contextString = contextInfo ? formatContextString(contextInfo) : "";
 
-  return craftPrompt(message, contextString, instructions, passageContext);
+  // Ensure passageContext only has textBeforeDynamic if needed
+  const cleanPassageContext = passageContext ? {
+    textBeforeDynamic: passageContext.textBeforeDynamic
+  } : null;
+
+  return craftPrompt(message, contextString, instructions, cleanPassageContext);
 };

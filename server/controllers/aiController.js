@@ -33,7 +33,7 @@ export const getStoryBlocks = async (storyId) => {
  * @param {string} blockId - ID of the dynamic block
  * @param {string} storyId - ID of the story
  * @param {string} playerID - ID of the player (to get their choices)
- * @returns {Promise<Object>} - Passage context object with text before and after
+ * @returns {Promise<Object>} - Passage context object with text before the dynamic block
  */
 export const getPassageContext = async (blockId, storyId, playerID) => {
     const blocks = await getStoryBlocks(storyId);
@@ -43,23 +43,18 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
     const dynamicBlock = blocks.find(block => block.id === blockId);
     if (!dynamicBlock) return null;
 
-    const sceneId = dynamicBlock.sceneId;
-
-    // Get all blocks in the same scene in order
-    const sceneBlocks = blocks.filter(block => block.sceneId === sceneId);
-
-    // Find the index of our dynamic block
-    const dynamicBlockIndex = sceneBlocks.findIndex(block => block.id === blockId);
+    // Find the index of our dynamic block in the entire story
+    const dynamicBlockIndex = blocks.findIndex(block => block.id === blockId);
     if (dynamicBlockIndex === -1) return null;
 
     // Read player choices to replace static blocks
     await db.read();
     const playerChoices = db.data.players?.[playerID]?.choices || {};
 
-    // Build text before the dynamic block
+    // Build text before the dynamic block (from ALL previous blocks in the story)
     let textBeforeDynamic = '';
     for (let i = 0; i < dynamicBlockIndex; i++) {
-        const block = sceneBlocks[i];
+        const block = blocks[i];
         if (block.type === 'plain') {
             textBeforeDynamic += block.text;
         } else if (block.type === 'static') {
@@ -71,24 +66,8 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
         // Skip other block types like scene-header
     }
 
-    // Build text after the dynamic block
-    let textAfterDynamic = '';
-    for (let i = dynamicBlockIndex + 1; i < sceneBlocks.length; i++) {
-        const block = sceneBlocks[i];
-        if (block.type === 'plain') {
-            textAfterDynamic += block.text;
-        } else if (block.type === 'static') {
-            // Replace with player's choice if available, otherwise use first option
-            const choice = playerChoices[block.id];
-            const chosenText = choice ? choice.chosenText : block.options[0];
-            textAfterDynamic += chosenText;
-        }
-        // Skip other block types
-    }
-
     return {
-        textBeforeDynamic: textBeforeDynamic.trim(),
-        textAfterDynamic: textAfterDynamic.trim()
+        textBeforeDynamic: textBeforeDynamic.trim()
     };
 };
 

@@ -104,18 +104,48 @@
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="block-operations">
-          <button @click="addPlainBlock">+ Plain Block</button>
-          <button @click="addStaticOptionBlock">+ Static Option</button>
-          <button @click="addDynamicOptionBlock">+ Dynamic Option Block</button>
-          <button @click="addDynamicTextBlock">+ Dynamic Text Block</button>
-          <button @click="addDynamicWordBlock">+ Dynamic Word Block</button>
-          <button @click="addSceneHeaderBlock">+ Scene Header Block</button>
+          <button @click="addPlainBlock">
+            + Plain Block
+            <span class="tooltip">Add a simple text block for narrative content</span>
+          </button>
+          <button @click="addStaticOptionBlock">
+            + Static Option
+            <span class="tooltip">Add a block with predefined player choices</span>
+          </button>
+          <button @click="addDynamicOptionBlock">
+            + Dynamic Option Block
+            <span class="tooltip">Add a block with AI-generated player choices</span>
+          </button>
+          <button @click="addDynamicTextBlock">
+            + Dynamic Text Block
+            <span class="tooltip">Add a block with AI-generated narrative text</span>
+          </button>
+          <button @click="addDynamicWordBlock">
+            + Dynamic Word Block
+            <span class="tooltip">Add a block with AI-generated vocabulary</span>
+          </button>
+          <button @click="addSceneHeaderBlock">
+            + Scene Header Block
+            <span class="tooltip">Add a header to mark the beginning of a new scene</span>
+          </button>
         </div>
         <div class="utility-operations">
-          <button @click="playStory">Play</button>
-          <button @click="exportJson">Export Project as JSON</button>
-          <button @click="importJson">Import Project</button>
-          <button @click="saveProject">Save Project</button>
+          <button @click="playStory">
+            Play
+            <span class="tooltip">Save and play the current story</span>
+          </button>
+          <button @click="exportJson">
+            Export Project as JSON
+            <span class="tooltip">Download the project as a JSON file for backup</span>
+          </button>
+          <button @click="importJson">
+            Import Project
+            <span class="tooltip">Load a project from a JSON file</span>
+          </button>
+          <button @click="saveProject">
+            Save Project
+            <span class="tooltip">Save the project to the server</span>
+          </button>
         </div>
       </div>
 

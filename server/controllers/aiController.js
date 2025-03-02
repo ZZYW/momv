@@ -11,8 +11,8 @@ import db from '../db.js';
  */
 export const getStoryBlocks = async (storyId) => {
     try {
-        // This path should be configured properly for your environment
-        const storyPath = path.join(process.cwd(), 'station1', 'input', `story${storyId}.json`);
+        // Dynamically build the path based on storyId which corresponds to the station number
+        const storyPath = path.join(process.cwd(), 'server', 'sites', `station${storyId}`, 'input', 'story.json');
         const storyData = await fs.readFile(storyPath, 'utf-8');
         const story = JSON.parse(storyData);
         return story.blocks || [];

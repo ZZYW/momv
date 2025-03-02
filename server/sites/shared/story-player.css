@@ -65,21 +65,42 @@
     unicode-range: U+AC00-D7AF;
 }
 
-/* Use the font */
-body {
-    font-family: "FusionPixelFont", sans-serif;
+@font-face {
+    font-family: "CP437Courier";
+    src: local("Courier");
+    unicode-range:
+        U+0000-007F,
+        /* Basic Latin */
+        U+00A0-00FF,
+        /* Latin-1 Supplement */
+        U+0192,
+        /* Latin small letter f with hook */
+        U+20A7,
+        /* Peseta sign */
+        U+2310,
+        /* Reversed not sign (⌐) */
+        U+2500-257F,
+        /* Box drawing characters */
+        U+2580-259F,
+        /* Block elements */
+        U+263A-263B,
+        /* Smiley faces */
+        U+2660-2663;
+    /* Card suits */
 }
+
 
 /* ============== */
 /* = CORE LAYOUT = */
 /* ============== */
 body {
-    font-family: "FusionPixelFont", sans-serif;
+    font-family: "CP437Courier", "FusionPixelFont", sans-serif;
+    /* font-family: monospace; */
     margin: 0 auto;
     padding: 20px;
     max-width: 500px;
     color: #eaeaea;
-    font-size: 18px;
+    font-size: 12px;
     background-color: #191b21;
     /* previously var(--bg-color) */
     line-height: 1.6;

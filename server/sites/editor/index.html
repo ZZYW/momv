@@ -174,7 +174,7 @@
                 <textarea
                   v-model="block.text"
                   class="narrative-textarea"
-                  placeholder="Your narrative..."
+                  placeholder=""
                   v-auto-resize
                 ></textarea>
               </template>
@@ -342,7 +342,7 @@
           },
           addPlainBlock() {
             const id = this.generateUUID();
-            this.blocks.push({ id, type: "plain", text: "Your narrative..." });
+            this.blocks.push({ id, type: "plain", text: "" });
           },
           addStaticOptionBlock() {
             const id = this.generateUUID();

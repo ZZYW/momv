@@ -3,11 +3,12 @@ document.addEventListener("alpine:init", () => {
     // ===== CONFIGURATION =====
     config: {
       serverUrl: "http://localhost:3001",
-      playerId:
-        "player_" +
+      // For station2, use the validated player ID if available
+      playerId: window.VALIDATED_PLAYER_ID || 
+        ("player_" +
         Date.now() +
         "_" +
-        Math.random().toString(36).substring(2, 9),
+        Math.random().toString(36).substring(2, 9)),
       storyPath: "input/story.json",
       debug: false,
       // Determine which station this is - used for localStorage namespacing
@@ -539,6 +540,9 @@ document.addEventListener("alpine:init", () => {
         (ctx) => ctx.value
       );
 
+      // Log the player ID being used in the request
+      console.log("Recording choice with player ID:", this.config.playerId);
+      
       fetch(`${this.config.serverUrl}/record-choice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -672,6 +676,6 @@ document.addEventListener("alpine:init", () => {
           }, 3000); // Match the CSS animation duration (3s)
         }, 1000); // Wait for fade-out to complete (adjust if needed)
       });
-    },
+    }
   }));
 });

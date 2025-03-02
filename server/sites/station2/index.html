@@ -177,6 +177,9 @@
       
       // Initialize Alpine.js story player after verification
       function initializeStoryPlayer() {
+        // Very simple approach - directly override the player ID in the story-player.js
+        window.VALIDATED_PLAYER_ID = validatedPlayerId;
+        
         // Initialize Alpine.js with the storyPlayer component
         document.querySelector("#story-container").innerHTML = `
           <div x-data="storyPlayer" x-init="init()">
@@ -188,29 +191,7 @@
           </div>
         `;
         
-        // Override the default player ID with our validated one
-        document.addEventListener("alpine:init", () => {
-          Alpine.data("storyPlayer", () => ({
-            // Override config with our validated player ID
-            config: {
-              serverUrl: "http://localhost:3001",
-              playerId: validatedPlayerId,
-              storyPath: "input/story.json",
-              debug: false,
-              stationId: "station2"
-            },
-            
-            // The rest of the storyPlayer methods are defined in story-player.js
-          }));
-        });
-        
-        // Force a re-evaluation of Alpine.js
-        window.dispatchEvent(new CustomEvent('alpine:init'));
-        
-        // Reinitialize Alpine.js
-        if (window.Alpine) {
-          window.Alpine.initTree(document.body);
-        }
+        console.log("Story player initialized with player ID:", validatedPlayerId);
       }
     </script>
   </body>

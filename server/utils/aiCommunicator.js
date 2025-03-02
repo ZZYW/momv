@@ -85,11 +85,14 @@ function parseResponse(reply, blockType) {
         const jsonString = jsonMatch[0];
         const parsed = JSON.parse(jsonString);
 
-        if (!parsed.final_printed_text) {
-            throw new Error("Invalid JSON structure: missing final_printed_text");
+        // Check for different possible field names and use the first one found
+        const deliverable = parsed.deliverable
+
+        if (!deliverable) {
+            throw new Error("Invalid JSON structure: missing deliverable content");
         }
 
-        return parsed.final_printed_text;
+        return deliverable;
     } catch (parseError) {
         console.error("Error parsing JSON from LLM response:", parseError);
         console.error("Raw reply:", reply);

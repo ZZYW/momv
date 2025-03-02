@@ -47,8 +47,8 @@
 <%# Common response format requirement %>
 <response_format>
 请以JSON格式回复，包含两个字段：
-1. "thinking_process"：你的创作思路和考虑
-2. "final_printed_text"：将在故事中显示的最终内容
+1. "reasoning"：你的创作思路和考虑，对符号们的解析和破解，详细的推理和创意写作的发挥
+2. "deliverable"：将在故事中显示的最终内容
 </response_format>
 
 <!-- PROMPT TEMPLATES IN NATURAL LANGUAGE -->
@@ -66,8 +66,8 @@
 {response_format}
 具体格式如下：
 {
-    "thinking_process": "你的创作思路和考虑...",
-    "final_printed_text": ["选项1", "选项2", ...]
+    "reasoning": "你的创作思路和考虑...",
+    "deliverable": ["选项1", "选项2", ...]
 }
 </dynamic_option>
   
@@ -86,8 +86,8 @@
 {response_format}
 具体格式如下：
 {
-    "thinking_process": "你的创作思路和考虑...",
-    "final_printed_text": "生成的段落文本"
+    "reasoning": "你的创作思路和考虑...",
+    "deliverable": "生成的段落文本"
 }
 </dynamic_text>
   
@@ -105,8 +105,8 @@
 {response_format}
 具体格式如下：
 {
-    "thinking_process": "你的创作思路和考虑...",
-    "final_printed_text": "生成的词语"
+    "reasoning": "你的创作思路和考虑...",
+    "deliverable": "生成的词语"
 }
 </dynamic_word>
   

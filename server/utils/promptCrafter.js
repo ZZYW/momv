@@ -176,9 +176,16 @@ export const formatContextString = (contextInfo) => {
   
   let formattedItems = [];
   
+  // Format player choices section
+  formattedItems.push("--- 玩家历史选择 ---");
+  formattedItems.push("");
+  formattedItems.push("以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。");
+  formattedItems.push("请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。");
+  
   // Format station1 choices if any
   if (station1Choices.length > 0) {
-    formattedItems.push("--- 第一站玩家选择 ---");
+    formattedItems.push("");
+    formattedItems.push("第一站选择：");
     
     station1Choices.forEach((ctx, index) => {
       if (ctx.chosenText) {
@@ -192,19 +199,14 @@ export const formatContextString = (contextInfo) => {
           .replace('{index}', String(index + 1))
           .replace('{chosenText}', ctx.chosenText)
           .replace('{optionsInfo}', optionsInfo));
-      } else {
-        formattedItems.push(CONTEXT_TEMPLATE.noChoice.replace('{index}', String(index + 1)));
       }
     });
-    
-    formattedItems.push("--- 第一站玩家选择结束 ---");
   }
   
   // Format station2 choices if any
   if (station2Choices.length > 0) {
-    if (station1Choices.length > 0) {
-      formattedItems.push(""); // Add a blank line between station sections
-    }
+    formattedItems.push("");
+    formattedItems.push("第二站选择：");
     
     // Map station2 choices with proper indexing
     station2Choices.forEach((ctx, index) => {
@@ -219,13 +221,14 @@ export const formatContextString = (contextInfo) => {
           .replace('{index}', String(index + 1))
           .replace('{chosenText}', ctx.chosenText)
           .replace('{optionsInfo}', optionsInfo));
-      } else {
-        formattedItems.push(CONTEXT_TEMPLATE.noChoice.replace('{index}', String(index + 1)));
       }
     });
   }
+  
+  formattedItems.push("");
+  formattedItems.push("--- 玩家历史选择结束 ---");
 
-  return CONTEXT_TEMPLATE.prefix + "\n" + formattedItems.join("\n") + "\n" + CONTEXT_TEMPLATE.suffix;
+  return formattedItems.join("\n");
 };
 
 /**
@@ -264,7 +267,8 @@ export const previewPrompt = ({
   sentenceCount,
   lexiconCategory,
   contextInfo,
-  passageContext
+  passageContext,
+  storyId = "1"
 }) => {
   const instructions = getBlockInstructions({
     blockType,
@@ -273,7 +277,11 @@ export const previewPrompt = ({
     lexiconCategory
   });
 
-  const contextString = contextInfo ? formatContextString(contextInfo) : "";
+  // For station2, omit contextString since it's already in the passageContext
+  let contextString = "";
+  if (storyId !== "2" && contextInfo && contextInfo.length > 0) {
+    contextString = formatContextString(contextInfo);
+  }
 
   // Ensure passageContext only has textBeforeDynamic if needed
   const cleanPassageContext = passageContext ? {

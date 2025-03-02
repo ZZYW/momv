@@ -57,6 +57,8 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
     // For station2, first include all content from station1
     if (storyId === "2") {
         const station1Blocks = await getStoryBlocks("1");
+        textBeforeDynamic += '--- 第一站内容 ---\n\n';
+        
         for (const block of station1Blocks) {
             if (block.type === 'plain') {
                 textBeforeDynamic += block.text;
@@ -64,12 +66,24 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
                 // Replace with player's choice if available, otherwise use first option
                 const choice = playerChoices[block.id];
                 const chosenText = choice ? choice.chosenText : block.options[0];
-                textBeforeDynamic += chosenText;
+                
+                // Include both the chosen text and the available options
+                if (choice && choice.availableOptions) {
+                    textBeforeDynamic += chosenText + '（可选项包括：' + choice.availableOptions.join(' | ') + '）';
+                } else if (block.options && block.options.length > 0) {
+                    textBeforeDynamic += chosenText + '（可选项包括：' + block.options.join(' | ') + '）';
+                } else {
+                    textBeforeDynamic += chosenText;
+                }
+            } else if (block.type === 'scene-header') {
+                // Include scene headers
+                textBeforeDynamic += '\n\n' + (block.titleName || '未命名场景') + '\n\n';
             }
-            // Skip other block types like scene-header
+            // Skip other block types
         }
+        
         // Add a separator between station1 and station2 content
-        textBeforeDynamic += '\n\n--- 第二站 ---\n\n';
+        textBeforeDynamic += '\n\n--- 第二站内容 ---\n\n';
     }
     
     // Now add content from the current station up to the dynamic block
@@ -81,9 +95,20 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
             // Replace with player's choice if available, otherwise use first option
             const choice = playerChoices[block.id];
             const chosenText = choice ? choice.chosenText : block.options[0];
-            textBeforeDynamic += chosenText;
+            
+            // Include both the chosen text and the available options
+            if (choice && choice.availableOptions) {
+                textBeforeDynamic += chosenText + '（可选项包括：' + choice.availableOptions.join(' | ') + '）';
+            } else if (block.options && block.options.length > 0) {
+                textBeforeDynamic += chosenText + '（可选项包括：' + block.options.join(' | ') + '）';
+            } else {
+                textBeforeDynamic += chosenText;
+            }
+        } else if (block.type === 'scene-header') {
+            // Include scene headers
+            textBeforeDynamic += '\n\n' + (block.titleName || '未命名场景') + '\n\n';
         }
-        // Skip other block types like scene-header
+        // Skip other block types
     }
 
     return {
@@ -118,19 +143,21 @@ export const askLLM = async (req, res) => {
             lexiconCategory
         });
 
-        // Step 2: Get and format context information
+        // Step 2: Get passage context if this is a dynamic block
+        let passageContext = null;
+        if (blockType.startsWith('dynamic-') && blockId) {
+            passageContext = await getPassageContext(blockId, storyId, playerID);
+        }
+
+        // Step 3: Craft complete prompt - omit player choices if we're in Station 2
+        // as they're already included in the story context
         let contextString = "";
-        if (contextRefs && contextRefs.length > 0) {
+        if (storyId !== "2" && contextRefs && contextRefs.length > 0) {
+            // Only include separate player choices section for Station 1
             const contextInfo = await fetchContextInfo(contextRefs, playerID, storyId);
             if (contextInfo.length > 0) {
                 contextString = formatContextString(contextInfo);
             }
-        }
-
-        // Step 3: Get passage context if this is a dynamic block
-        let passageContext = null;
-        if (blockType.startsWith('dynamic-') && blockId) {
-            passageContext = await getPassageContext(blockId, storyId, playerID);
         }
 
         // Step 4: Craft complete prompt
@@ -175,16 +202,16 @@ export const previewAIPrompt = async (req, res) => {
     } = req.body;
 
     try {
-        // Step 1: Get context information if provided
-        let contextInfo = [];
-        if (contextRefs && contextRefs.length > 0) {
-            contextInfo = await fetchContextInfo(contextRefs, playerID, storyId);
-        }
-        
-        // Step 2: Get passage context if this is a dynamic block
+        // Step 1: Get passage context if this is a dynamic block
         let passageContext = null;
         if (blockType.startsWith('dynamic-') && blockId) {
             passageContext = await getPassageContext(blockId, storyId, playerID);
+        }
+        
+        // Step 2: Get context information if provided - omit for Station 2
+        let contextInfo = [];
+        if (storyId !== "2" && contextRefs && contextRefs.length > 0) {
+            contextInfo = await fetchContextInfo(contextRefs, playerID, storyId);
         }
 
         // Step 3: Generate preview of the prompt
@@ -195,7 +222,8 @@ export const previewAIPrompt = async (req, res) => {
             sentenceCount,
             lexiconCategory,
             contextInfo,
-            passageContext
+            passageContext,
+            storyId
         });
 
         // Step 4: Return the preview

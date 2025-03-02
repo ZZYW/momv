@@ -31,22 +31,6 @@
     /* Define font style (normal, italic, etc.) */
 }
 
-:root {
-    /* Animation timings */
-    --fade-duration: 4s;
-    --fade-in-duration: 3s;
-
-    /* Colors */
-    --bg-color: #f9f9f9;
-    --text-color: #333;
-    --option-color: #69801d;
-    --primary-color: #1890ff;
-    --primary-hover: #096dd9;
-    --border-color: #ccc;
-    --selected-bg: #e6f7ff;
-    --shadow-color: rgba(0, 0, 0, 0.1);
-}
-
 /* ============== */
 /* = CORE LAYOUT = */
 /* ============== */
@@ -56,7 +40,8 @@ body {
     padding: 20px;
     max-width: 800px;
     font-size: 18px;
-    background-color: var(--bg-color);
+    background-color: #d1d1d1;
+    /* previously var(--bg-color) */
     line-height: 1.6;
 }
 
@@ -69,9 +54,11 @@ body {
     padding: 20px;
     background-color: white;
     border-radius: 5px;
-    box-shadow: 0 2px 5px var(--shadow-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* previously var(--shadow-color) */
     margin-bottom: 20px;
-    transition: opacity var(--fade-duration) ease;
+    transition: opacity 4s ease;
+    /* previously var(--fade-duration) */
 }
 
 .passage.active {
@@ -86,7 +73,8 @@ body {
 }
 
 .fade-in {
-    animation: fadeIn var(--fade-in-duration) forwards;
+    animation: fadeIn 3s forwards;
+    /* previously var(--fade-in-duration) */
     position: relative;
     z-index: 2;
 }
@@ -117,8 +105,7 @@ body {
 
 h2 {
     margin-top: 0;
-    color: var(--text-color);
-    border-bottom: 1px solid #eee;
+    /* previously var(--text-color) */
     padding-bottom: 10px;
 }
 
@@ -138,7 +125,8 @@ h2 {
     display: inline;
     margin: 8px 0;
     cursor: pointer;
-    color: var(--option-color);
+    color: #69801d;
+    /* previously var(--option-color) */
     /* text-decoration: underline; */
     transition: all 0.2s ease, opacity 3s ease, text-shadow 0.3s ease;
     /* Add subtle glow effect */
@@ -158,13 +146,15 @@ h2 {
 }
 
 .static-option:hover {
-    color: var(--text-color);
+    color: #ffffff;
+    /* previously var(--text-color) */
     text-shadow: 0 0 10px rgba(105, 128, 29, 0.8);
 }
 
 /* When selected, make it look like normal text */
 .static-option.selected {
-    color: var(--text-color);
+    color: #ffffff;
+    /* previously var(--text-color) */
     text-decoration: none;
     text-shadow: none;
     animation: none;
@@ -178,7 +168,8 @@ h2 {
 .option-divider {
     display: inline;
     margin: 0 5px;
-    color: var(--text-color);
+    color: #ffffff;
+    /* previously var(--text-color) */
     opacity: 0.5;
     font-weight: normal;
     transition: opacity 3s ease;
@@ -213,9 +204,8 @@ h2 {
     display: inline-block;
     margin-top: 20px;
     padding: 8px 16px;
-
-    /* background-color: var(--primary-color); */
-    color: var(--text-color);
+    color: #ffffff;
+    /* previously var(--text-color) */
     border: 1px dotted;
     text-decoration: none;
     border-radius: 4px;
@@ -223,7 +213,7 @@ h2 {
 }
 
 .next-link:hover {
-    /* background-color: var(--primary-hover); */
+    /* No background-color specified; original hover effect referenced var(--primary-hover) in a commented line */
 }
 
 /* ============== */
@@ -235,7 +225,8 @@ h2 {
     height: 20px;
     border: 3px solid rgba(0, 0, 0, 0.2);
     border-radius: 50%;
-    border-top-color: var(--primary-color);
+    border-top-color: #1890ff;
+    /* previously var(--primary-color) */
     animation: spin 1s ease-in-out infinite;
     margin-left: 10px;
     vertical-align: middle;

@@ -103,17 +103,20 @@
     <div id="app">
       <!-- Toolbar -->
       <div class="toolbar">
-        <button @click="addPlainBlock">+ Plain Block</button>
-        <button @click="addStaticOptionBlock">+ Static Option</button>
-        <button @click="addDynamicOptionBlock">+ Dynamic Option Block</button>
-        <button @click="addDynamicTextBlock">+ Dynamic Text Block</button>
-        <button @click="addDynamicWordBlock">+ Dynamic Word Block</button>
-        <button @click="addSceneHeaderBlock">+ Scene Header Block</button>
-        <button @click="playStory">Play</button>
-        <button @click="exportJson">Export Project as JSON</button>
-        <button @click="importJson">Import Project</button>
-        <!-- Save Project button now triggers saving to the server -->
-        <button @click="saveProject">Save Project</button>
+        <div class="block-operations">
+          <button @click="addPlainBlock">+ Plain Block</button>
+          <button @click="addStaticOptionBlock">+ Static Option</button>
+          <button @click="addDynamicOptionBlock">+ Dynamic Option Block</button>
+          <button @click="addDynamicTextBlock">+ Dynamic Text Block</button>
+          <button @click="addDynamicWordBlock">+ Dynamic Word Block</button>
+          <button @click="addSceneHeaderBlock">+ Scene Header Block</button>
+        </div>
+        <div class="utility-operations">
+          <button @click="playStory">Play</button>
+          <button @click="exportJson">Export Project as JSON</button>
+          <button @click="importJson">Import Project</button>
+          <button @click="saveProject">Save Project</button>
+        </div>
       </div>
 
       <!-- Main Content Area -->

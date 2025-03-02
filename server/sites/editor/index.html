@@ -112,6 +112,7 @@
         <button @click="playStory">Play</button>
         <button @click="exportJson">Export Project as JSON</button>
         <button @click="importJson">Import Project</button>
+        <!-- Save Project button now triggers saving to the server -->
         <button @click="saveProject">Save Project</button>
       </div>
 
@@ -238,6 +239,7 @@
             handler(newVal, oldVal) {
               this.syncUI();
               this.updateSceneIds();
+              // Auto-save changes to localStorage
               this.debounceSaveProject();
             },
             deep: true,
@@ -274,7 +276,7 @@
           debounceSaveProject() {
             clearTimeout(this._saveTimeout);
             this._saveTimeout = setTimeout(() => {
-              this.saveProject();
+              this.autoSaveProject();
             }, 500);
           },
           syncUI() {
@@ -572,12 +574,8 @@
 
                   // Update the project data
                   this.blocks = processedBlocks;
-                  this.autosaveTime =
-                    projectData.autosave || this.updateAutosaveTime();
-
-                  // Save the imported project
-                  this.saveProject();
-
+                  this.autosaveTime = projectData.autosave || "";
+                  this.autoSaveProject();
                   // Display success message
                   alert("Project imported successfully!");
                 } catch (error) {
@@ -601,8 +599,8 @@
             // Trigger the file dialog
             fileInput.click();
           },
-
-          saveProject() {
+          // This function auto-saves the project to localStorage on every change.
+          autoSaveProject() {
             const scrollX = window.scrollX;
             const scrollY = window.scrollY;
             this.updateAutosaveTime();
@@ -611,7 +609,32 @@
               blocks: this.blocks,
             };
             localStorage.setItem("vueRWSProject", JSON.stringify(project));
-            console.log("saved!");
+            console.log("Auto-saved to localStorage!");
+            this.$nextTick(() => {
+              window.scrollTo(scrollX, scrollY);
+            });
+          },
+          // This function is triggered by the Save Project button and saves the project to a JSON file on the server.
+          saveProject() {
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            this.updateAutosaveTime();
+            const project = {
+              autosave: this.autosaveTime,
+              blocks: this.blocks,
+            };
+            fetch(`http://localhost:3001/save-story-json/${this.station}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(project),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                console.log("Project saved to server!", data);
+              })
+              .catch((err) => {
+                console.error("Error saving project to server:", err);
+              });
             this.$nextTick(() => {
               window.scrollTo(scrollX, scrollY);
             });
@@ -630,6 +653,7 @@
           },
         },
         mounted() {
+          // Auto-load project from localStorage
           const savedData = localStorage.getItem("vueRWSProject");
           if (savedData) {
             try {

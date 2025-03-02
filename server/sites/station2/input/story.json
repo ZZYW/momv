@@ -68,6 +68,24 @@
       "prompt": "根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n回到原文中，结合对玩家的选择的分析，用白描的方式，陈述出玩家应如何清晰地洞察目前情况下潜在的模式和能量。\n",
       "context": [],
       "sceneId": 1
+    },
+    {
+      "id": "592997f0-60e6-4c9c-851b-42bf7702a2b0",
+      "type": "dynamic-option",
+      "blockName": "xxx",
+      "optionCount": 4,
+      "prompt": "讲小吴可能的欲望",
+      "context": [
+        {
+          "value": "28cfdc37-ecfb-4698-b2db-a139405f22b6",
+          "includeAll": false
+        },
+        {
+          "value": "592997f0-60e6-4c9c-851b-42bf7702a2b0",
+          "includeAll": false
+        }
+      ],
+      "sceneId": 1
     }
   ]
 }

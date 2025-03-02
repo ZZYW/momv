@@ -1,0 +1,86 @@
+/* Codename verification styles */
+#codename-verification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #191b21;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.codename-form {
+  width: 90%;
+  max-width: 800px;
+  padding: 20px;
+  border: 1px dotted #69801d;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.codename-form h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.codename-selection {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.codename-column {
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+}
+
+.codename-button {
+  padding: 8px;
+  margin: 4px 0;
+  background-color: #232530;
+  color: #eaeaea;
+  border: 1px solid #666;
+  cursor: pointer;
+  font-family: "CP437Courier", "FusionPixelFont", sans-serif;
+  font-size: 16px;
+}
+
+.codename-button.selected {
+  background-color: #3a3f52;
+  border: 1px solid #69801d;
+}
+
+.codename-preview {
+  font-size: 20px;
+  margin: 20px 0;
+  padding: 10px;
+  background-color: #232530;
+  color: #eaeaea;
+  border: 1px solid #666;
+  font-family: "CP437Courier", "FusionPixelFont", sans-serif;
+  display: inline-block;
+  min-width: 200px;
+}
+
+.codename-form button {
+  padding: 8px 16px;
+  background-color: transparent;
+  color: #69801d;
+  border: 1px dotted #69801d;
+  cursor: pointer;
+  font-family: "CP437Courier", "FusionPixelFont", sans-serif;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.codename-form .error-message {
+  color: #ff6b6b;
+  margin-top: 10px;
+  font-size: 14px;
+}

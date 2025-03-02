@@ -1,4 +1,13 @@
 document.addEventListener("alpine:init", () => {
+  // Create a global flag for Alpine data initialization
+  if (window._storyPlayerDataInitialized) {
+    console.warn('[ALPINE] storyPlayer data already initialized! Skipping duplicate initialization');
+    return;
+  }
+  window._storyPlayerDataInitialized = true;
+  
+  console.log('[ALPINE] Initializing storyPlayer data component');
+  
   Alpine.data("storyPlayer", () => ({
     // ===== CONFIGURATION =====
     config: {
@@ -10,9 +19,11 @@ document.addEventListener("alpine:init", () => {
         "_" +
         Math.random().toString(36).substring(2, 9)),
       storyPath: "input/story.json",
-      debug: false,
-      // Determine which station this is - used for localStorage namespacing
-      stationId: window.location.pathname.includes("station2") ? "station2" : "station1"
+      debug: true, // Enable debug logging
+      // Determine which station this is - used for localStorage namespacing and storyId
+      stationId: window.location.pathname.includes("station2") ? "station2" : "station1",
+      // Numeric station ID for API calls
+      stationNumber: window.location.pathname.includes("station2") ? "2" : "1"
     },
 
     // ===== STATE =====
@@ -39,15 +50,24 @@ document.addEventListener("alpine:init", () => {
 
     // ===== STORY LOADING & PARSING =====
     loadStory() {
+      console.log(`[STORY] Starting loadStory with playerId: ${this.config.playerId}`);
+      console.log(`[STORY] Station ID: ${this.config.stationId}, Station Number: ${this.config.stationNumber}`);
+      
+      // Add debug info to indicate exact execution context
+      console.log(`[STORY] Alpine data loading - time: ${new Date().toISOString()}`);
+      console.log(`[STORY] Window validated player ID: ${window.VALIDATED_PLAYER_ID}`);
+      
       this.state.isLoading = true;
       fetch(`${this.config.storyPath}?nocache=${new Date().getTime()}`)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`Failed to load story (${response.status})`);
           }
+          console.log(`[STORY] Story response received, parsing JSON`);
           return response.json();
         })
         .then((data) => {
+          console.log(`[STORY] Story data loaded, processing blocks`);
           if (data.blocks && Array.isArray(data.blocks)) {
             this.state.projectBlocks = data.blocks;
             this.groupBlocksIntoPassages();
@@ -102,14 +122,28 @@ document.addEventListener("alpine:init", () => {
 
     // ===== RENDERING =====
     renderPassage(passageIndex) {
-      if (passageIndex >= this.state.passages.length) return;
+      console.log(`[RENDER] Starting renderPassage for passage index ${passageIndex}`);
+      
+      if (passageIndex >= this.state.passages.length) {
+        console.warn(`[RENDER] Invalid passage index: ${passageIndex}, max: ${this.state.passages.length - 1}`);
+        return;
+      }
+      
+      // Check if passage already exists
+      const existingPassage = document.getElementById(`passage-${passageIndex}`);
+      if (existingPassage) {
+        console.warn(`[RENDER] Passage ${passageIndex} already exists! Skipping render.`);
+        return existingPassage;
+      }
 
+      console.log(`[RENDER] Creating new passage element for index ${passageIndex}`);
       const container = document.getElementById("passage-container");
       const blocks = this.state.passages[passageIndex];
       const passageEl = document.createElement("div");
 
       passageEl.className = "passage";
       passageEl.id = `passage-${passageIndex}`;
+      passageEl._rendered = true;
 
       // Create elements for each block
       blocks.forEach((block) => {
@@ -351,20 +385,59 @@ document.addEventListener("alpine:init", () => {
 
     // ===== DYNAMIC CONTENT =====
     loadDynamicContentForPassage(passageElement) {
+      console.log(`[LOAD-DYNAMIC] Starting loadDynamicContentForPassage for passage ${passageElement.id}`);
+      console.log(`[LOAD-DYNAMIC] Player ID: ${this.config.playerId}`);
+      
+      // Track if we're already loading this passage
+      if (passageElement._dynamicContentLoading) {
+        console.warn(`[LOAD-DYNAMIC] Already loading dynamic content for ${passageElement.id}! Returning existing promise.`);
+        return passageElement._dynamicContentLoadingPromise;
+      }
+      
       const dynamicContainers = passageElement.querySelectorAll(
         ".dynamic-options-container, .dynamic-text-container, .dynamic-word-container"
       );
+      
+      console.log(`[LOAD-DYNAMIC] Found ${dynamicContainers.length} dynamic containers in passage ${passageElement.id}`);
+      
+      if (dynamicContainers.length === 0) {
+        console.log(`[LOAD-DYNAMIC] No dynamic content to load for passage ${passageElement.id}`);
+        return Promise.resolve();
+      }
 
+      // Mark this passage as being loaded
+      passageElement._dynamicContentLoading = true;
+      
       const promises = Array.from(dynamicContainers).map((container) => {
         let blockType = this.getDynamicContainerType(container);
-        return this.fetchDynamicBlock(
-          container.dataset.uuid,
-          blockType,
-          container
-        );
+        let blockId = container.dataset.uuid;
+        
+        console.log(`[LOAD-DYNAMIC] Will load ${blockType} with ID ${blockId}`);
+        
+        // Check if this container was already processed
+        if (container._dynamicContentLoaded) {
+          console.warn(`[LOAD-DYNAMIC] Container for block ${blockId} already loaded!`);
+          return Promise.resolve();
+        }
+        
+        // Mark as loaded to prevent duplicate loads
+        container._dynamicContentLoaded = true;
+        
+        return this.fetchDynamicBlock(blockId, blockType, container);
       });
 
-      return Promise.all(promises);
+      // Store the promise for future reference
+      passageElement._dynamicContentLoadingPromise = Promise.all(promises)
+        .then(results => {
+          console.log(`[LOAD-DYNAMIC] All dynamic content loaded for passage ${passageElement.id}`);
+          return results;
+        })
+        .catch(err => {
+          console.error(`[LOAD-DYNAMIC] Error loading dynamic content for passage ${passageElement.id}:`, err);
+          throw err;
+        });
+      
+      return passageElement._dynamicContentLoadingPromise;
     },
 
     getDynamicContainerType(container) {
@@ -378,11 +451,14 @@ document.addEventListener("alpine:init", () => {
     },
 
     fetchDynamicBlock(blockID, blockType, container) {
+      console.log(`[FETCH] Starting fetchDynamicBlock for ${blockID} of type ${blockType}`);
+      
       const blockData = this.state.projectBlocks.find(
         (b) => b.id === blockID
       );
 
       if (!blockData) {
+        console.error(`[FETCH] No block data found for ID: ${blockID}`);
         container.innerText = "No block data found";
         return Promise.resolve();
       }
@@ -390,6 +466,9 @@ document.addEventListener("alpine:init", () => {
       const loadingIndicator = container
         .closest(".dynamic-container")
         .querySelector(".loading-indicator");
+        
+      console.log(`[FETCH] Preparing request for block ${blockID} with player ID: ${this.config.playerId}`);
+      console.log(`[FETCH] Station ID: ${this.config.stationId}, Station Number: ${this.config.stationNumber}`);
 
       const payload = {
         message: blockData.prompt || "",
@@ -402,8 +481,11 @@ document.addEventListener("alpine:init", () => {
         optionCount: blockData.optionCount,
         sentenceCount: blockData.sentenceCount,
         lexiconCategory: blockData.lexiconCategory,
-        storyId: "1", // Currently hard-coded for story.json
+        storyId: this.config.stationNumber, // Use the numeric station ID as story ID
+        _fetchTimestamp: new Date().getTime() // Add timestamp to identify unique requests
       };
+      
+      console.log(`[FETCH] Sending request for block ${blockID}`, payload);
 
       return fetch(`${this.config.serverUrl}/generate-dynamic`, {
         method: "POST",

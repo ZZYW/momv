@@ -23,9 +23,9 @@
     <!-- Codename verification overlay - displayed before story starts -->
     <div id="codename-verification">
       <div class="codename-form">
-        <h2>选择你的代号以继续</h2>
-        <p>在第一站结束时，你已获得一个代号。请从以下选项中选择你的代号。</p>
-        
+        <p>若水住持：请问施主的法号是？</p>
+        <p>（请选择Station1给你的法号）</p>
+
         <div id="codename-selection" class="codename-selection">
           <div class="codename-column" id="first-column">
             <!-- First component buttons will be generated here -->
@@ -37,14 +37,14 @@
             <!-- Third component buttons will be generated here -->
           </div>
         </div>
-        
+
         <div class="codename-preview" id="codename-preview">_____</div>
-        
+
         <div id="error-message" class="error-message"></div>
         <button id="verify-button" disabled>确认</button>
       </div>
     </div>
-    
+
     <div id="story-container">
       <!-- Story player will be initialized here after codename verification -->
       <!-- Alpine.js container will be inserted here after verification -->
@@ -52,7 +52,7 @@
 
     <!-- Keep these scripts for verification, story-player.js will be loaded later -->
     <script src="codename-verification.js"></script>
-    
+
     <script>
       // Initialize the codename verification system when the DOM is loaded
       document.addEventListener("DOMContentLoaded", () => {

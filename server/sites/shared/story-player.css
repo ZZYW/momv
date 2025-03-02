@@ -80,7 +80,7 @@ body {
     max-width: 500px;
     color: #eaeaea;
     font-size: 18px;
-    background-color: #1f1f1f;
+    background-color: #191b21;
     /* previously var(--bg-color) */
     line-height: 1.6;
 }
@@ -91,14 +91,7 @@ body {
 
 .passage {
     display: none;
-    /* padding: 20px; */
-    /* background-color: white; */
-    /* border-radius: 5px; */
-    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
-    /* previously var(--shadow-color) */
-    /* margin-bottom: 20px; */
     transition: opacity 4s ease;
-    /* previously var(--fade-duration) */
 }
 
 .passage.active {
@@ -108,36 +101,6 @@ body {
 .block-scene-header {
     display: flex;
     justify-content: center;
-}
-
-/* ============== */
-/* = ANIMATIONS = */
-/* ============== */
-.fade-out {
-    opacity: 0;
-}
-
-.fade-in {
-    animation: fadeIn 3s forwards;
-    /* previously var(--fade-in-duration) */
-    position: relative;
-    z-index: 2;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 /* ================ */
@@ -150,7 +113,6 @@ body {
 
 h2 {
     margin-top: 0;
-    /* previously var(--text-color) */
     padding-bottom: 10px;
 }
 
@@ -279,4 +241,34 @@ h2 {
     padding: 20px;
     text-align: center;
     font-weight: bold;
+}
+
+/* ============== */
+/* = ANIMATIONS = */
+/* ============== */
+.fade-out {
+    opacity: 0;
+}
+
+.fade-in {
+    animation: fadeIn 3s forwards;
+    /* previously var(--fade-in-duration) */
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

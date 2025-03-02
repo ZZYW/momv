@@ -18,7 +18,10 @@ export const sendPromptToLLM = async (prompt, blockType) => {
         throw new Error("API key not found. Set DASHSCOPE_API_KEY in environment variables.");
     }
 
-    console.log("Sending natural language prompt to LLM:");
+    for (let index = 0; index < 4; index++) {
+        console.log('..........................................................................................................')
+    }
+
     console.log(prompt);
 
     const response = await openai.chat.completions.create({
@@ -31,6 +34,11 @@ export const sendPromptToLLM = async (prompt, blockType) => {
 
     // Get and clean up the LLM response
     const reply = cleanMessage(response.choices?.[0]?.message?.content || "No reply received");
+
+    for (let index = 0; index < 4; index++) {
+        console.log('..........................................................................................................')
+    }
+
     console.log(`Returned result: ----\n${reply}\n----\n\n`);
 
     return parseResponse(reply, blockType);

@@ -1,0 +1,132 @@
+<!-- PROMPT TEMPLATES -->
+<%# Template for dynamic option blocks %>
+<template id="dynamic-option">
+  <role>你是一位擅长隐喻，符号主义，神秘学和心理分析的当代小说家</role>
+  <task>请生成 {optionCount} 个不同且引人入胜的故事选项。</task>
+  <requirements>
+    - 这些选项应该有趣、多样化，并且适合上下文
+    - 每个选项应该简短明了
+    - 每个选项应该代表一个不同的可能性
+    - 所有选项都应该用中文表达
+  </requirements>
+  </template>
+  
+  <%# Template for dynamic text blocks %>
+  <template id="dynamic-text">
+  <role>你是一位擅长隐喻，符号主义，神秘学和心理分析的当代小说家</role>
+  <task>请生成一段大约 {sentenceCount} 个句子的文本段落。</task>
+  <requirements>
+    - 文本应该生动、引人入胜，并且自然地融入故事上下文
+    - 语言应该流畅、富有表现力
+    - 叙述应该符合整体故事的风格和基调
+    - 所有内容都应该用中文表达
+  </requirements>
+  </template>
+  
+  <%# Template for dynamic word blocks %>
+  <template id="dynamic-word">
+  <role>你是一位擅长隐喻，符号主义，神秘学和心理分析的当代小说家</role>
+  <task>请生成一个适合故事上下文的 {lexiconCategory}。</task>
+  <requirements>
+    - 词语应该表达丰富、富有暗示性，并且与叙述情境相关
+    - 应该选择能够增强故事氛围的词语
+    - 所选词语应该是中文
+  </requirements>
+  </template>
+  
+  <!-- FORMAT TEMPLATES -->
+  <%# Format template for dynamic option response %>
+  <template id="format-dynamic-option">
+  <response_format>
+    请一定要以JSON格式回复。请使用中文！请严格遵循以下格式:
+    {
+      "thinking_process": "你的思考过程...",
+      "final_printed_text": ["选项1", "选项2", ...]
+    }
+  </response_format>
+  </template>
+  
+  <%# Format template for dynamic text response %>
+  <template id="format-dynamic-text">
+  <response_format>
+    请一定要以JSON格式回复。请使用中文！请严格遵循以下格式:
+    {
+      "thinking_process": "你的思考过程...",
+      "final_printed_text": "正文内容"
+    }
+  </response_format>
+  </template>
+  
+  <%# Format template for dynamic word response %>
+  <template id="format-dynamic-word">
+  <response_format>
+    请一定要以JSON格式回复。请使用中文！请严格遵循以下格式:
+    {
+      "thinking_process": "你的思考过程...",
+      "final_printed_text": "词语"
+    }
+  </response_format>
+  </template>
+  
+  <!-- CONTEXT TEMPLATE PARTS -->
+  <%# Context template prefix %>
+  <template id="context-prefix">
+  <player_choices>
+    <instruction>关于玩家之前的一些选择。这些选择永远不是字面的意思。它们都是隐喻与符号主义。所以请深入的去解构再重构。请记住，千万不要在你最终的写作中原封不动的出现这些选择！！！</instruction>
+  </template>
+  
+  <%# Context template for items with choices %>
+  <template id="context-item-with-choice">
+    <choice id="{index}">
+      <selected_option>{chosenText}</selected_option>{optionsInfo}
+    </choice>
+  </template>
+  
+  <%# Context template for options prefix %>
+  <template id="context-options-prefix">
+      <available_options>
+  </template>
+  
+  <%# Context template for options suffix %>
+  <template id="context-options-suffix">
+      </available_options>
+  </template>
+  
+  <%# Context template for items without choices %>
+  <template id="context-no-choice">
+    <choice id="{index}">
+      <no_selection>无选择记录</no_selection>
+    </choice>
+  </template>
+  
+  <%# Context template suffix %>
+  <template id="context-suffix">
+  </player_choices>
+  </template>
+  
+  <!-- FULL PROMPT TEMPLATES -->
+  <%# Basic prompt template %>
+  <template id="full-prompt">
+  <prompt>
+    <task>{message}</task>
+    {contextString}
+    <instructions>{instructions}</instructions>
+  </prompt>
+  </template>
+  
+  <%# Extended prompt template with passage context %>
+  <template id="extended-prompt">
+  <prompt>
+    <task>{message}</task>
+    
+    <passage_context>
+      <text_before>{textBeforeDynamic}</text_before>
+      <dynamic_placeholder>[!!!!!!final_printed_text will be placed here!!!!!]</dynamic_placeholder>
+      <text_after>{textAfterDynamic}</text_after>
+    </passage_context>
+    
+    {contextString}
+    
+    <instructions>{instructions}</instructions>
+  </prompt>
+  </template>

@@ -36,6 +36,9 @@ app.use((req, res, next) => {
 
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 
+// Make utils directory accessible for codename components
+app.use("/utils", express.static(path.join(__dirname, "utils")));
+
 // ----------------------------------------------
 // Editor Routes (always local – dev mode only)
 // ----------------------------------------------

@@ -37,8 +37,8 @@
       }
       
       .codename-form {
-        width: 80%;
-        max-width: 400px;
+        width: 90%;
+        max-width: 800px;
         padding: 20px;
         border: 1px dotted #69801d;
         text-align: center;
@@ -50,16 +50,45 @@
         margin-bottom: 20px;
       }
       
-      .codename-form input {
-        width: 80%;
+      .codename-selection {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin: 20px 0;
+      }
+      
+      .codename-column {
+        display: flex;
+        flex-direction: column;
+        width: 30%;
+      }
+      
+      .codename-button {
+        padding: 8px;
+        margin: 4px 0;
+        background-color: #232530;
+        color: #eaeaea;
+        border: 1px solid #666;
+        cursor: pointer;
+        font-family: "CP437Courier", "FusionPixelFont", sans-serif;
+        font-size: 16px;
+      }
+      
+      .codename-button.selected {
+        background-color: #3a3f52;
+        border: 1px solid #69801d;
+      }
+      
+      .codename-preview {
+        font-size: 20px;
+        margin: 20px 0;
         padding: 10px;
-        margin: 15px 0;
         background-color: #232530;
         color: #eaeaea;
         border: 1px solid #666;
         font-family: "CP437Courier", "FusionPixelFont", sans-serif;
-        font-size: 16px;
-        text-align: center;
+        display: inline-block;
+        min-width: 200px;
       }
       
       .codename-form button {
@@ -84,11 +113,25 @@
     <!-- Codename verification overlay - displayed before story starts -->
     <div id="codename-verification">
       <div class="codename-form">
-        <h2>输入你的代号以继续</h2>
-        <p>在第一站结束时，你已获得一个代号。</p>
-        <input type="text" id="codename-input" placeholder="请输入你在第一站获得的代号" />
+        <h2>选择你的代号以继续</h2>
+        <p>在第一站结束时，你已获得一个代号。请从以下选项中选择你的代号。</p>
+        
+        <div id="codename-selection" class="codename-selection">
+          <div class="codename-column" id="first-column">
+            <!-- First component buttons will be generated here -->
+          </div>
+          <div class="codename-column" id="second-column">
+            <!-- Second component buttons will be generated here -->
+          </div>
+          <div class="codename-column" id="third-column">
+            <!-- Third component buttons will be generated here -->
+          </div>
+        </div>
+        
+        <div class="codename-preview" id="codename-preview">_____</div>
+        
         <div id="error-message" class="error-message"></div>
-        <button id="verify-button">确认</button>
+        <button id="verify-button" disabled>确认</button>
       </div>
     </div>
     
@@ -111,17 +154,108 @@
       document.addEventListener("DOMContentLoaded", () => {
         const serverUrl = "http://localhost:3001";
         const verifyButton = document.getElementById("verify-button");
-        const codenameInput = document.getElementById("codename-input");
         const errorMessage = document.getElementById("error-message");
         const verificationOverlay = document.getElementById("codename-verification");
+        const codenamePreview = document.getElementById("codename-preview");
+        const firstColumn = document.getElementById("first-column");
+        const secondColumn = document.getElementById("second-column");
+        const thirdColumn = document.getElementById("third-column");
         
-        verifyButton.addEventListener("click", () => {
-          const codename = codenameInput.value.trim();
+        // Selected components
+        let selectedComponents = {
+          first: null,
+          second: null,
+          third: null
+        };
+        
+        // Load codename components from server
+        fetch(`${serverUrl}/utils/codeNameComponents.json`)
+          .then(response => response.json())
+          .then(components => {
+            // Populate first column
+            components.first.forEach(component => {
+              const button = createComponentButton(component, "first");
+              firstColumn.appendChild(button);
+            });
+            
+            // Populate second column
+            components.second.forEach(component => {
+              const button = createComponentButton(component, "second");
+              secondColumn.appendChild(button);
+            });
+            
+            // Populate third column
+            components.third.forEach(component => {
+              const button = createComponentButton(component, "third");
+              thirdColumn.appendChild(button);
+            });
+          })
+          .catch(error => {
+            console.error("Error loading codename components:", error);
+            errorMessage.textContent = "加载代号组件失败";
+          });
+        
+        // Create component button
+        function createComponentButton(component, type) {
+          const button = document.createElement("button");
+          button.textContent = component;
+          button.className = "codename-button";
+          button.dataset.component = component;
+          button.dataset.type = type;
           
-          if (!codename) {
-            errorMessage.textContent = "请输入代号";
-            return;
+          button.addEventListener("click", () => {
+            // Deselect previous button in this column
+            if (selectedComponents[type]) {
+              document.querySelectorAll(`.codename-button[data-type="${type}"].selected`).forEach(btn => {
+                btn.classList.remove("selected");
+              });
+            }
+            
+            // Select this button
+            button.classList.add("selected");
+            selectedComponents[type] = component;
+            
+            // Update preview
+            updateCodenamePreview();
+            
+            // Enable submit button if all components selected
+            if (selectedComponents.first && selectedComponents.second && selectedComponents.third) {
+              verifyButton.disabled = false;
+            }
+          });
+          
+          return button;
+        }
+        
+        // Update codename preview
+        function updateCodenamePreview() {
+          let preview = "";
+          
+          if (selectedComponents.first) {
+            preview += selectedComponents.first;
+          } else {
+            preview += "_";
           }
+          
+          if (selectedComponents.second) {
+            preview += selectedComponents.second;
+          } else {
+            preview += "_";
+          }
+          
+          if (selectedComponents.third) {
+            preview += selectedComponents.third;
+          } else {
+            preview += "_";
+          }
+          
+          codenamePreview.textContent = preview;
+        }
+        
+        // Handle verify button click
+        verifyButton.addEventListener("click", () => {
+          // Build complete codename
+          const codename = selectedComponents.first + selectedComponents.second + selectedComponents.third;
           
           console.log("Verifying codename:", codename);
           
@@ -165,13 +299,6 @@
             console.error("Error verifying codename:", error);
             errorMessage.textContent = "验证失败，请重试";
           });
-        });
-        
-        // Also allow pressing Enter to submit
-        codenameInput.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") {
-            verifyButton.click();
-          }
         });
       });
       

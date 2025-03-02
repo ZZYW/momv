@@ -11,10 +11,6 @@
     <title>Story Player - Station 2</title>
     <link rel="stylesheet" href="/shared/story-player.css" />
     <link rel="stylesheet" href="codename-verification.css" />
-    <script
-      defer
-      src="https://unpkg.com/alpinejs@3.11.1/dist/cdn.min.js"
-    ></script>
     <style>
       /* Override the transition time specifically for static options */
       .static-option {
@@ -51,14 +47,10 @@
     
     <div id="story-container">
       <!-- Story player will be initialized here after codename verification -->
-      <div id="player-data"></div>
-      <div id="passage-container">
-        <!-- Passages will be rendered here -->
-      </div>
-      <div id="status-bar"></div>
+      <!-- Alpine.js container will be inserted here after verification -->
     </div>
 
-    <script src="/shared/story-player.js"></script>
+    <!-- Keep these scripts for verification, story-player.js will be loaded later -->
     <script src="codename-verification.js"></script>
     
     <script>

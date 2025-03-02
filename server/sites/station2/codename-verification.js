@@ -155,19 +155,62 @@ function initializeCodenameVerification() {
 
 // Initialize Alpine.js story player after verification
 function initializeStoryPlayer() {
-  // Very simple approach - directly override the player ID in the story-player.js
+  // Track initialization to prevent duplicates
+  if (window.storyPlayerInitialized) {
+    console.warn("Story player already initialized! Ignoring duplicate call.");
+    return;
+  }
+  
+  window.storyPlayerInitialized = true;
+  
+  // Store validated player ID
   window.VALIDATED_PLAYER_ID = validatedPlayerId;
   
-  // Initialize Alpine.js with the storyPlayer component
-  document.querySelector("#story-container").innerHTML = `
-    <div x-data="storyPlayer" x-init="init()">
-      <div id="player-data"></div>
-      <div id="passage-container">
-        <!-- Passages will be rendered here -->
-      </div>
-      <div id="status-bar" x-text="'Story Player ID: ' + config.playerId"></div>
-    </div>
-  `;
+  console.log(`[INIT] Starting story player initialization with player ID: ${validatedPlayerId}`);
+  console.log(`[INIT] Loading Alpine.js and story-player.js...`);
   
-  console.log("Story player initialized with player ID:", validatedPlayerId);
+  // First, dynamically load the story-player.js script
+  const storyPlayerScript = document.createElement('script');
+  storyPlayerScript.src = '/shared/story-player.js?nocache=' + new Date().getTime(); // Add cache buster
+  
+  storyPlayerScript.onload = function() {
+    console.log(`[INIT] story-player.js loaded at ${new Date().toISOString()}`);
+    
+    // Create the Alpine.js script
+    const alpineScript = document.createElement('script');
+    alpineScript.src = 'https://unpkg.com/alpinejs@3.11.1/dist/cdn.min.js';
+    
+    // When Alpine.js loads, set up the story player container
+    alpineScript.onload = function() {
+      console.log(`[INIT] Alpine.js loaded at ${new Date().toISOString()}`);
+      
+      // Clear any previous content in the story container
+      const storyContainer = document.querySelector("#story-container");
+      storyContainer.innerHTML = '';
+      
+      // Create a small delay to ensure Alpine is fully initialized
+      setTimeout(() => {
+        console.log(`[INIT] Creating Alpine component at ${new Date().toISOString()}`);
+        
+        // Initialize Alpine.js with the storyPlayer component
+        storyContainer.innerHTML = `
+          <div x-data="storyPlayer" x-init="init()">
+            <div id="player-data"></div>
+            <div id="passage-container">
+              <!-- Passages will be rendered here -->
+            </div>
+            <div id="status-bar" x-text="'Story Player ID: ' + config.playerId"></div>
+          </div>
+        `;
+        
+        console.log(`[INIT] Story player initialized with player ID: ${validatedPlayerId}`);
+      }, 200);
+    };
+    
+    // Add Alpine.js script to the page
+    document.body.appendChild(alpineScript);
+  };
+  
+  // Add story-player.js script to the page
+  document.body.appendChild(storyPlayerScript);
 }

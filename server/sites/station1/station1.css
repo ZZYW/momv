@@ -12,7 +12,7 @@
 @font-face {
     font-family: 'GnuUnifontFull';
     /* Choose a name for your font */
-    src: url('../shared/fonts/GnuUnifontFull-Pm9P.ttf') format('truetype');
+    src: url('/assets/fonts/GnuUnifontFull-Pm9P.ttf') format('truetype');
     /* Path to your font file */
     font-weight: normal;
     /* Define font weight (normal, bold, etc.) */
@@ -23,7 +23,7 @@
 @font-face {
     font-family: 'vt323';
     /* Choose a name for your font */
-    src: url('../shared/fonts/VT323-Regular.ttf') format('truetype');
+    src: url('/assets/fonts/VT323-Regular.ttf') format('truetype');
     /* Path to your font file */
     font-weight: normal;
     /* Define font weight (normal, bold, etc.) */

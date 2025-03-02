@@ -6,66 +6,110 @@ import { compilePlayable } from "./controllers/compileController.js";
 import { getData, postData } from "./controllers/dataController.js";
 import { recordChoice } from "./controllers/choiceController.js";
 import { askLLM } from "./controllers/aiController.js";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
+// If defined, CENTRAL_BACKEND_URL is used for station routes.
+const central_backend_url = process.env.CENTRAL_BACKEND_URL;
+// Check production mode based on command line arguments.
+const isProd = process.argv.includes("prod");
+
+const PORT = process.env.PORT || 3001;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = process.env.BACKEND_PORT || 3001;
-const apiKey = process.env.DASHSCOPE_API_KEY;
 
-if (!apiKey) {
-    console.error("Missing LLM API key. Set DASHSCOPE_API_KEY in your environment variables.");
-}
-
+// Global Middleware
 app.use(cors());
 app.use(express.json());
-// Add this near the top of your middleware section, before your routes
 app.use((req, res, next) => {
     res.set({
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Surrogate-Control': 'no-store'
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+        "Surrogate-Control": "no-store",
     });
     next();
 });
 
-// Existing Routes
-app.post("/compile-playable", compilePlayable);
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "static", "control-panel.html"));
-});
-app.get("/data", getData);
-app.post("/data", postData);
-app.post("/record-choice", recordChoice);
-app.post("/generate-dynamic", askLLM);
+app.use("/assets", express.static(path.join(__dirname, "assets")));
 
-// New endpoint to save story JSON
-app.post("/save-story-json", (req, res) => {
-    const { blocks } = req.body;
-    if (!blocks || !Array.isArray(blocks)) {
-        return res.status(400).send("Missing or invalid blocks data");
-    }
+// ----------------------------------------------
+// Editor Routes (always local – dev mode only)
+// ----------------------------------------------
+if (!isProd) {
+    // Serve two editor front ends—one for station1 and one for station2.
+    app.use("/editor/station1", express.static(path.join(__dirname, "sites", "editor")));
+    app.use("/editor/station2", express.static(path.join(__dirname, "sites", "editor")));
 
-    // Ensure directory exists
-    const dirPath = path.join("station1", "input");
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-    }
-
-    // Write the JSON file
-    const filePath = path.join(dirPath, "story1.json");
-    fs.writeFile(filePath, JSON.stringify({ blocks }, null, 2), (err) => {
-        if (err) {
-            console.error("Error writing story JSON file:", err);
-            return res.status(500).send("Error saving story");
+    // Editor API routes (parameterized by station)
+    // The compile-playable route is used exclusively by the editor.
+    app.post("/compile-playable/:station", (req, res) => {
+        const { station } = req.params;
+        if (!["station1", "station2"].includes(station)) {
+            return res.status(400).send("Invalid station specified");
         }
-        res.json({ success: true, filePath });
+        // Optionally, pass station info to compilePlayable if needed.
+        compilePlayable(req, res);
     });
-});
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    // Save story JSON locally in the corresponding station's input folder.
+    app.post("/save-story-json/:station", (req, res) => {
+        const { station } = req.params;
+        if (!["station1", "station2"].includes(station)) {
+            return res.status(400).send("Invalid station specified");
+        }
+        const { blocks } = req.body;
+        if (!blocks || !Array.isArray(blocks)) {
+            return res.status(400).send("Missing or invalid blocks data");
+        }
+        const dirPath = path.join(__dirname, "sites", station, "input");
+        console.log(`saving the file into ${dirPath}`)
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true });
+        }
+        const filePath = path.join(dirPath, "story1.json");
+        fs.writeFile(filePath, JSON.stringify({ blocks }, null, 2), (err) => {
+            if (err) {
+                console.error("Error writing story JSON file:", err);
+                return res.status(500).send("Error saving story");
+            }
+            res.json({ success: true, filePath });
+        });
+    });
+
+    // Control Panel (only in dev mode)
+    app.use("/cp", express.static(path.join(__dirname, "sites", "cp")));
+} else {
+    console.log("Production mode: Editor and Control Panel are not being served.");
+}
+
+// -------------------------------------------------
+// Station Routes (used by station1 and station2)
+// -------------------------------------------------
+if (central_backend_url) {
+    console.log(`Proxying station API routes to central backend at ${central_backend_url}`);
+    app.use("/data", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
+    app.use("/record-choice", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
+    app.use("/generate-dynamic", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
+} else {
+    app.get("/data", getData);
+    app.post("/data", postData);
+    app.post("/record-choice", recordChoice);
+    app.post("/generate-dynamic", askLLM);
+}
+
+// ---------------------------------
+// Static Site Routes
+// ---------------------------------
+
+// Station 1: Accessible at http://localhost:3001/station1
+app.use("/station1", express.static(path.join(__dirname, "sites", "station1")));
+
+// Station 2: Accessible at http://localhost:3001/station2
+app.use("/station2", express.static(path.join(__dirname, "sites", "station2")));
+
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
 });

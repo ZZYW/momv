@@ -80,7 +80,7 @@
         overflow: hidden;
         height: auto;
       }
-      
+
       /* Scrollable textarea style for dynamic blocks */
       .scrollable-textarea {
         overflow-y: auto !important;
@@ -376,8 +376,13 @@
     </script>
 
     <!-- Hidden file input for JSON import -->
-    <input type="file" id="jsonFileInput" accept=".json" style="display: none;" />
-    
+    <input
+      type="file"
+      id="jsonFileInput"
+      accept=".json"
+      style="display: none"
+    />
+
     <div id="app">
       <!-- Toolbar -->
       <div class="toolbar">
@@ -387,7 +392,7 @@
         <button @click="addDynamicTextBlock">+ Dynamic Text Block</button>
         <button @click="addDynamicWordBlock">+ Dynamic Word Block</button>
         <button @click="addSceneHeaderBlock">+ Scene Header Block</button>
-        <button @click="playStory">[Play]</button>
+        <button @click="playStory">Play</button>
         <button @click="exportJson">Export Project as JSON</button>
         <button @click="importJson">Import Project</button>
         <button @click="saveProject">Save Project</button>
@@ -480,6 +485,7 @@
     </div>
 
     <!-- Vue 3 via CDN -->
+    <!-- TODO: use local lib  -->
     <script src="https://unpkg.com/vue@3"></script>
     <script>
       const { createApp } = Vue;
@@ -501,6 +507,14 @@
               ].includes(b.type)
             );
           },
+          // Compute the target station from the URL.
+          station() {
+            // Assumes the editor is loaded under /editor/station1 or /editor/station2.
+            if (window.location.pathname.includes("station2")) {
+              return "station2";
+            }
+            return "station1";
+          },
         },
         watch: {
           blocks: {
@@ -516,10 +530,10 @@
           autoResize: {
             mounted(el) {
               // Don't auto-resize if it's a scrollable textarea
-              if (el.classList.contains('scrollable-textarea')) {
+              if (el.classList.contains("scrollable-textarea")) {
                 return;
               }
-              
+
               el.style.overflow = "hidden";
               const resize = () => {
                 el.style.height = "auto";
@@ -530,10 +544,10 @@
             },
             updated(el) {
               // Don't auto-resize if it's a scrollable textarea
-              if (el.classList.contains('scrollable-textarea')) {
+              if (el.classList.contains("scrollable-textarea")) {
                 return;
               }
-              
+
               el.style.height = "auto";
               el.style.height = el.scrollHeight + "px";
             },
@@ -651,12 +665,13 @@
           removeContext(block, ctxIndex) {
             block.context.splice(ctxIndex, 1);
           },
-          // Replace the playStory() method in editor/index.html
+          // Updated playStory() to use the parameterized endpoint based on the computed station.
           playStory() {
             this.updateSceneIds();
-
-            // Save the story JSON to station1/input/story1.json
-            fetch("http://localhost:3001/save-story-json", {
+            // Use the computed station value
+            const station = this.station;
+            // TODO: parametrize server url
+            fetch(`http://localhost:3001/save-story-json/${station}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ blocks: this.blocks }),
@@ -664,8 +679,9 @@
               .then((res) => res.json())
               .then((data) => {
                 if (data.success) {
-                  // Open station1/index.html in a new window
-                  window.open("http://localhost:8764", "_blank");
+                  // Open the corresponding station's page in a new window
+                  // TODO: parametrize server url
+                  window.open(`http://localhost:3001/${station}`, "_blank");
                 } else {
                   console.error("Error saving story JSON:", data);
                 }
@@ -739,112 +755,136 @@
           },
           importJson() {
             // Get the file input element
-            const fileInput = document.getElementById('jsonFileInput');
-            
+            const fileInput = document.getElementById("jsonFileInput");
+
             // Add an event listener for when a file is selected
             fileInput.onchange = (event) => {
               const file = event.target.files[0];
               if (!file) return;
-              
+
               const reader = new FileReader();
-              
+
               reader.onload = (e) => {
                 try {
                   // Parse the JSON content
                   const projectData = JSON.parse(e.target.result);
-                  
+
                   // Check if the JSON has the expected structure
-                  if (!projectData.blocks || !Array.isArray(projectData.blocks)) {
-                    alert('Error: Invalid project file format. The file must contain a "blocks" array.');
+                  if (
+                    !projectData.blocks ||
+                    !Array.isArray(projectData.blocks)
+                  ) {
+                    alert(
+                      'Error: Invalid project file format. The file must contain a "blocks" array.'
+                    );
                     return;
                   }
-                  
+
                   // Confirm with the user before replacing the current project
                   if (this.blocks.length > 0) {
-                    if (!confirm('This will replace your current project. Continue?')) {
+                    if (
+                      !confirm(
+                        "This will replace your current project. Continue?"
+                      )
+                    ) {
                       return;
                     }
                   }
-                  
+
                   // Process the imported blocks to ensure proper structure
-                  const processedBlocks = projectData.blocks.map(block => {
+                  const processedBlocks = projectData.blocks.map((block) => {
                     // Ensure ID field is consistent
                     const id = block.id || block.uuid || this.generateUUID();
-                    
+
                     // Create a properly structured block based on type
-                    const baseBlock = { id, type: block.type, sceneId: block.sceneId };
-                    
+                    const baseBlock = {
+                      id,
+                      type: block.type,
+                      sceneId: block.sceneId,
+                    };
+
                     switch (block.type) {
-                      case 'plain':
-                        return { ...baseBlock, text: block.text || '' };
-                      case 'static':
-                        return { ...baseBlock, options: Array.isArray(block.options) ? block.options : [] };
-                      case 'dynamic-option':
+                      case "plain":
+                        return { ...baseBlock, text: block.text || "" };
+                      case "static":
                         return {
                           ...baseBlock,
-                          blockName: block.blockName || '',
+                          options: Array.isArray(block.options)
+                            ? block.options
+                            : [],
+                        };
+                      case "dynamic-option":
+                        return {
+                          ...baseBlock,
+                          blockName: block.blockName || "",
                           optionCount: block.optionCount || 3,
-                          prompt: block.prompt || '',
-                          context: Array.isArray(block.context) ? block.context : []
+                          prompt: block.prompt || "",
+                          context: Array.isArray(block.context)
+                            ? block.context
+                            : [],
                         };
-                      case 'dynamic-text':
+                      case "dynamic-text":
                         return {
                           ...baseBlock,
-                          blockName: block.blockName || '',
+                          blockName: block.blockName || "",
                           sentenceCount: block.sentenceCount || 1,
-                          prompt: block.prompt || '',
-                          context: Array.isArray(block.context) ? block.context : []
+                          prompt: block.prompt || "",
+                          context: Array.isArray(block.context)
+                            ? block.context
+                            : [],
                         };
-                      case 'dynamic-word':
+                      case "dynamic-word":
                         return {
                           ...baseBlock,
-                          blockName: block.blockName || '',
-                          lexiconCategory: block.lexiconCategory || 'noun',
-                          prompt: block.prompt || '',
-                          context: Array.isArray(block.context) ? block.context : []
+                          blockName: block.blockName || "",
+                          lexiconCategory: block.lexiconCategory || "noun",
+                          prompt: block.prompt || "",
+                          context: Array.isArray(block.context)
+                            ? block.context
+                            : [],
                         };
-                      case 'scene-header':
+                      case "scene-header":
                         return {
                           ...baseBlock,
-                          titleName: block.titleName || ''
+                          titleName: block.titleName || "",
                         };
                       default:
                         return baseBlock;
                     }
                   });
-                  
+
                   // Update the project data
                   this.blocks = processedBlocks;
-                  this.autosaveTime = projectData.autosave || this.updateAutosaveTime();
-                  
+                  this.autosaveTime =
+                    projectData.autosave || this.updateAutosaveTime();
+
                   // Save the imported project
                   this.saveProject();
-                  
+
                   // Display success message
-                  alert('Project imported successfully!');
-                  
+                  alert("Project imported successfully!");
                 } catch (error) {
-                  console.error('Error importing project:', error);
+                  console.error("Error importing project:", error);
                   alert(`Error importing project: ${error.message}`);
                 }
-                
+
                 // Reset the file input
-                fileInput.value = '';
+                fileInput.value = "";
               };
-              
+
               reader.onerror = () => {
-                alert('Error reading the file');
-                fileInput.value = '';
+                alert("Error reading the file");
+                fileInput.value = "";
               };
-              
+
               // Read the file as text
               reader.readAsText(file);
             };
-            
+
             // Trigger the file dialog
             fileInput.click();
           },
-          
+
           saveProject() {
             const scrollX = window.scrollX;
             const scrollY = window.scrollY;

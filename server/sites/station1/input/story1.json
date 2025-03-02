@@ -1,0 +1,40 @@
+{
+  "blocks": [
+    {
+      "id": "e62abc53-42f4-46d1-8da5-ae339ea9447d",
+      "type": "plain",
+      "text": "Your narrative...",
+      "sceneId": 1
+    },
+    {
+      "id": "82365951-11d0-4b0b-936a-f8edf427b027",
+      "type": "static",
+      "options": [
+        "1",
+        "2",
+        "3"
+      ],
+      "sceneId": 1
+    },
+    {
+      "id": "a28328a9-2682-4caa-836d-d41041561e15",
+      "type": "scene-header",
+      "titleName": "",
+      "sceneId": 1
+    },
+    {
+      "id": "6d25f5e8-5736-40f5-8fa2-627398f78fe4",
+      "type": "dynamic-option",
+      "blockName": "xxx",
+      "optionCount": 3,
+      "prompt": "sss",
+      "context": [
+        {
+          "value": "82365951-11d0-4b0b-936a-f8edf427b027",
+          "includeAll": false
+        }
+      ],
+      "sceneId": 1
+    }
+  ]
+}

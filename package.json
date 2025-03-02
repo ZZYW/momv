@@ -1,10 +1,11 @@
 {
-  "name": "db",
+  "name": "momv",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node server/index.js",
+    "prod": "node server/index.js prod"
   },
   "keywords": [],
   "type": "module",
@@ -14,6 +15,7 @@
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "http-proxy-middleware": "^3.0.3",
     "lowdb": "^7.0.1",
     "openai": "^4.86.1"
   },

@@ -213,30 +213,72 @@ document.addEventListener("alpine:init", () => {
         passageEl.appendChild(navContainer);
       } else {
         // Final passage - story is ending
+        const endContainer = document.createElement("div");
+        endContainer.className = "end-container";
+        
+        // Create end message but don't show it yet
         const endMessage = document.createElement("div");
         endMessage.className = "end-message";
         endMessage.innerText = "故事结束";
-        passageEl.appendChild(endMessage);
+        endMessage.style.display = "none";
+        endContainer.appendChild(endMessage);
+        
+        passageEl.appendChild(endContainer);
         
         // Only generate and display codename for Station 1
         if (this.config.stationId === "station1") {
-          this.generateAndDisplayCodename(passageEl);
+          this.generateAndDisplayCodename(passageEl, endMessage);
+        } else {
+          // For other stations, just check for unselected options
+          if (this.passageHasUnselectedOptions(passageEl)) {
+            const checkInterval = setInterval(() => {
+              if (!this.passageHasUnselectedOptions(passageEl)) {
+                clearInterval(checkInterval);
+                endMessage.style.display = "block";
+              }
+            }, 500);
+          } else {
+            endMessage.style.display = "block";
+          }
         }
       }
     },
     
     // Generate and display a codename for the player when they complete Station 1
-    generateAndDisplayCodename(passageEl) {
+    generateAndDisplayCodename(passageEl, endMessage) {
       const codenameContainer = document.createElement("div");
       codenameContainer.className = "codename-container";
+      codenameContainer.style.display = "none"; // Initially hidden
+      
+      // Add container to passage
+      passageEl.appendChild(codenameContainer);
+      
+      // Only show the codename when all options in the passage have been selected
+      if (this.passageHasUnselectedOptions(passageEl)) {
+        // If there are unselected options, we'll check repeatedly until they're all selected
+        const checkInterval = setInterval(() => {
+          if (!this.passageHasUnselectedOptions(passageEl)) {
+            clearInterval(checkInterval);
+            this.fetchAndDisplayCodename(codenameContainer, endMessage);
+          }
+        }, 500); // Check every 500ms
+      } else {
+        // If there are no options to select, show codename right away
+        this.fetchAndDisplayCodename(codenameContainer, endMessage);
+      }
+    },
+    
+    // Helper method to actually fetch and display the codename
+    fetchAndDisplayCodename(codenameContainer, endMessage) {
+      // Show end message and container
+      if (endMessage) endMessage.style.display = "block";
+      codenameContainer.style.display = "block";
       
       // Show loading indicator while fetching codename
       const loadingElement = document.createElement("div");
       loadingElement.className = "codename-loading";
       loadingElement.innerHTML = "生成代号中... <span class='loading'></span>";
       codenameContainer.appendChild(loadingElement);
-      
-      passageEl.appendChild(codenameContainer);
       
       console.log("Requesting codename for player:", this.config.playerId);
       console.log("Server URL:", this.config.serverUrl);
@@ -266,6 +308,17 @@ document.addEventListener("alpine:init", () => {
         // Replace loading with actual content
         codenameContainer.innerHTML = "";
         codenameContainer.appendChild(codenameMessage);
+        
+        // Add "start a new journey" button
+        const newJourneyButton = document.createElement("button");
+        newJourneyButton.className = "new-journey-button";
+        newJourneyButton.innerText = "开始新的旅程";
+        newJourneyButton.addEventListener("click", () => {
+          window.location.reload();
+        });
+        codenameContainer.appendChild(document.createElement("br"));
+        codenameContainer.appendChild(document.createElement("br"));
+        codenameContainer.appendChild(newJourneyButton);
       })
       .catch(error => {
         console.error("Error generating codename:", error);

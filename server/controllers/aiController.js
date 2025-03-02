@@ -1,4 +1,10 @@
-import { getBlockInstructions, fetchContextInfo, formatContextString, craftPrompt } from '../utils/promptCrafter.js';
+import { 
+  getBlockInstructions, 
+  fetchContextInfo, 
+  formatContextString, 
+  craftPrompt,
+  previewPrompt
+} from '../utils/promptCrafter.js';
 import { sendPromptToLLM } from '../utils/aiCommunicator.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -146,6 +152,66 @@ export const askLLM = async (req, res) => {
             message: error.message,
             stack: error.stack,
             details: error.response?.data || "No additional details available"
+        });
+    }
+};
+
+/**
+ * Controller to preview the prompt that will be sent to the AI
+ * This helps writers understand how their templates will look when composed
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const previewAIPrompt = async (req, res) => {
+    const {
+        message,
+        playerID,
+        contextRefs,
+        blockType,
+        optionCount,
+        sentenceCount,
+        lexiconCategory,
+        blockId,
+        storyId = "1" // Default to story1 if not specified
+    } = req.body;
+
+    try {
+        // Step 1: Get context information if provided
+        let contextInfo = [];
+        if (contextRefs && contextRefs.length > 0) {
+            contextInfo = await fetchContextInfo(contextRefs, playerID);
+        }
+        
+        // Step 2: Get passage context if this is a dynamic block
+        let passageContext = null;
+        if (blockType.startsWith('dynamic-') && blockId) {
+            passageContext = await getPassageContext(blockId, storyId, playerID);
+        }
+
+        // Step 3: Generate preview of the prompt
+        const promptPreview = previewPrompt({
+            blockType,
+            message,
+            optionCount,
+            sentenceCount,
+            lexiconCategory,
+            contextInfo,
+            passageContext
+        });
+
+        // Step 4: Return the preview
+        res.json({
+            preview: promptPreview,
+            message: '这是将发送给AI的提示预览，供创作者参考'
+        });
+    } catch (error) {
+        console.error("Error generating prompt preview:", error.message);
+        console.error("Stack trace:", error.stack);
+
+        // Return error information to the client
+        res.status(500).json({
+            error: "Preview Generation Error",
+            message: error.message
         });
     }
 };

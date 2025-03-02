@@ -5,7 +5,7 @@ import fs from "fs";
 import { compilePlayable } from "./controllers/compileController.js";
 import { getData, postData } from "./controllers/dataController.js";
 import { recordChoice } from "./controllers/choiceController.js";
-import { askLLM } from "./controllers/aiController.js";
+import { askLLM, previewAIPrompt } from "./controllers/aiController.js";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
@@ -99,6 +99,7 @@ if (central_backend_url) {
     app.post("/data", postData);
     app.post("/record-choice", recordChoice);
     app.post("/generate-dynamic", askLLM);
+    app.post("/preview-prompt", previewAIPrompt);
 }
 
 // ---------------------------------

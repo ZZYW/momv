@@ -7,55 +7,456 @@
       body {
         font-family: Arial, sans-serif;
         padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
       }
       button {
         margin: 5px;
         padding: 10px;
+        cursor: pointer;
       }
       pre {
         background: #f4f4f4;
         padding: 10px;
         border: 1px solid #ddd;
+        overflow: auto;
+        max-height: 500px;
+      }
+      .tab-container {
+        margin: 20px 0;
+      }
+      .tab-buttons {
+        display: flex;
+        border-bottom: 1px solid #ddd;
+      }
+      .tab-button {
+        padding: 10px 20px;
+        background: #f1f1f1;
+        border: none;
+        border-radius: 5px 5px 0 0;
+        margin-right: 5px;
+      }
+      .tab-button.active {
+        background: #007bff;
+        color: white;
+      }
+      .tab-content {
+        display: none;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-top: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .preview-container {
+        display: flex;
+        gap: 20px;
+      }
+      .preview-form {
+        flex: 1;
+      }
+      .preview-result {
+        flex: 1;
+      }
+      .section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        border-left: 4px solid #007bff;
+      }
+      .button-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
       }
     </style>
   </head>
   <body>
-    <h1>Control Panel</h1>
-    
-    <h2>Available Web Apps</h2>
-    <div style="margin-bottom: 20px;">
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-        <a href="/station1" target="_blank" style="display: block; padding: 15px; background-color: #e9f5ff; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; color: #0066cc;">
-          Station 1
-        </a>
-        <a href="/station2" target="_blank" style="display: block; padding: 15px; background-color: #e9f5ff; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; color: #0066cc;">
-          Station 2
-        </a>
-        <a href="/editor/station1" target="_blank" style="display: block; padding: 15px; background-color: #fff0e9; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; color: #cc6600;">
-          Editor (Station 1)
-        </a>
-        <a href="/editor/station2" target="_blank" style="display: block; padding: 15px; background-color: #fff0e9; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; color: #cc6600;">
-          Editor (Station 2)
-        </a>
+    <h1>Mountain of Many Voices Control Panel</h1>
+
+    <!-- Tab navigation -->
+    <div class="tab-container">
+      <div class="tab-buttons">
+        <button class="tab-button active" onclick="openTab(event, 'apps-tab')">
+          Apps
+        </button>
+        <button class="tab-button" onclick="openTab(event, 'api-tab')">
+          API Tests
+        </button>
+        <button class="tab-button" onclick="openTab(event, 'preview-tab')">
+          Template Preview
+        </button>
+      </div>
+
+      <!-- Apps Tab -->
+      <div id="apps-tab" class="tab-content active">
+        <h2>Available Web Apps</h2>
+        <div style="margin-bottom: 20px">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+              gap: 15px;
+            "
+          >
+            <a
+              href="/station1"
+              target="_blank"
+              style="
+                display: block;
+                padding: 15px;
+                background-color: #e9f5ff;
+                border-radius: 5px;
+                text-decoration: none;
+                text-align: center;
+                font-weight: bold;
+                color: #0066cc;
+              "
+            >
+              Station 1
+            </a>
+            <a
+              href="/station2"
+              target="_blank"
+              style="
+                display: block;
+                padding: 15px;
+                background-color: #e9f5ff;
+                border-radius: 5px;
+                text-decoration: none;
+                text-align: center;
+                font-weight: bold;
+                color: #0066cc;
+              "
+            >
+              Station 2
+            </a>
+            <a
+              href="/editor/station1"
+              target="_blank"
+              style="
+                display: block;
+                padding: 15px;
+                background-color: #fff0e9;
+                border-radius: 5px;
+                text-decoration: none;
+                text-align: center;
+                font-weight: bold;
+                color: #cc6600;
+              "
+            >
+              Editor (Station 1)
+            </a>
+            <a
+              href="/editor/station2"
+              target="_blank"
+              style="
+                display: block;
+                padding: 15px;
+                background-color: #fff0e9;
+                border-radius: 5px;
+                text-decoration: none;
+                text-align: center;
+                font-weight: bold;
+                color: #cc6600;
+              "
+            >
+              Editor (Station 2)
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Tests Tab -->
+      <div id="api-tab" class="tab-content">
+        <h2>API Tests</h2>
+        <div>
+          <button onclick="testGetData()">Test GET /data</button>
+          <button onclick="testPostData()">Test POST /data</button>
+          <button onclick="testRecordChoice()">Test POST /record-choice</button>
+          <button onclick="testGenerateDynamic()">
+            Test POST /generate-dynamic
+          </button>
+          <button onclick="testCompilePlayable()">
+            Test POST /compile-playable
+          </button>
+          <button onclick="testSaveStoryJson()">
+            Test POST /save-story-json
+          </button>
+        </div>
+      </div>
+
+      <!-- Template Preview Tab -->
+      <div id="preview-tab" class="tab-content">
+        <h2>AI Prompt Template Preview</h2>
+        <p>
+          Use this tool to preview how template changes will appear in the final
+          AI prompt.
+        </p>
+
+        <div class="preview-container">
+          <div class="preview-form">
+            <div class="section">
+              <h3>Template Type</h3>
+              <div class="form-group">
+                <label for="blockType">Block Type:</label>
+                <select id="blockType" onchange="updateFormFields()">
+                  <option value="dynamic-option">Dynamic Options</option>
+                  <option value="dynamic-text" selected>Dynamic Text</option>
+                  <option value="dynamic-word">Dynamic Word</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>Dynamic Content Settings</h3>
+              <div id="dynamic-option-fields" style="display: none">
+                <div class="form-group">
+                  <label for="optionCount">Number of Choices:</label>
+                  <input
+                    type="number"
+                    id="optionCount"
+                    value="3"
+                    min="1"
+                    max="10"
+                  />
+                </div>
+              </div>
+
+              <div id="dynamic-text-fields">
+                <div class="form-group">
+                  <label for="sentenceCount">Number of Sentences:</label>
+                  <input
+                    type="number"
+                    id="sentenceCount"
+                    value="3"
+                    min="1"
+                    max="20"
+                  />
+                </div>
+              </div>
+
+              <div id="dynamic-word-fields" style="display: none">
+                <div class="form-group">
+                  <label for="lexiconCategory">Word Category:</label>
+                  <select id="lexiconCategory">
+                    <option value="名词" selected>名词 (Noun)</option>
+                    <option value="形容词">形容词 (Adjective)</option>
+                    <option value="副词">副词 (Adverb)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="customCategory">Custom Category:</label>
+                  <input
+                    type="text"
+                    id="customCategory"
+                    placeholder="Enter a custom word category if not in the list above"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>Custom Message</h3>
+              <div class="form-group">
+                <label for="message">Custom Instruction:</label>
+                <textarea
+                  id="message"
+                  rows="3"
+                  placeholder="Enter custom instruction for the AI..."
+                >
+请创建一个神秘的场景描述</textarea
+                >
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>Player Context (Optional)</h3>
+              <div class="form-group">
+                <label for="playerID">Player ID:</label>
+                <input type="text" id="playerID" value="default" />
+              </div>
+
+              <div class="form-group">
+                <label for="contextRefs"
+                  >Context References (comma separated):</label
+                >
+                <input
+                  type="text"
+                  id="contextRefs"
+                  placeholder="e.g. block1,block2"
+                />
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button class="button-primary" onclick="previewPrompt()">
+                Generate Preview
+              </button>
+              <button onclick="copyToClipboard()">Copy to Clipboard</button>
+            </div>
+          </div>
+
+          <div class="preview-result">
+            <h3>Preview Result</h3>
+            <pre id="preview-response">Preview will appear here...</pre>
+          </div>
+        </div>
       </div>
     </div>
-    
-    <h2>API Tests</h2>
-    <div>
-      <button onclick="testGetData()">Test GET /data</button>
-      <button onclick="testPostData()">Test POST /data</button>
-      <button onclick="testRecordChoice()">Test POST /record-choice</button>
-      <button onclick="testGenerateDynamic()">
-        Test POST /generate-dynamic
-      </button>
-      <button onclick="testCompilePlayable()">
-        Test POST /compile-playable
-      </button>
-      <button onclick="testSaveStoryJson()">Test POST /save-story-json</button>
-    </div>
+
     <h2>Response:</h2>
     <pre id="response"></pre>
     <script>
+      // Tab navigation
+      function openTab(evt, tabName) {
+        // Hide all tab content
+        const tabContents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabContents.length; i++) {
+          tabContents[i].classList.remove("active");
+        }
+
+        // Remove active class from all tab buttons
+        const tabButtons = document.getElementsByClassName("tab-button");
+        for (let i = 0; i < tabButtons.length; i++) {
+          tabButtons[i].classList.remove("active");
+        }
+
+        // Show the selected tab and mark its button as active
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+      }
+
+      // Update form fields based on selected block type
+      function updateFormFields() {
+        const blockType = document.getElementById("blockType").value;
+
+        // Hide all specific fields first
+        document.getElementById("dynamic-option-fields").style.display = "none";
+        document.getElementById("dynamic-text-fields").style.display = "none";
+        document.getElementById("dynamic-word-fields").style.display = "none";
+
+        // Show fields specific to the selected block type
+        if (blockType === "dynamic-option") {
+          document.getElementById("dynamic-option-fields").style.display =
+            "block";
+        } else if (blockType === "dynamic-text") {
+          document.getElementById("dynamic-text-fields").style.display =
+            "block";
+        } else if (blockType === "dynamic-word") {
+          document.getElementById("dynamic-word-fields").style.display =
+            "block";
+        }
+      }
+
+      // Generate prompt preview
+      function previewPrompt() {
+        const blockType = document.getElementById("blockType").value;
+        const message = document.getElementById("message").value;
+        const playerID = document.getElementById("playerID").value;
+
+        // Prepare the request body
+        const body = {
+          blockType: blockType,
+          message: message,
+          playerID: playerID,
+          contextRefs: [],
+        };
+
+        // Add context references if provided
+        const contextRefsInput = document.getElementById("contextRefs").value;
+        if (contextRefsInput.trim()) {
+          const refs = contextRefsInput.split(",").map((ref) => ref.trim());
+          body.contextRefs = refs.map((ref) => ({ value: ref }));
+        }
+
+        // Add block-specific parameters
+        if (blockType === "dynamic-option") {
+          body.optionCount = parseInt(
+            document.getElementById("optionCount").value
+          );
+        } else if (blockType === "dynamic-text") {
+          body.sentenceCount = parseInt(
+            document.getElementById("sentenceCount").value
+          );
+        } else if (blockType === "dynamic-word") {
+          // Check if custom category is provided, use it if available
+          const customCategory = document
+            .getElementById("customCategory")
+            .value.trim();
+          body.lexiconCategory =
+            customCategory || document.getElementById("lexiconCategory").value;
+        }
+
+        // Update the preview-response element with a loading message
+        document.getElementById("preview-response").textContent =
+          "Loading preview...";
+
+        // Make the API request
+        fetch("/preview-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error(`API error: ${res.status}`);
+            }
+            return res.json();
+          })
+          .then((data) => {
+            document.getElementById("preview-response").textContent =
+              data.preview;
+          })
+          .catch((err) => {
+            document.getElementById(
+              "preview-response"
+            ).textContent = `Error: ${err.message}`;
+          });
+      }
+
+      // Copy preview to clipboard
+      function copyToClipboard() {
+        const previewText =
+          document.getElementById("preview-response").textContent;
+        navigator.clipboard
+          .writeText(previewText)
+          .then(() => {
+            console.log("Preview copied to clipboard!");
+          })
+          .catch((err) => {
+            alert("Failed to copy: " + err);
+          });
+      }
+
+      // Update response display for API tests
       function updateResponse(data) {
         document.getElementById("response").textContent = JSON.stringify(
           data,
@@ -63,12 +464,15 @@
           2
         );
       }
+
+      // API test functions
       function testGetData() {
         fetch("/data")
           .then((res) => res.json())
           .then((data) => updateResponse(data))
           .catch((err) => updateResponse({ error: err.toString() }));
       }
+
       function testPostData() {
         fetch("/data", {
           method: "POST",
@@ -79,6 +483,7 @@
           .then((data) => updateResponse(data))
           .catch((err) => updateResponse({ error: err.toString() }));
       }
+
       function testRecordChoice() {
         fetch("/record-choice", {
           method: "POST",
@@ -96,6 +501,7 @@
           .then((data) => updateResponse(data))
           .catch((err) => updateResponse({ error: err.toString() }));
       }
+
       function testGenerateDynamic() {
         fetch("/generate-dynamic", {
           method: "POST",
@@ -113,6 +519,7 @@
           .then((data) => updateResponse(data))
           .catch((err) => updateResponse({ error: err.toString() }));
       }
+
       function testCompilePlayable() {
         // Use station1 as the default station
         fetch("/compile-playable/station1", {
@@ -126,6 +533,7 @@
           .then((data) => updateResponse({ html: data }))
           .catch((err) => updateResponse({ error: err.toString() }));
       }
+
       function testSaveStoryJson() {
         // Use station1 as the default station
         fetch("/save-story-json/station1", {
@@ -139,6 +547,11 @@
           .then((data) => updateResponse(data))
           .catch((err) => updateResponse({ error: err.toString() }));
       }
+
+      // Initialize the form fields on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        updateFormFields();
+      });
     </script>
   </body>
 </html>

@@ -22,9 +22,13 @@ const getTemplate = (id) => {
   return match ? match[1].trim() : '';
 };
 
+// Shared components
+const WRITER_ROLE = getTemplate('writer-role');
+const LANGUAGE_REQUIREMENT = getTemplate('language-requirement');
+const COMMON_RESPONSE_FORMAT = getTemplate('common-response-format');
+
 /**
- * Prompt templates for different block types with XML tags.
- * These templates provide the structure for AI prompts and can be easily modified.
+ * Prompt templates for different block types in natural language.
  */
 export const PROMPT_TEMPLATES = {
   "dynamic-option": getTemplate('dynamic-option'),
@@ -33,7 +37,7 @@ export const PROMPT_TEMPLATES = {
 };
 
 /**
- * JSON response format templates with XML instruction tags
+ * JSON response format templates
  */
 export const FORMAT_TEMPLATES = {
   "dynamic-option": getTemplate('format-dynamic-option'),
@@ -42,7 +46,7 @@ export const FORMAT_TEMPLATES = {
 };
 
 /**
- * Context formatting template with XML tags
+ * Context formatting template in natural language
  */
 export const CONTEXT_TEMPLATE = {
   prefix: getTemplate('context-prefix'),
@@ -54,40 +58,52 @@ export const CONTEXT_TEMPLATE = {
 };
 
 /**
- * Full prompt structure template with XML tags
+ * Full prompt structure template in natural language
  */
 export const FULL_PROMPT_TEMPLATE = getTemplate('full-prompt');
 
 /**
- * Extended prompt structure template with passage context and XML tags
+ * Extended prompt structure template with passage context in natural language
  */
 export const EXTENDED_PROMPT_TEMPLATE = getTemplate('extended-prompt');
 
 /**
- * Creates instructions based on block type and properties.
+ * Creates instructions based on block type and properties in natural language format.
  * @param {Object} params - Parameter object
  * @param {string} params.blockType - Type of block (dynamic-option, dynamic-text, dynamic-word)
  * @param {number} params.optionCount - Number of options to generate
  * @param {number} params.sentenceCount - Number of sentences to generate
  * @param {string} params.lexiconCategory - Category of word to generate
- * @returns {string} - Crafted instructions
+ * @returns {string} - Crafted instructions in natural language
  */
 export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, lexiconCategory }) => {
-  let baseInstruction = "";
-
-  // Get the appropriate template and replace the placeholders
+  let template = PROMPT_TEMPLATES[blockType] || "";
+  let formatTemplate = "";
+  
+  // Replace placeholders with actual values based on block type
   if (blockType === "dynamic-option" && optionCount) {
-    baseInstruction = PROMPT_TEMPLATES[blockType].replace('{optionCount}', String(optionCount));
-  } else if (blockType === "dynamic-text" && sentenceCount) {
-    baseInstruction = PROMPT_TEMPLATES[blockType].replace('{sentenceCount}', String(sentenceCount));
-  } else if (blockType === "dynamic-word" && lexiconCategory) {
-    baseInstruction = PROMPT_TEMPLATES[blockType].replace('{lexiconCategory}', lexiconCategory);
+    template = template
+      .replace('{number_of_choices}', String(optionCount))
+      .replace('{writer_role}', WRITER_ROLE)
+      .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
+      .replace('{response_format_json_array}', FORMAT_TEMPLATES[blockType]);
+  } 
+  else if (blockType === "dynamic-text" && sentenceCount) {
+    template = template
+      .replace('{number_of_sentences}', String(sentenceCount))
+      .replace('{writer_role}', WRITER_ROLE)
+      .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
+      .replace('{response_format_json_text}', FORMAT_TEMPLATES[blockType]);
+  } 
+  else if (blockType === "dynamic-word" && lexiconCategory) {
+    template = template
+      .replace('{word_category}', lexiconCategory)
+      .replace('{writer_role}', WRITER_ROLE)
+      .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
+      .replace('{response_format_json_word}', FORMAT_TEMPLATES[blockType]);
   }
 
-  // Add the JSON format instruction
-  const returnFormat = FORMAT_TEMPLATES[blockType] || "";
-
-  return baseInstruction + "\n\n" + returnFormat;
+  return template;
 };
 
 /**
@@ -123,9 +139,9 @@ export const fetchContextInfo = async (contextRefs, currentPlayerID) => {
 };
 
 /**
- * Formats context information into a readable string with XML tags
+ * Formats context information into a readable natural language string
  * @param {Array} contextInfo - Array of context objects
- * @returns {string} - Formatted context string with XML structure
+ * @returns {string} - Formatted context string in natural language
  */
 export const formatContextString = (contextInfo) => {
   if (!contextInfo || contextInfo.length === 0) return "";
@@ -146,18 +162,18 @@ export const formatContextString = (contextInfo) => {
     return CONTEXT_TEMPLATE.noChoice.replace('{index}', String(index + 1));
   }).join("\n");
 
-  return CONTEXT_TEMPLATE.prefix + "\n" + formattedItems + CONTEXT_TEMPLATE.suffix;
+  return CONTEXT_TEMPLATE.prefix + "\n" + formattedItems + "\n" + CONTEXT_TEMPLATE.suffix;
 };
 
 /**
- * Crafts a complete prompt for the AI using message, context and instructions
+ * Crafts a complete prompt for the AI using natural language
  * @param {string} message - The main message/prompt
  * @param {string} contextString - Formatted context string
  * @param {string} instructions - Block-specific instructions
  * @param {Object} [passageContext] - The surrounding passage context (optional)
  * @param {string} passageContext.textBeforeDynamic - Text that comes before the dynamic block
  * @param {string} passageContext.textAfterDynamic - Text that comes after the dynamic block
- * @returns {string} - Complete prompt for the AI
+ * @returns {string} - Complete prompt in natural language
  */
 export const craftPrompt = (message, contextString, instructions, passageContext) => {
   if (passageContext && passageContext.textBeforeDynamic !== undefined) {
@@ -173,4 +189,30 @@ export const craftPrompt = (message, contextString, instructions, passageContext
     .replace('{message}', message || "")
     .replace('{contextString}', contextString)
     .replace('{instructions}', instructions);
+};
+
+/**
+ * Preview function to see what the final composed prompt will look like
+ * @param {Object} params - Parameter object with all prompt components
+ * @returns {string} - The complete prompt that will be sent to the LLM
+ */
+export const previewPrompt = ({ 
+  blockType, 
+  message, 
+  optionCount, 
+  sentenceCount, 
+  lexiconCategory, 
+  contextInfo,
+  passageContext
+}) => {
+  const instructions = getBlockInstructions({ 
+    blockType, 
+    optionCount, 
+    sentenceCount, 
+    lexiconCategory 
+  });
+  
+  const contextString = contextInfo ? formatContextString(contextInfo) : "";
+  
+  return craftPrompt(message, contextString, instructions, passageContext);
 };

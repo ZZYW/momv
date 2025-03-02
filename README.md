@@ -122,7 +122,32 @@ To extend the platform with new interactive elements:
 3. Implement any necessary backend support in controllers
 
 ### AI Prompt Templates
-Modify the prompt templates in `server/utils/promptCrafter.js` to adjust how the AI generates content. The system uses XML-structured prompts for explicit instruction formatting.
+The system uses natural language templates for AI generation, located in `server/utils/templates.ejs`. These templates are designed to be writer-friendly and easily customizable.
+
+#### Key Template Features:
+- **Natural Language Format**: Templates use plain language instead of technical XML tags
+- **Modular Structure**: Common elements are extracted to reduce duplication
+- **Descriptive Variables**: Clear variable names like `{number_of_sentences}` make templates intuitive
+- **Preview Functionality**: Use the `/preview-prompt` API endpoint to see the complete prompt before sending to AI
+
+#### Customizing Templates:
+1. Open `server/utils/templates.ejs`
+2. Edit the relevant section (dynamic-option, dynamic-text, dynamic-word)
+3. Maintain the existing variable placeholders (e.g., `{number_of_choices}`)
+4. Save your changes and restart the server
+5. Use the preview functionality to test your changes
+
+#### Template Preview Tool
+The Control Panel includes a dedicated Template Preview tab that allows writers to visually test how template changes affect the final AI prompts:
+
+1. Open the Control Panel at http://localhost:3001/cp
+2. Click on the "Template Preview" tab
+3. Select the block type (dynamic-option, dynamic-text, or dynamic-word)
+4. Fill in the required parameters (number of choices, sentences, or word category)
+5. Add a custom message
+6. Click "Generate Preview" to see the exact prompt that will be sent to the AI
+
+This feature helps writers understand and refine the prompt templates without needing to know the technical details of the API.
 
 ## Troubleshooting
 

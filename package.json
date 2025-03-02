@@ -1,7 +1,7 @@
 {
   "name": "momv",
   "version": "1.0.0",
-  "description": "",
+  "description": "Mountain of Many Voices interactive narrative platform",
   "main": "server/index.js",
   "scripts": {
     "dev": "node server/index.js",

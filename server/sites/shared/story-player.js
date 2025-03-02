@@ -230,16 +230,38 @@ document.addEventListener("alpine:init", () => {
         if (this.config.stationId === "station1") {
           this.generateAndDisplayCodename(passageEl, endMessage);
         } else {
-          // For other stations, just check for unselected options
+          // For other stations, show end message and add "start a new journey" button
+          const addNewJourneyButton = () => {
+            // Create a container for the new journey button
+            const buttonContainer = document.createElement("div");
+            buttonContainer.className = "codename-container";
+            buttonContainer.style.marginTop = "30px";
+            
+            // Add "start a new journey" button
+            const newJourneyButton = document.createElement("button");
+            newJourneyButton.className = "new-journey-button";
+            newJourneyButton.innerText = "开始新的旅程";
+            newJourneyButton.addEventListener("click", () => {
+              window.location.reload();
+            });
+            
+            buttonContainer.appendChild(newJourneyButton);
+            endContainer.appendChild(buttonContainer);
+            
+            // Show the end message
+            endMessage.style.display = "block";
+          };
+          
+          // Check if there are unselected options before showing button
           if (this.passageHasUnselectedOptions(passageEl)) {
             const checkInterval = setInterval(() => {
               if (!this.passageHasUnselectedOptions(passageEl)) {
                 clearInterval(checkInterval);
-                endMessage.style.display = "block";
+                addNewJourneyButton();
               }
             }, 500);
           } else {
-            endMessage.style.display = "block";
+            addNewJourneyButton();
           }
         }
       }

@@ -78,8 +78,22 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
             } else if (block.type === 'scene-header') {
                 // Include scene headers
                 textBeforeDynamic += '\n\n' + (block.titleName || '未命名场景') + '\n\n';
+            } else if (block.type.startsWith('dynamic-')) {
+                // Add recorded dynamic content if available
+                const dynamicContent = db.data.players?.[playerID]?.dynamicContent?.[block.id];
+                if (dynamicContent) {
+                    if (block.type === 'dynamic-option') {
+                        // For dynamic options, include the selected content
+                        const choice = playerChoices[block.id];
+                        if (choice && choice.chosenText) {
+                            textBeforeDynamic += choice.chosenText;
+                        }
+                    } else if (block.type === 'dynamic-text' || block.type === 'dynamic-word') {
+                        // For dynamic text/word, include the generated content
+                        textBeforeDynamic += dynamicContent.content;
+                    }
+                }
             }
-            // Skip other block types
         }
         
         // Add a separator between station1 and station2 content
@@ -107,8 +121,22 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
         } else if (block.type === 'scene-header') {
             // Include scene headers
             textBeforeDynamic += '\n\n' + (block.titleName || '未命名场景') + '\n\n';
+        } else if (block.type.startsWith('dynamic-')) {
+            // Add recorded dynamic content if available
+            const dynamicContent = db.data.players?.[playerID]?.dynamicContent?.[block.id];
+            if (dynamicContent) {
+                if (block.type === 'dynamic-option') {
+                    // For dynamic options, include the selected content
+                    const choice = playerChoices[block.id];
+                    if (choice && choice.chosenText) {
+                        textBeforeDynamic += choice.chosenText;
+                    }
+                } else if (block.type === 'dynamic-text' || block.type === 'dynamic-word') {
+                    // For dynamic text/word, include the generated content
+                    textBeforeDynamic += dynamicContent.content;
+                }
+            }
         }
-        // Skip other block types
     }
 
     return {
@@ -166,7 +194,25 @@ export const askLLM = async (req, res) => {
         // Step 5: Send to LLM and get response
         const finalContent = await sendPromptToLLM(prompt, blockType);
 
-        // Step 6: Return processed result to client
+        // Step 6: Record dynamic block content in database
+        await db.read();
+        // Ensure db structure exists
+        if (!db.data.players[playerID]) {
+            db.data.players[playerID] = { choices: {}, dynamicContent: {} };
+        } else if (!db.data.players[playerID].dynamicContent) {
+            db.data.players[playerID].dynamicContent = {};
+        }
+        
+        // Store the dynamic content with its metadata
+        db.data.players[playerID].dynamicContent[blockId] = {
+            blockType,
+            content: finalContent,
+            timestamp: new Date().toISOString()
+        };
+        
+        await db.write();
+
+        // Step 7: Return processed result to client
         res.json(finalContent);
     } catch (error) {
         console.error("Error in askLLM:", error.message);

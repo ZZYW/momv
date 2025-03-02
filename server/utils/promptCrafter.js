@@ -16,56 +16,47 @@ const MASTER_TEMPLATE = fs.readFileSync(templatePath, 'utf8');
  * @param {string} id - Template ID to extract
  * @returns {string} - Extracted template string
  */
-const getTemplate = (id) => {
-  const regex = new RegExp(`<template id="${id}">(.*?)</template>`, 's');
+const getTemplate = (tag) => {
+  const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 's');
   const match = MASTER_TEMPLATE.match(regex);
   return match ? match[1].trim() : '';
 };
 
 // Shared components
-const WRITER_ROLE = getTemplate('writer-role');
-const LANGUAGE_REQUIREMENT = getTemplate('language-requirement');
-const COMMON_RESPONSE_FORMAT = getTemplate('common-response-format');
+const WRITER_ROLE = getTemplate('writer_role');
+const LANGUAGE_REQUIREMENT = getTemplate('language_requirement');
+const RESPONSE_FORMAT = getTemplate('response_format');
 
 /**
  * Prompt templates for different block types in natural language.
  */
 export const PROMPT_TEMPLATES = {
-  "dynamic-option": getTemplate('dynamic-option'),
-  "dynamic-text": getTemplate('dynamic-text'),
-  "dynamic-word": getTemplate('dynamic-word')
-};
-
-/**
- * JSON response format templates
- */
-export const FORMAT_TEMPLATES = {
-  "dynamic-option": getTemplate('format-dynamic-option'),
-  "dynamic-text": getTemplate('format-dynamic-text'),
-  "dynamic-word": getTemplate('format-dynamic-word')
+  "dynamic-option": getTemplate('dynamic_option'),
+  "dynamic-text": getTemplate('dynamic_text'),
+  "dynamic-word": getTemplate('dynamic_word')
 };
 
 /**
  * Context formatting template in natural language
  */
 export const CONTEXT_TEMPLATE = {
-  prefix: getTemplate('context-prefix'),
-  itemWithChoice: getTemplate('context-item-with-choice'),
-  optionsPrefix: getTemplate('context-options-prefix'),
-  optionsSuffix: getTemplate('context-options-suffix'),
-  noChoice: getTemplate('context-no-choice'),
-  suffix: getTemplate('context-suffix')
+  prefix: getTemplate('context_prefix'),
+  itemWithChoice: getTemplate('context_item_with_choice'),
+  optionsPrefix: getTemplate('context_options_prefix'),
+  optionsSuffix: getTemplate('context_options_suffix'),
+  noChoice: getTemplate('context_no_choice'),
+  suffix: getTemplate('context_suffix')
 };
 
 /**
  * Full prompt structure template in natural language
  */
-export const FULL_PROMPT_TEMPLATE = getTemplate('full-prompt');
+export const FULL_PROMPT_TEMPLATE = getTemplate('full_prompt');
 
 /**
  * Extended prompt structure template with passage context in natural language
  */
-export const EXTENDED_PROMPT_TEMPLATE = getTemplate('extended-prompt');
+export const EXTENDED_PROMPT_TEMPLATE = getTemplate('extended_prompt');
 
 /**
  * Creates instructions based on block type and properties in natural language format.
@@ -86,21 +77,21 @@ export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, le
       .replace('{number_of_choices}', String(optionCount))
       .replace('{writer_role}', WRITER_ROLE)
       .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
-      .replace('{response_format_json_array}', FORMAT_TEMPLATES[blockType]);
+      .replace('{response_format}', RESPONSE_FORMAT);
   } 
   else if (blockType === "dynamic-text" && sentenceCount) {
     template = template
       .replace('{number_of_sentences}', String(sentenceCount))
       .replace('{writer_role}', WRITER_ROLE)
       .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
-      .replace('{response_format_json_text}', FORMAT_TEMPLATES[blockType]);
+      .replace('{response_format}', RESPONSE_FORMAT);
   } 
   else if (blockType === "dynamic-word" && lexiconCategory) {
     template = template
       .replace('{word_category}', lexiconCategory)
       .replace('{writer_role}', WRITER_ROLE)
       .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
-      .replace('{response_format_json_word}', FORMAT_TEMPLATES[blockType]);
+      .replace('{response_format}', RESPONSE_FORMAT);
   }
 
   return template;
@@ -151,7 +142,7 @@ export const formatContextString = (contextInfo) => {
       let optionsInfo = "";
       if (ctx.availableOptions && Array.isArray(ctx.availableOptions)) {
         optionsInfo = CONTEXT_TEMPLATE.optionsPrefix +
-          ctx.availableOptions.join(", ") +
+          ctx.availableOptions.join(" | ") +
           CONTEXT_TEMPLATE.optionsSuffix;
       }
       return CONTEXT_TEMPLATE.itemWithChoice

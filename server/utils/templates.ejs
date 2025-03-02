@@ -6,12 +6,12 @@
 本文件包含给AI的提示模板，采用自然语言格式而非技术标记语言。
 
 如何使用:
-1. 每个模板都包含在 <template id="template-name">...</template> 标签中
+1. 每个模板都使用有描述性的XML标签名称，如 <writer_role>...</writer_role>
 2. 模板中的变量使用 {variable_name} 格式，会在运行时被替换
 3. 模板分为几个主要部分:
    - 共享组件: 在多个模板中重复使用的文本块
    - 提示模板: 针对不同创作需求的主要模板
-   - 格式模板: 定义AI应返回的JSON结构
+   - 响应格式: 定义AI应返回的JSON结构
    - 上下文模板: 展示玩家历史选择的格式
    - 完整提示模板: 组合以上所有元素的最终格式
 
@@ -19,7 +19,7 @@
 - 可以直接编辑各部分的文本内容
 - 保持变量名称 {variable_name} 不变
 - 可以调整文本的语气、格式和表达方式
-- 测试更改可使用 /preview-prompt API 来预览完整提示
+- 在Control Panel中使用"Template Preview"标签页预览完整提示
 
 对于模板变量:
 - {number_of_choices}: 要生成的选项数量
@@ -27,32 +27,33 @@
 - {word_category}: 要生成的词语类别
 - {writer_role}: 写作者角色的共享定义
 - {language_requirement}: 语言要求的共享定义
+- {response_format}: 响应格式(JSON)的共享定义
 
-可以通过API端点 /preview-prompt 预览最终组合的提示效果。
+访问Control Panel预览工具: http://localhost:3001/cp (开发模式)
 ===============================================================================
 -->
 
 <!-- SHARED COMPONENTS -->
 <%# Common writer role - used across all templates %>
-<template id="writer-role">
+<writer_role>
 作为一位擅长隐喻、符号主义、神秘学和心理分析的当代小说家
-</template>
+</writer_role>
 
 <%# Common language requirement - used across all templates %>
-<template id="language-requirement">
+<language_requirement>
 请使用流畅自然的中文表达所有内容
-</template>
+</language_requirement>
 
 <%# Common response format requirement %>
-<template id="common-response-format">
+<response_format>
 请以JSON格式回复，包含两个字段：
 1. "thinking_process"：你的创作思路和考虑
 2. "final_printed_text"：将在故事中显示的最终内容
-</template>
+</response_format>
 
 <!-- PROMPT TEMPLATES IN NATURAL LANGUAGE -->
 <%# Template for story choices/options %>
-<template id="dynamic-option">
+<dynamic_option>
 我需要为我的故事创建 {number_of_choices} 个引人入胜的选择项。
 
 {writer_role}
@@ -62,11 +63,16 @@
     - 每个选项应简短明了，代表不同的可能性
     - {language_requirement}
 
-{response_format_json_array}
-</template>
+{response_format}
+具体格式如下：
+{
+    "thinking_process": "你的创作思路和考虑...",
+    "final_printed_text": ["选项1", "选项2", ...]
+}
+</dynamic_option>
   
 <%# Template for paragraph generation %>
-<template id="dynamic-text">
+<dynamic_text>
 我需要为我的故事创建一段新的文本。
 
 {writer_role}
@@ -77,11 +83,16 @@
     - 叙述应符合整体故事的风格和基调
     - {language_requirement}
 
-{response_format_json_text}
-</template>
+{response_format}
+具体格式如下：
+{
+    "thinking_process": "你的创作思路和考虑...",
+    "final_printed_text": "生成的段落文本"
+}
+</dynamic_text>
   
 <%# Template for single word/phrase generation %>
-<template id="dynamic-word">
+<dynamic_word>
 我需要为我的故事创建一个特定类型的词语。
 
 {writer_role}
@@ -91,73 +102,58 @@
     - 应选择能够增强故事氛围的词语
     - {language_requirement}
 
-{response_format_json_word}
-</template>
-  
-<!-- FORMAT TEMPLATES - JSON RESPONSE FORMATS -->
-<%# Format for returning multiple choice options %>
-<template id="format-dynamic-option">
-{
-    "thinking_process": "你的创作思路和考虑...",
-    "final_printed_text": ["选项1", "选项2", ...]
-}
-</template>
-  
-<%# Format for returning paragraph text %>
-<template id="format-dynamic-text">
-{
-    "thinking_process": "你的创作思路和考虑...",
-    "final_printed_text": "生成的段落文本"
-}
-</template>
-  
-<%# Format for returning a single word %>
-<template id="format-dynamic-word">
+{response_format}
+具体格式如下：
 {
     "thinking_process": "你的创作思路和考虑...",
     "final_printed_text": "生成的词语"
 }
-</template>
+</dynamic_word>
+  
+<!-- FORMAT TEMPLATES - NOW INTEGRATED INTO EACH TEMPLATE -->
+<!-- These templates are now directly included in the main template blocks above -->
+<!-- This helps writers see the exact format within context -->
+<!-- The old separate templates have been removed to simplify maintenance -->
   
 <!-- CONTEXT INFORMATION - PLAYER HISTORY -->
 <%# Context introduction %>
-<template id="context-prefix">
+<context_prefix>
 --- 玩家历史选择 ---
 
 以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。
 请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。
-</template>
+</context_prefix>
   
 <%# Format for displaying a specific player choice %>
-<template id="context-item-with-choice">
+<context_item_with_choice>
 选择 #{index}：
     玩家选择了 "{chosenText}"{optionsInfo}
-</template>
+</context_item_with_choice>
   
 <%# Format for showing available options the player chose from %>
-<template id="context-options-prefix">
+<context_options_prefix>
     （可选项包括：
-</template>
+</context_options_prefix>
   
 <%# Closing parenthesis for options list %>
-<template id="context-options-suffix">
+<context_options_suffix>
     ）
-</template>
+</context_options_suffix>
   
 <%# Format when player made no choice %>
-<template id="context-no-choice">
+<context_no_choice>
 选择 #{index}：
     玩家未做选择
-</template>
+</context_no_choice>
   
 <%# End of player history section %>
-<template id="context-suffix">
+<context_suffix>
 --- 玩家历史选择结束 ---
-</template>
+</context_suffix>
   
 <!-- COMPLETE PROMPT TEMPLATES -->
 <%# Standard prompt template without surrounding passage %>
-<template id="full-prompt">
+<full_prompt>
 --- 创作任务 ---
 {message}
 
@@ -165,10 +161,10 @@
 
 --- 创作要求 ---
 {instructions}
-</template>
+</full_prompt>
   
 <%# Extended prompt with surrounding passage context %>
-<template id="extended-prompt">
+<extended_prompt>
 --- 创作任务 ---
 {message}
 
@@ -180,4 +176,4 @@
 
 --- 创作要求 ---
 {instructions}
-</template>
+</extended_prompt>

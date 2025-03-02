@@ -1,1 +1,36 @@
-station 2
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Story Player - Station 2</title>
+    <link rel="stylesheet" href="/shared/story-player.css" />
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.11.1/dist/cdn.min.js"
+    ></script>
+    <style>
+      /* Override the transition time specifically for static options */
+      .static-option {
+        transition: opacity 3s ease, background-color 0.2s ease,
+          border-color 0.2s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div x-data="storyPlayer" x-init="init()">
+      <div id="player-data"></div>
+      <div id="passage-container">
+        <!-- Passages will be rendered here -->
+      </div>
+      <div id="status-bar" x-text="'Story Player ID: ' + config.playerId"></div>
+    </div>
+
+    <script src="/shared/story-player.js"></script>
+  </body>
+</html>

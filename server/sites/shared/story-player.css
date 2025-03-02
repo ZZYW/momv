@@ -1,1 +1,262 @@
-/* waiting to be filled */
+/**
+ * story-player.css - Interactive Story Player Styles
+ *
+ * This stylesheet contains all the visual styling for the story player,
+ * including animations, interactive elements, and layout.
+ */
+
+/* ================= */
+/* = CONFIGURATION = */
+/* ================= */
+
+@font-face {
+    font-family: 'GnuUnifontFull';
+    /* Choose a name for your font */
+    src: url('/assets/fonts/GnuUnifontFull-Pm9P.ttf') format('truetype');
+    /* Path to your font file */
+    font-weight: normal;
+    /* Define font weight (normal, bold, etc.) */
+    font-style: normal;
+    /* Define font style (normal, italic, etc.) */
+}
+
+@font-face {
+    font-family: 'vt323';
+    /* Choose a name for your font */
+    src: url('/assets/fonts/VT323-Regular.ttf') format('truetype');
+    /* Path to your font file */
+    font-weight: normal;
+    /* Define font weight (normal, bold, etc.) */
+    font-style: normal;
+    /* Define font style (normal, italic, etc.) */
+}
+
+:root {
+    /* Animation timings */
+    --fade-duration: 4s;
+    --fade-in-duration: 3s;
+
+    /* Colors */
+    --bg-color: #f9f9f9;
+    --text-color: #333;
+    --option-color: #69801d;
+    --primary-color: #1890ff;
+    --primary-hover: #096dd9;
+    --border-color: #ccc;
+    --selected-bg: #e6f7ff;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ============== */
+/* = CORE LAYOUT = */
+/* ============== */
+body {
+    font-family: 'GnuUnifontFull', 'vt323', monospace;
+    margin: 0 auto;
+    padding: 20px;
+    max-width: 800px;
+    font-size: 18px;
+    background-color: var(--bg-color);
+    line-height: 1.6;
+}
+
+#passage-container {
+    position: relative;
+}
+
+.passage {
+    display: none;
+    padding: 20px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    margin-bottom: 20px;
+    transition: opacity var(--fade-duration) ease;
+}
+
+.passage.active {
+    display: block;
+}
+
+/* ============== */
+/* = ANIMATIONS = */
+/* ============== */
+.fade-out {
+    opacity: 0;
+}
+
+.fade-in {
+    animation: fadeIn var(--fade-in-duration) forwards;
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================ */
+/* = TEXT CONTENT = */
+/* ================ */
+.plain {
+    display: block;
+    margin-bottom: 15px;
+}
+
+h2 {
+    margin-top: 0;
+    color: var(--text-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* ===================== */
+/* = INTERACTIVE OPTIONS = */
+/* ===================== */
+.static-option-container {
+    margin: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 5px;
+}
+
+/* Options with glow effect */
+.static-option {
+    display: inline;
+    margin: 8px 0;
+    cursor: pointer;
+    color: var(--option-color);
+    /* text-decoration: underline; */
+    transition: all 0.2s ease, opacity 3s ease, text-shadow 0.3s ease;
+    /* Add subtle glow effect */
+    text-shadow: 0 0 2px rgba(105, 128, 29, 0.3);
+    /* Add a slight pulse animation */
+    animation: gentle-pulse 2s infinite alternate;
+}
+
+@keyframes gentle-pulse {
+    from {
+        text-shadow: 0 0 2px rgba(105, 128, 29, 0.3);
+    }
+
+    to {
+        text-shadow: 0 0 8px rgba(105, 128, 29, 0.6);
+    }
+}
+
+.static-option:hover {
+    color: var(--text-color);
+    text-shadow: 0 0 10px rgba(105, 128, 29, 0.8);
+}
+
+/* When selected, make it look like normal text */
+.static-option.selected {
+    color: var(--text-color);
+    text-decoration: none;
+    text-shadow: none;
+    animation: none;
+}
+
+.static-option.faded {
+    opacity: 0;
+}
+
+/* Style for the divider between options */
+.option-divider {
+    display: inline;
+    margin: 0 5px;
+    color: var(--text-color);
+    opacity: 0.5;
+    font-weight: normal;
+    transition: opacity 3s ease;
+}
+
+/* Make dividers fade out when options are selected */
+.option-divider.faded {
+    opacity: 0;
+}
+
+/* =================== */
+/* = DYNAMIC CONTENT = */
+/* =================== */
+.dynamic-container {
+    /* placeholder */
+}
+
+.dynamic-text-result {
+    /* font-style: italic; */
+    /* font-size: 18px; */
+}
+
+.dynamic-word {
+    font-weight: bold;
+    border-bottom: 1px dotted #666;
+}
+
+/* ============== */
+/* = NAVIGATION = */
+/* ============== */
+.next-link {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 8px 16px;
+
+    /* background-color: var(--primary-color); */
+    color: var(--text-color);
+    border: 1px dotted;
+    text-decoration: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.next-link:hover {
+    /* background-color: var(--primary-hover); */
+}
+
+/* ============== */
+/* = UI ELEMENTS = */
+/* ============== */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+#status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background-color: #f8f8f8;
+    border-top: 1px solid #ddd;
+    font-size: 12px;
+    text-align: center;
+    color: #666;
+}
+
+.error {
+    color: red;
+    padding: 20px;
+    text-align: center;
+    font-weight: bold;
+}

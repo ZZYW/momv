@@ -105,6 +105,9 @@ if (central_backend_url) {
 // Static Site Routes
 // ---------------------------------
 
+// Shared resources
+app.use("/shared", express.static(path.join(__dirname, "sites", "shared")));
+
 // Station 1: Accessible at http://localhost:3001/station1
 app.use("/station1", express.static(path.join(__dirname, "sites", "station1")));
 

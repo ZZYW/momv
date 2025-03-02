@@ -51,8 +51,28 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
     await db.read();
     const playerChoices = db.data.players?.[playerID]?.choices || {};
 
-    // Build text before the dynamic block (from ALL previous blocks in the story)
+    // Build text before the dynamic block
     let textBeforeDynamic = '';
+    
+    // For station2, first include all content from station1
+    if (storyId === "2") {
+        const station1Blocks = await getStoryBlocks("1");
+        for (const block of station1Blocks) {
+            if (block.type === 'plain') {
+                textBeforeDynamic += block.text;
+            } else if (block.type === 'static') {
+                // Replace with player's choice if available, otherwise use first option
+                const choice = playerChoices[block.id];
+                const chosenText = choice ? choice.chosenText : block.options[0];
+                textBeforeDynamic += chosenText;
+            }
+            // Skip other block types like scene-header
+        }
+        // Add a separator between station1 and station2 content
+        textBeforeDynamic += '\n\n--- 第二站 ---\n\n';
+    }
+    
+    // Now add content from the current station up to the dynamic block
     for (let i = 0; i < dynamicBlockIndex; i++) {
         const block = blocks[i];
         if (block.type === 'plain') {
@@ -101,7 +121,7 @@ export const askLLM = async (req, res) => {
         // Step 2: Get and format context information
         let contextString = "";
         if (contextRefs && contextRefs.length > 0) {
-            const contextInfo = await fetchContextInfo(contextRefs, playerID);
+            const contextInfo = await fetchContextInfo(contextRefs, playerID, storyId);
             if (contextInfo.length > 0) {
                 contextString = formatContextString(contextInfo);
             }
@@ -158,7 +178,7 @@ export const previewAIPrompt = async (req, res) => {
         // Step 1: Get context information if provided
         let contextInfo = [];
         if (contextRefs && contextRefs.length > 0) {
-            contextInfo = await fetchContextInfo(contextRefs, playerID);
+            contextInfo = await fetchContextInfo(contextRefs, playerID, storyId);
         }
         
         // Step 2: Get passage context if this is a dynamic block

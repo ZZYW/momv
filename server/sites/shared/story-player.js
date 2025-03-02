@@ -11,8 +11,10 @@ document.addEventListener("alpine:init", () => {
         Math.random().toString(36).substring(2, 9)),
       storyPath: "input/story.json",
       debug: false,
-      // Determine which station this is - used for localStorage namespacing
-      stationId: window.location.pathname.includes("station2") ? "station2" : "station1"
+      // Determine which station this is - used for localStorage namespacing and storyId
+      stationId: window.location.pathname.includes("station2") ? "station2" : "station1",
+      // Numeric station ID for API calls
+      stationNumber: window.location.pathname.includes("station2") ? "2" : "1"
     },
 
     // ===== STATE =====
@@ -402,7 +404,7 @@ document.addEventListener("alpine:init", () => {
         optionCount: blockData.optionCount,
         sentenceCount: blockData.sentenceCount,
         lexiconCategory: blockData.lexiconCategory,
-        storyId: "1", // Currently hard-coded for story.json
+        storyId: this.config.stationNumber, // Use the numeric station ID as story ID
       };
 
       return fetch(`${this.config.serverUrl}/generate-dynamic`, {

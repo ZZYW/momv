@@ -15,6 +15,24 @@
       "type": "plain",
       "text": "ends.s...2tfr2ijg39igjh398g3jh9g8jih98gij\n",
       "sceneId": 1
+    },
+    {
+      "id": "592997f0-60e6-4c9c-851b-42bf7702a2b0",
+      "type": "dynamic-option",
+      "blockName": "xxx",
+      "optionCount": 4,
+      "prompt": "讲小吴可能的欲望",
+      "context": [
+        {
+          "value": "28cfdc37-ecfb-4698-b2db-a139405f22b6",
+          "includeAll": false
+        },
+        {
+          "value": "592997f0-60e6-4c9c-851b-42bf7702a2b0",
+          "includeAll": false
+        }
+      ],
+      "sceneId": 1
     }
   ]
 }

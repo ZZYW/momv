@@ -233,6 +233,20 @@
                   <option value="dynamic-word">Dynamic Word</option>
                 </select>
               </div>
+              
+              <div class="form-group" style="margin-top: 15px;">
+                <label>Station:</label>
+                <div style="display: flex; gap: 15px; margin-top: 5px;">
+                  <div>
+                    <input type="radio" id="station1" name="station" value="station1" checked />
+                    <label for="station1">Station 1</label>
+                  </div>
+                  <div>
+                    <input type="radio" id="station2" name="station" value="station2" />
+                    <label for="station2">Station 2</label>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="section">
@@ -414,6 +428,10 @@
           body.lexiconCategory =
             customCategory || document.getElementById("lexiconCategory").value;
         }
+        
+        // Add storyId - default to "1" for station1
+        const station = document.querySelector('input[name="station"]:checked')?.value || "station1";
+        body.storyId = station === "station2" ? "2" : "1";
 
         // Update the preview-response element with a loading message
         document.getElementById("preview-response").textContent =

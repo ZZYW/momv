@@ -99,13 +99,32 @@ export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, le
  * Retrieve context information in a human-friendly format.
  * @param {Array} contextRefs - References to context blocks
  * @param {string} currentPlayerID - Current player's ID
+ * @param {string} storyId - ID of the current story
  * @returns {Promise<Array>} - Context information
  */
-export const fetchContextInfo = async (contextRefs, currentPlayerID) => {
+export const fetchContextInfo = async (contextRefs, currentPlayerID, storyId = "1") => {
   await db.read();
   const contextInfo = [];
   const players = db.data.players || {};
 
+  // For station2, automatically include all static choices from station1
+  if (storyId === "2" && !contextRefs.some(ref => ref.station1Choices === false)) {
+    const station1Blocks = await getStoryBlocks("1");
+    const staticBlocks = station1Blocks.filter(block => block.type === 'static');
+    
+    for (const block of staticBlocks) {
+      if (players[currentPlayerID]?.choices?.[block.id]) {
+        const { availableOptions, chosenText } = players[currentPlayerID].choices[block.id];
+        contextInfo.push({ 
+          availableOptions, 
+          chosenText,
+          isFromStation1: true  // Mark these as coming from station1
+        });
+      }
+    }
+  }
+
+  // Process explicitly referenced contexts
   for (const contextRef of contextRefs) {
     const blockId = contextRef.value;
     const includeAll = contextRef.includeAll === true;
@@ -127,6 +146,22 @@ export const fetchContextInfo = async (contextRefs, currentPlayerID) => {
   return contextInfo;
 };
 
+// Helper function to get story blocks - import from aiController
+const getStoryBlocks = async (storyId) => {
+  try {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    // Dynamically build the path based on storyId which corresponds to the station number
+    const storyPath = path.join(process.cwd(), 'server', 'sites', `station${storyId}`, 'input', 'story.json');
+    const storyData = await fs.readFile(storyPath, 'utf-8');
+    const story = JSON.parse(storyData);
+    return story.blocks || [];
+  } catch (error) {
+    console.error(`Error loading story ${storyId}:`, error);
+    return [];
+  }
+};
+
 /**
  * Formats context information into a readable natural language string
  * @param {Array} contextInfo - Array of context objects
@@ -135,23 +170,62 @@ export const fetchContextInfo = async (contextRefs, currentPlayerID) => {
 export const formatContextString = (contextInfo) => {
   if (!contextInfo || contextInfo.length === 0) return "";
 
-  const formattedItems = contextInfo.map((ctx, index) => {
-    if (ctx.chosenText) {
-      let optionsInfo = "";
-      if (ctx.availableOptions && Array.isArray(ctx.availableOptions)) {
-        optionsInfo = CONTEXT_TEMPLATE.optionsPrefix +
-          ctx.availableOptions.join(" | ") +
-          CONTEXT_TEMPLATE.optionsSuffix;
+  // Group contexts by station
+  const station1Choices = contextInfo.filter(ctx => ctx.isFromStation1);
+  const station2Choices = contextInfo.filter(ctx => !ctx.isFromStation1);
+  
+  let formattedItems = [];
+  
+  // Format station1 choices if any
+  if (station1Choices.length > 0) {
+    formattedItems.push("--- 第一站玩家选择 ---");
+    
+    station1Choices.forEach((ctx, index) => {
+      if (ctx.chosenText) {
+        let optionsInfo = "";
+        if (ctx.availableOptions && Array.isArray(ctx.availableOptions)) {
+          optionsInfo = CONTEXT_TEMPLATE.optionsPrefix +
+            ctx.availableOptions.join(" | ") +
+            CONTEXT_TEMPLATE.optionsSuffix;
+        }
+        formattedItems.push(CONTEXT_TEMPLATE.itemWithChoice
+          .replace('{index}', String(index + 1))
+          .replace('{chosenText}', ctx.chosenText)
+          .replace('{optionsInfo}', optionsInfo));
+      } else {
+        formattedItems.push(CONTEXT_TEMPLATE.noChoice.replace('{index}', String(index + 1)));
       }
-      return CONTEXT_TEMPLATE.itemWithChoice
-        .replace('{index}', String(index + 1))
-        .replace('{chosenText}', ctx.chosenText)
-        .replace('{optionsInfo}', optionsInfo);
+    });
+    
+    formattedItems.push("--- 第一站玩家选择结束 ---");
+  }
+  
+  // Format station2 choices if any
+  if (station2Choices.length > 0) {
+    if (station1Choices.length > 0) {
+      formattedItems.push(""); // Add a blank line between station sections
     }
-    return CONTEXT_TEMPLATE.noChoice.replace('{index}', String(index + 1));
-  }).join("\n");
+    
+    // Map station2 choices with proper indexing
+    station2Choices.forEach((ctx, index) => {
+      if (ctx.chosenText) {
+        let optionsInfo = "";
+        if (ctx.availableOptions && Array.isArray(ctx.availableOptions)) {
+          optionsInfo = CONTEXT_TEMPLATE.optionsPrefix +
+            ctx.availableOptions.join(" | ") +
+            CONTEXT_TEMPLATE.optionsSuffix;
+        }
+        formattedItems.push(CONTEXT_TEMPLATE.itemWithChoice
+          .replace('{index}', String(index + 1))
+          .replace('{chosenText}', ctx.chosenText)
+          .replace('{optionsInfo}', optionsInfo));
+      } else {
+        formattedItems.push(CONTEXT_TEMPLATE.noChoice.replace('{index}', String(index + 1)));
+      }
+    });
+  }
 
-  return CONTEXT_TEMPLATE.prefix + "\n" + formattedItems + "\n" + CONTEXT_TEMPLATE.suffix;
+  return CONTEXT_TEMPLATE.prefix + "\n" + formattedItems.join("\n") + "\n" + CONTEXT_TEMPLATE.suffix;
 };
 
 /**

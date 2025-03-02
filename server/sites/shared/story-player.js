@@ -214,7 +214,7 @@ document.addEventListener("alpine:init", () => {
       } else {
         const endMessage = document.createElement("div");
         endMessage.className = "end-message";
-        endMessage.innerText = "The End";
+        endMessage.innerText = "故事结束";
         passageEl.appendChild(endMessage);
       }
     },

@@ -404,28 +404,64 @@ document.addEventListener("alpine:init", () => {
             // Save selected codename to server
             this.saveSelectedCodename(codename);
             
-            // Add a small message below the options
+            // Add a small message and countdown below the options
             setTimeout(() => {
               // Create a small reminder message
               const reminderMessage = document.createElement("div");
               reminderMessage.className = "codename-reminder";
               reminderMessage.innerHTML = `<p>请务必牢记您的法号……</p>`;
-              reminderMessage.style.marginTop = "20px";
-              reminderMessage.style.fontSize = "12px";
-              reminderMessage.style.opacity = "0.8";
+ 
               
-              // Add "start a new journey" button
-              const newJourneyButton = document.createElement("button");
-              newJourneyButton.className = "new-journey-button";
-              newJourneyButton.innerText = "开始新的旅程";
-              newJourneyButton.style.marginTop = "10px";
-              newJourneyButton.addEventListener("click", () => {
-                window.location.reload();
-              });
+              // Create countdown container
+              const countdownContainer = document.createElement("div");
+              countdownContainer.className = "countdown-container";
+              countdownContainer.style.marginTop = "15px";
+              countdownContainer.style.textAlign = "center";
               
-              // Add these below the options
+              // Set countdown duration
+              const totalSeconds = 20;
+              
+              // Add countdown text
+              const countdownText = document.createElement("div");
+              countdownText.className = "countdown-text";
+              countdownText.textContent = `下一位旅人的故事将在 ${totalSeconds} 秒内开始`;
+              
+              // Add ASCII progress bar
+              const progressBar = document.createElement("div");
+              progressBar.className = "countdown-bar";
+              progressBar.style.fontFamily = "monospace";
+              progressBar.style.letterSpacing = "2px";
+              progressBar.textContent = "────────────────────────";
+              
+              // Add elements to container
+              countdownContainer.appendChild(countdownText);
+              countdownContainer.appendChild(progressBar);
+              
+              // Add elements to codename container
               codenameContainer.appendChild(reminderMessage);
-              codenameContainer.appendChild(newJourneyButton);
+              codenameContainer.appendChild(countdownContainer);
+              
+              // Start the countdown
+              let secondsLeft = totalSeconds;
+              const fullBar = progressBar.textContent;
+              const barLength = fullBar.length;
+              
+              const countdownInterval = setInterval(() => {
+                secondsLeft -= 0.5;
+                
+                // Update text with properly parameterized value
+                countdownText.textContent = `下一位旅人的故事将在 ${Math.ceil(secondsLeft)} 秒内开始`;
+                
+                // Update progress bar
+                const remainingChars = Math.floor((secondsLeft / totalSeconds) * barLength);
+                progressBar.textContent = fullBar.substring(0, remainingChars);
+                
+                // When countdown ends, refresh page
+                if (secondsLeft <= 0) {
+                  clearInterval(countdownInterval);
+                  window.location.reload();
+                }
+              }, 500); // Update every half second
             }, 1000); // Short delay for visual transition
           });
           

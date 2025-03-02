@@ -174,7 +174,7 @@ document.addEventListener("alpine:init", () => {
             <div class="dynamic-word-container" data-uuid="${b.id}"></div>
           </div>`,
 
-        "scene-header": (b) => `<h2>${b.titleName || "Scene"}</h2>`,
+        "scene-header": (b) => `<div class="scene-header">${b.titleName || "Scene"}</div>`,
       };
 
       // Use the appropriate renderer or return an error message

@@ -9,38 +9,78 @@
 /* = CONFIGURATION = */
 /* ================= */
 
+/* Japanese-specific glyphs (8px) – typically covers hiragana & katakana */
 @font-face {
-    font-family: 'GnuUnifontFull';
-    /* Choose a name for your font */
-    src: url('/assets/fonts/GnuUnifontFull-Pm9P.ttf') format('truetype');
-    /* Path to your font file */
-    font-weight: normal;
-    /* Define font weight (normal, bold, etc.) */
-    font-style: normal;
-    /* Define font style (normal, italic, etc.) */
+    font-family: "FusionPixelFont";
+    src: url("misaki/misaki_gothic.ttf") format("truetype");
+    unicode-range: U+3040-30FF;
+}
+
+/* Simplified Chinese glyphs (8px) */
+@font-face {
+    font-family: "FusionPixelFont";
+    src: url("miseki-bitmap/MisekiBitmap.ttf") format("truetype");
+    /* Note: CJK Unified Ideographs are used by both simplified and traditional,
+       so you may need to refine this range or let it overlap depending on your needs */
+    unicode-range: U+4E00-9FFF;
+}
+
+/* Traditional Chinese glyphs (8px) */
+@font-face {
+    font-family: "FusionPixelFont";
+    src: url("/assets/fonts/fuse-fonts/boutique-bitmap-7x7/BoutiqueBitmap7x7_1.7.ttf") format("truetype");
+    unicode-range: U+4E00-9FFF;
+}
+
+/* Traditional Chinese supplement for 10px */
+@font-face {
+    font-family: "FusionPixelFont";
+    src: url("/assets/fonts/fuse-fonts/boutique-bitmap-9x9/BoutiqueBitmap9x9_1.92.ttf") format("truetype");
+    unicode-range: U+4E00-9FFF;
+}
+
+/* Traditional Chinese supplement for 12px */
+@font-face {
+    font-family: "FusionPixelFont";
+    src: url("/assets/fonts/fuse-fonts/cubic-11/Cubic_11.woff2") format("woff2");
+    unicode-range: U+4E00-9FFF;
+}
+
+/* Korean glyphs – multiple files (choose the one matching your design size) */
+@font-face {
+    font-family: "FusionPixelFont";
+    src: url("/assets/fonts/fuse-fonts/galmuri/Galmuri7.ttf") format("truetype");
+    unicode-range: U+AC00-D7AF;
 }
 
 @font-face {
-    font-family: 'vt323';
-    /* Choose a name for your font */
-    src: url('/assets/fonts/VT323-Regular.ttf') format('truetype');
-    /* Path to your font file */
-    font-weight: normal;
-    /* Define font weight (normal, bold, etc.) */
-    font-style: normal;
-    /* Define font style (normal, italic, etc.) */
+    font-family: "FusionPixelFont";
+    src: url("/assets/fonts/fuse-fonts/galmuri/Galmuri9.ttf") format("truetype");
+    unicode-range: U+AC00-D7AF;
+}
+
+@font-face {
+    font-family: "FusionPixelFont";
+    src: url("/assets/fonts/fuse-fonts/galmuri/Galmuri11.ttf") format("truetype");
+    unicode-range: U+AC00-D7AF;
+}
+
+/* Use the font */
+body {
+    font-family: "FusionPixelFont", sans-serif;
 }
 
 /* ============== */
 /* = CORE LAYOUT = */
 /* ============== */
 body {
-    font-family: 'GnuUnifontFull', 'vt323', monospace;
+    font-family: "FusionPixelFont", sans-serif;
     margin: 0 auto;
     padding: 20px;
-    max-width: 800px;
+    max-width: 500px;
+    color: #eaeaea;
     font-size: 18px;
-    background-color: #d1d1d1;
+    background-color: #1f1f1f;
     /* previously var(--bg-color) */
     line-height: 1.6;
 }
@@ -51,18 +91,23 @@ body {
 
 .passage {
     display: none;
-    padding: 20px;
-    background-color: white;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* padding: 20px; */
+    /* background-color: white; */
+    /* border-radius: 5px; */
+    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
     /* previously var(--shadow-color) */
-    margin-bottom: 20px;
+    /* margin-bottom: 20px; */
     transition: opacity 4s ease;
     /* previously var(--fade-duration) */
 }
 
 .passage.active {
     display: block;
+}
+
+.block-scene-header {
+    display: flex;
+    justify-content: center;
 }
 
 /* ============== */
@@ -128,32 +173,16 @@ h2 {
     color: #69801d;
     /* previously var(--option-color) */
     /* text-decoration: underline; */
-    transition: all 0.2s ease, opacity 3s ease, text-shadow 0.3s ease;
+    /* transition: all 0.2s ease, opacity 3s ease, text-shadow 0.3s ease; */
     /* Add subtle glow effect */
-    text-shadow: 0 0 2px rgba(105, 128, 29, 0.3);
+    /* text-shadow: 0 0 2px rgba(105, 128, 29, 0.3); */
     /* Add a slight pulse animation */
-    animation: gentle-pulse 2s infinite alternate;
-}
-
-@keyframes gentle-pulse {
-    from {
-        text-shadow: 0 0 2px rgba(105, 128, 29, 0.3);
-    }
-
-    to {
-        text-shadow: 0 0 8px rgba(105, 128, 29, 0.6);
-    }
-}
-
-.static-option:hover {
-    color: #ffffff;
-    /* previously var(--text-color) */
-    text-shadow: 0 0 10px rgba(105, 128, 29, 0.8);
+    /* animation: gentle-pulse 2s infinite alternate; */
 }
 
 /* When selected, make it look like normal text */
 .static-option.selected {
-    color: #ffffff;
+    /* color: #ffffff; */
     /* previously var(--text-color) */
     text-decoration: none;
     text-shadow: none;
@@ -168,7 +197,7 @@ h2 {
 .option-divider {
     display: inline;
     margin: 0 5px;
-    color: #ffffff;
+    /* color: #ffffff; */
     /* previously var(--text-color) */
     opacity: 0.5;
     font-weight: normal;

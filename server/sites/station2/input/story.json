@@ -1,3 +1,20 @@
 {
-  "blocks": []
+  "blocks": [
+    {
+      "id": "28cfdc37-ecfb-4698-b2db-a139405f22b6",
+      "type": "static",
+      "options": [
+        "test",
+        "33",
+        "325"
+      ],
+      "sceneId": 1
+    },
+    {
+      "id": "27e740ab-6012-4f8f-8875-3ab41158ee4f",
+      "type": "plain",
+      "text": "ends.s...2tfr2ijg39igjh398g3jh9g8jih98gij\n",
+      "sceneId": 1
+    }
+  ]
 }

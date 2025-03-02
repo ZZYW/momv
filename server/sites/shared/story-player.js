@@ -10,6 +10,8 @@ document.addEventListener("alpine:init", () => {
         Math.random().toString(36).substring(2, 9),
       storyPath: "input/story.json",
       debug: false,
+      // Determine which station this is - used for localStorage namespacing
+      stationId: window.location.pathname.includes("station2") ? "station2" : "station1"
     },
 
     // ===== STATE =====

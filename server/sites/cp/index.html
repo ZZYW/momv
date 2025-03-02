@@ -21,6 +21,26 @@
   </head>
   <body>
     <h1>Control Panel</h1>
+    
+    <h2>Available Web Apps</h2>
+    <div style="margin-bottom: 20px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+        <a href="/station1" target="_blank" style="display: block; padding: 15px; background-color: #e9f5ff; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; color: #0066cc;">
+          Station 1
+        </a>
+        <a href="/station2" target="_blank" style="display: block; padding: 15px; background-color: #e9f5ff; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; color: #0066cc;">
+          Station 2
+        </a>
+        <a href="/editor/station1" target="_blank" style="display: block; padding: 15px; background-color: #fff0e9; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; color: #cc6600;">
+          Editor (Station 1)
+        </a>
+        <a href="/editor/station2" target="_blank" style="display: block; padding: 15px; background-color: #fff0e9; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; color: #cc6600;">
+          Editor (Station 2)
+        </a>
+      </div>
+    </div>
+    
+    <h2>API Tests</h2>
     <div>
       <button onclick="testGetData()">Test GET /data</button>
       <button onclick="testPostData()">Test POST /data</button>
@@ -94,7 +114,8 @@
           .catch((err) => updateResponse({ error: err.toString() }));
       }
       function testCompilePlayable() {
-        fetch("/compile-playable", {
+        // Use station1 as the default station
+        fetch("/compile-playable/station1", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -106,7 +127,8 @@
           .catch((err) => updateResponse({ error: err.toString() }));
       }
       function testSaveStoryJson() {
-        fetch("/save-story-json", {
+        // Use station1 as the default station
+        fetch("/save-story-json/station1", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

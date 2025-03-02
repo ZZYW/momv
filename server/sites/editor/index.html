@@ -608,8 +608,10 @@
               autosave: this.autosaveTime,
               blocks: this.blocks,
             };
-            localStorage.setItem("vueRWSProject", JSON.stringify(project));
-            console.log("Auto-saved to localStorage!");
+            // Use a namespaced localStorage key based on the station
+            const storageKey = `vueRWSProject_${this.station}`;
+            localStorage.setItem(storageKey, JSON.stringify(project));
+            console.log(`Auto-saved to localStorage for ${this.station}!`);
             this.$nextTick(() => {
               window.scrollTo(scrollX, scrollY);
             });
@@ -653,16 +655,20 @@
           },
         },
         mounted() {
-          // Auto-load project from localStorage
-          const savedData = localStorage.getItem("vueRWSProject");
+          // Auto-load project from localStorage using station-specific key
+          const storageKey = `vueRWSProject_${this.station}`;
+          const savedData = localStorage.getItem(storageKey);
           if (savedData) {
             try {
               const parsedData = JSON.parse(savedData);
               this.autosaveTime = parsedData.autosave || "";
               this.blocks = parsedData.blocks || [];
+              console.log(`Loaded project from localStorage for ${this.station}`);
             } catch (error) {
               console.error("Error parsing saved project", error);
             }
+          } else {
+            console.log(`No saved project found for ${this.station}`);
           }
           this.updateAutosaveTime();
         },

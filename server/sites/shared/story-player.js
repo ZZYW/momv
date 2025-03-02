@@ -212,11 +212,65 @@ document.addEventListener("alpine:init", () => {
         navContainer.appendChild(continueLink);
         passageEl.appendChild(navContainer);
       } else {
+        // Final passage - story is ending
         const endMessage = document.createElement("div");
         endMessage.className = "end-message";
         endMessage.innerText = "故事结束";
         passageEl.appendChild(endMessage);
+        
+        // Only generate and display codename for Station 1
+        if (this.config.stationId === "station1") {
+          this.generateAndDisplayCodename(passageEl);
+        }
       }
+    },
+    
+    // Generate and display a codename for the player when they complete Station 1
+    generateAndDisplayCodename(passageEl) {
+      const codenameContainer = document.createElement("div");
+      codenameContainer.className = "codename-container";
+      
+      // Show loading indicator while fetching codename
+      const loadingElement = document.createElement("div");
+      loadingElement.className = "codename-loading";
+      loadingElement.innerHTML = "生成代号中... <span class='loading'></span>";
+      codenameContainer.appendChild(loadingElement);
+      
+      passageEl.appendChild(codenameContainer);
+      
+      console.log("Requesting codename for player:", this.config.playerId);
+      console.log("Server URL:", this.config.serverUrl);
+      
+      // Request codename from server
+      fetch(`${this.config.serverUrl}/assign-codename`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId: this.config.playerId })
+      })
+      .then(response => {
+        console.log("Server response status:", response.status);
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        return response.json().then(data => {
+          console.log("Received codename data:", data);
+          return data;
+        });
+      })
+      .then(data => {
+        // Replace loading with codename message
+        const codenameMessage = document.createElement("div");
+        codenameMessage.className = "codename-message";
+        codenameMessage.innerHTML = `<p>这是你的代号，请牢记：<strong>${data.codename}</strong></p><p>前往第二站时需要输入此代号。</p>`;
+        
+        // Replace loading with actual content
+        codenameContainer.innerHTML = "";
+        codenameContainer.appendChild(codenameMessage);
+      })
+      .catch(error => {
+        console.error("Error generating codename:", error);
+        codenameContainer.innerHTML = "<div class='error'>无法生成代号，请刷新页面重试。</div>";
+      });
     },
 
     // ===== DYNAMIC CONTENT =====

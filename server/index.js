@@ -6,6 +6,7 @@ import { compilePlayable } from "./controllers/compileController.js";
 import { getData, postData } from "./controllers/dataController.js";
 import { recordChoice } from "./controllers/choiceController.js";
 import { askLLM, previewAIPrompt } from "./controllers/aiController.js";
+import { assignCodename, validateCodename } from "./controllers/codenameController.js";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
@@ -94,12 +95,26 @@ if (central_backend_url) {
     app.use("/data", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
     app.use("/record-choice", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
     app.use("/generate-dynamic", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
+    app.use("/assign-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
+    app.use("/validate-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
 } else {
     app.get("/data", getData);
     app.post("/data", postData);
     app.post("/record-choice", recordChoice);
     app.post("/generate-dynamic", askLLM);
     app.post("/preview-prompt", previewAIPrompt);
+    
+    // Fix: Ensure codename endpoints are properly registered 
+    console.log("Registering codename endpoints");
+    app.post("/assign-codename", (req, res) => {
+        console.log("Received assignCodename request:", req.body);
+        return assignCodename(req, res);
+    });
+    
+    app.post("/validate-codename", (req, res) => {
+        console.log("Received validateCodename request:", req.body);
+        return validateCodename(req, res);
+    });
 }
 
 // ---------------------------------

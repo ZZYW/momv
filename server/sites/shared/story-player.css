@@ -264,6 +264,42 @@ h2 {
     font-weight: bold;
 }
 
+/* ===================== */
+/* = CODENAME ELEMENTS = */
+/* ===================== */
+.end-message {
+    font-size: 16px;
+    text-align: center;
+    margin: 30px 0 20px;
+    padding: 10px;
+    border-top: 1px dotted #666;
+    border-bottom: 1px dotted #666;
+}
+
+.codename-container {
+    margin: 30px 0;
+    padding: 15px;
+    border: 1px dotted #69801d;
+    text-align: center;
+}
+
+.codename-loading {
+    padding: 10px;
+    font-style: italic;
+}
+
+.codename-message {
+    font-size: 14px;
+}
+
+.codename-message strong {
+    font-size: 18px;
+    color: #69801d;
+    font-weight: bold;
+    display: block;
+    margin: 15px 0;
+}
+
 /* ============== */
 /* = ANIMATIONS = */
 /* ============== */

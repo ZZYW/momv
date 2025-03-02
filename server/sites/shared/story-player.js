@@ -248,28 +248,18 @@ document.addEventListener("alpine:init", () => {
         passageEl.appendChild(navContainer);
       } else {
         // Final passage - story is ending
-        const endContainer = document.createElement("div");
-        endContainer.className = "end-container";
-        
-        // Create end message but don't show it yet
-        const endMessage = document.createElement("div");
-        endMessage.className = "end-message";
-        endMessage.innerText = "故事结束";
-        endMessage.style.display = "none";
-        endContainer.appendChild(endMessage);
-        
-        passageEl.appendChild(endContainer);
         
         // Only generate and display codename for Station 1
         if (this.config.stationId === "station1") {
-          this.generateAndDisplayCodename(passageEl, endMessage);
+          this.generateAndDisplayCodename(passageEl);
         } else {
-          // For other stations, show end message and add "start a new journey" button
+          // For other stations, just add "start a new journey" button
           const addNewJourneyButton = () => {
             // Create a container for the new journey button
             const buttonContainer = document.createElement("div");
             buttonContainer.className = "codename-container";
             buttonContainer.style.marginTop = "30px";
+            buttonContainer.style.textAlign = "center";
             
             // Add "start a new journey" button
             const newJourneyButton = document.createElement("button");
@@ -280,10 +270,7 @@ document.addEventListener("alpine:init", () => {
             });
             
             buttonContainer.appendChild(newJourneyButton);
-            endContainer.appendChild(buttonContainer);
-            
-            // Show the end message
-            endMessage.style.display = "block";
+            passageEl.appendChild(buttonContainer);
           };
           
           // Check if there are unselected options before showing button
@@ -301,8 +288,8 @@ document.addEventListener("alpine:init", () => {
       }
     },
     
-    // Generate and display a codename for the player when they complete Station 1
-    generateAndDisplayCodename(passageEl, endMessage) {
+    // Generate and display codename options for the player when they complete Station 1
+    generateAndDisplayCodename(passageEl) {
       const codenameContainer = document.createElement("div");
       codenameContainer.className = "codename-container";
       codenameContainer.style.display = "none"; // Initially hidden
@@ -310,41 +297,43 @@ document.addEventListener("alpine:init", () => {
       // Add container to passage
       passageEl.appendChild(codenameContainer);
       
-      // Only show the codename when all options in the passage have been selected
+      // Only show the codename options when all other options in the passage have been selected
       if (this.passageHasUnselectedOptions(passageEl)) {
         // If there are unselected options, we'll check repeatedly until they're all selected
         const checkInterval = setInterval(() => {
           if (!this.passageHasUnselectedOptions(passageEl)) {
             clearInterval(checkInterval);
-            this.fetchAndDisplayCodename(codenameContainer, endMessage);
+            this.fetchAndDisplayCodenameOptions(codenameContainer);
           }
         }, 500); // Check every 500ms
       } else {
-        // If there are no options to select, show codename right away
-        this.fetchAndDisplayCodename(codenameContainer, endMessage);
+        // If there are no options to select, show codename options right away
+        this.fetchAndDisplayCodenameOptions(codenameContainer);
       }
     },
     
-    // Helper method to actually fetch and display the codename
-    fetchAndDisplayCodename(codenameContainer, endMessage) {
-      // Show end message and container
-      if (endMessage) endMessage.style.display = "block";
+    // Helper method to fetch and display codename options
+    fetchAndDisplayCodenameOptions(codenameContainer) {
+      // Show container
       codenameContainer.style.display = "block";
       
-      // Show loading indicator while fetching codename
+      // Show loading indicator while fetching codename options
       const loadingElement = document.createElement("div");
       loadingElement.className = "codename-loading";
       loadingElement.innerHTML = "生成代号中... <span class='loading'></span>";
       codenameContainer.appendChild(loadingElement);
       
-      console.log("Requesting codename for player:", this.config.playerId);
+      console.log("Requesting codename options for player:", this.config.playerId);
       console.log("Server URL:", this.config.serverUrl);
       
-      // Request codename from server
+      // Request codenames from server - we'll modify to get three options
       fetch(`${this.config.serverUrl}/assign-codename`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId: this.config.playerId })
+        body: JSON.stringify({ 
+          playerId: this.config.playerId,
+          count: 3 // Request 3 codename options
+        })
       })
       .then(response => {
         console.log("Server response status:", response.status);
@@ -357,29 +346,120 @@ document.addEventListener("alpine:init", () => {
         });
       })
       .then(data => {
-        // Replace loading with codename message
-        const codenameMessage = document.createElement("div");
-        codenameMessage.className = "codename-message";
-        codenameMessage.innerHTML = `<p>这是你的代号，请牢记：<strong>${data.codename}</strong></p><p>前往第二站时需要输入此代号。</p>`;
+        // Get codename options (fallback to single option if server doesn't support multiple)
+        const codenames = Array.isArray(data.codenames) ? data.codenames : [data.codename];
         
-        // Replace loading with actual content
-        codenameContainer.innerHTML = "";
-        codenameContainer.appendChild(codenameMessage);
+        // Add a prompt message
+        const promptMessage = document.createElement("div");
+        promptMessage.className = "codename-prompt";
+        promptMessage.innerHTML = "并赐予他法号：";
         
-        // Add "start a new journey" button
-        const newJourneyButton = document.createElement("button");
-        newJourneyButton.className = "new-journey-button";
-        newJourneyButton.innerText = "开始新的旅程";
-        newJourneyButton.addEventListener("click", () => {
-          window.location.reload();
+        // Create static-option-container for codename options
+        const optionsContainer = document.createElement("div");
+        optionsContainer.className = "static-option-container";
+        
+        // Add each codename as a static-option
+        codenames.forEach((codename, i) => {
+          // Add divider before all options except the first one
+          if (i > 0) {
+            const dividerEl = document.createElement("div");
+            dividerEl.className = "option-divider";
+            dividerEl.textContent = "/";
+            optionsContainer.appendChild(dividerEl);
+          }
+          
+          // Create option element
+          const optEl = document.createElement("div");
+          optEl.className = "static-option";
+          optEl.dataset.idx = i;
+          optEl.textContent = codename;
+          
+          // Add click handler
+          optEl.addEventListener("click", () => {
+            // Handle selection visually
+            const allOpts = optionsContainer.querySelectorAll(".static-option");
+            
+            // Disable all options
+            allOpts.forEach(opt => {
+              opt.style.pointerEvents = "none";
+              opt.style.cursor = "default";
+              opt.onclick = null;
+            });
+            
+            // Update UI - mark selected and fade others
+            optEl.classList.add("selected");
+            allOpts.forEach(o => {
+              if (o !== optEl) {
+                o.classList.add("faded");
+                o.onclick = null;
+              }
+            });
+            
+            // Fade dividers
+            const dividers = optionsContainer.querySelectorAll(".option-divider");
+            dividers.forEach(divider => {
+              divider.classList.add("faded");
+            });
+            
+            // Save selected codename to server
+            this.saveSelectedCodename(codename);
+            
+            // Add a small message below the options
+            setTimeout(() => {
+              // Create a small reminder message
+              const reminderMessage = document.createElement("div");
+              reminderMessage.className = "codename-reminder";
+              reminderMessage.innerHTML = `<p>请务必牢记您的法号……</p>`;
+              reminderMessage.style.marginTop = "20px";
+              reminderMessage.style.fontSize = "12px";
+              reminderMessage.style.opacity = "0.8";
+              
+              // Add "start a new journey" button
+              const newJourneyButton = document.createElement("button");
+              newJourneyButton.className = "new-journey-button";
+              newJourneyButton.innerText = "开始新的旅程";
+              newJourneyButton.style.marginTop = "10px";
+              newJourneyButton.addEventListener("click", () => {
+                window.location.reload();
+              });
+              
+              // Add these below the options
+              codenameContainer.appendChild(reminderMessage);
+              codenameContainer.appendChild(newJourneyButton);
+            }, 1000); // Short delay for visual transition
+          });
+          
+          optionsContainer.appendChild(optEl);
         });
-        codenameContainer.appendChild(document.createElement("br"));
-        codenameContainer.appendChild(document.createElement("br"));
-        codenameContainer.appendChild(newJourneyButton);
+        
+        // Replace loading with options
+        codenameContainer.innerHTML = "";
+        codenameContainer.appendChild(promptMessage);
+        codenameContainer.appendChild(optionsContainer);
       })
       .catch(error => {
-        console.error("Error generating codename:", error);
+        console.error("Error generating codename options:", error);
         codenameContainer.innerHTML = "<div class='error'>无法生成代号，请刷新页面重试。</div>";
+      });
+    },
+    
+    // Save the selected codename to server
+    saveSelectedCodename(codename) {
+      fetch(`${this.config.serverUrl}/save-codename`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerId: this.config.playerId,
+          codename: codename
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          console.error("Error saving codename:", response.status);
+        }
+      })
+      .catch(error => {
+        console.error("Error saving codename:", error);
       });
     },
 

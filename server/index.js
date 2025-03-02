@@ -6,7 +6,7 @@ import { compilePlayable } from "./controllers/compileController.js";
 import { getData, postData } from "./controllers/dataController.js";
 import { recordChoice } from "./controllers/choiceController.js";
 import { askLLM, previewAIPrompt } from "./controllers/aiController.js";
-import { assignCodename, validateCodename } from "./controllers/codenameController.js";
+import { assignCodename, validateCodename, saveCodename } from "./controllers/codenameController.js";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
@@ -99,6 +99,7 @@ if (central_backend_url) {
     app.use("/record-choice", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
     app.use("/generate-dynamic", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
     app.use("/assign-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
+    app.use("/save-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
     app.use("/validate-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
 } else {
     app.get("/data", getData);
@@ -117,6 +118,11 @@ if (central_backend_url) {
     app.post("/validate-codename", (req, res) => {
         console.log("Received validateCodename request:", req.body);
         return validateCodename(req, res);
+    });
+    
+    app.post("/save-codename", (req, res) => {
+        console.log("Received saveCodename request:", req.body);
+        return saveCodename(req, res);
     });
 }
 

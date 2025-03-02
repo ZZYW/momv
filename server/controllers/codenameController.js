@@ -1,10 +1,10 @@
 import db from '../db.js';
 import { generateCodename, getPlayerIdFromCodename, hasCompletedStation1 } from '../utils/codenameGenerator.js';
 
-// Generate a codename for a player completing Station 1
+// Generate codename options for a player completing Station 1
 export const assignCodename = async (req, res) => {
     console.log("assignCodename endpoint called with body:", req.body);
-    const { playerId } = req.body;
+    const { playerId, count = 3 } = req.body;
     
     if (!playerId) {
         console.log("Missing playerId in request");
@@ -23,14 +23,48 @@ export const assignCodename = async (req, res) => {
         return res.json({ 
             status: "success", 
             codename: db.data.players[playerId].codename,
+            codenames: [db.data.players[playerId].codename],
             alreadyAssigned: true
         });
     }
     
-    // Generate a new codename
-    const codename = await generateCodename(db);
+    // Generate multiple unique codenames
+    const requestedCount = Math.min(parseInt(count), 5); // Limit to max 5 options
+    const codenames = [];
     
-    // Record the codename and mark Station 1 as completed
+    for (let i = 0; i < requestedCount; i++) {
+        const codename = await generateCodename(db);
+        codenames.push(codename);
+    }
+    
+    // We don't assign the codename yet - the player will choose one
+    // The selection will be handled by the save-codename endpoint
+    
+    res.json({ 
+        status: "success", 
+        codenames,
+        alreadyAssigned: false
+    });
+};
+
+// Save the selected codename for a player
+export const saveCodename = async (req, res) => {
+    console.log("saveCodename endpoint called with body:", req.body);
+    const { playerId, codename } = req.body;
+    
+    if (!playerId || !codename) {
+        console.log("Missing required fields in request");
+        return res.status(400).json({ error: "Missing required fields: playerId and codename" });
+    }
+    
+    await db.read();
+    
+    // Ensure player entry exists
+    if (!db.data.players[playerId]) {
+        db.data.players[playerId] = { choices: {}, completedStations: [] };
+    }
+    
+    // Save the selected codename and mark Station 1 as completed
     db.data.players[playerId].codename = codename;
     if (!db.data.players[playerId].completedStations) {
         db.data.players[playerId].completedStations = [];
@@ -43,8 +77,7 @@ export const assignCodename = async (req, res) => {
     
     res.json({ 
         status: "success", 
-        codename,
-        alreadyAssigned: false
+        codename
     });
 };
 

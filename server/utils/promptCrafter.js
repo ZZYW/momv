@@ -13,8 +13,6 @@ const MASTER_TEMPLATE = fs.readFileSync(templatePath, 'utf8');
 
 /**
  * Helper function to extract templates from the master template string
- * @param {string} id - Template ID to extract
- * @returns {string} - Extracted template string
  */
 const getTemplate = (tag) => {
   const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 's');
@@ -70,7 +68,7 @@ export const EXTENDED_PROMPT_TEMPLATE = getTemplate('extended_prompt');
 export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, lexiconCategory }) => {
   let template = PROMPT_TEMPLATES[blockType] || "";
   let formatTemplate = "";
-  
+
   // Replace placeholders with actual values based on block type
   if (blockType === "dynamic-option" && optionCount) {
     template = template
@@ -78,14 +76,14 @@ export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, le
       .replace('{writer_role}', WRITER_ROLE)
       .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
       .replace('{response_format}', RESPONSE_FORMAT);
-  } 
+  }
   else if (blockType === "dynamic-text" && sentenceCount) {
     template = template
       .replace('{number_of_sentences}', String(sentenceCount))
       .replace('{writer_role}', WRITER_ROLE)
       .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
       .replace('{response_format}', RESPONSE_FORMAT);
-  } 
+  }
   else if (blockType === "dynamic-word" && lexiconCategory) {
     template = template
       .replace('{word_category}', lexiconCategory)
@@ -187,23 +185,23 @@ export const craftPrompt = (message, contextString, instructions, passageContext
  * @param {Object} params - Parameter object with all prompt components
  * @returns {string} - The complete prompt that will be sent to the LLM
  */
-export const previewPrompt = ({ 
-  blockType, 
-  message, 
-  optionCount, 
-  sentenceCount, 
-  lexiconCategory, 
+export const previewPrompt = ({
+  blockType,
+  message,
+  optionCount,
+  sentenceCount,
+  lexiconCategory,
   contextInfo,
   passageContext
 }) => {
-  const instructions = getBlockInstructions({ 
-    blockType, 
-    optionCount, 
-    sentenceCount, 
-    lexiconCategory 
+  const instructions = getBlockInstructions({
+    blockType,
+    optionCount,
+    sentenceCount,
+    lexiconCategory
   });
-  
+
   const contextString = contextInfo ? formatContextString(contextInfo) : "";
-  
+
   return craftPrompt(message, contextString, instructions, passageContext);
 };

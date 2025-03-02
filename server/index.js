@@ -70,8 +70,7 @@ if (!isProd) {
             fs.mkdirSync(dirPath, { recursive: true });
         }
         // Generate a filename using the current epoch timestamp.
-        const timestamp = Date.now();
-        const filePath = path.join(dirPath, `${timestamp}.json`);
+        const filePath = path.join(dirPath, `story.json`);
         fs.writeFile(filePath, JSON.stringify({ blocks }, null, 2), (err) => {
             if (err) {
                 console.error("Error writing story JSON file:", err);
@@ -80,41 +79,6 @@ if (!isProd) {
             res.json({ success: true, filePath });
         });
     });
-
-    app.get("/load-latest-story-json/:station", (req, res) => {
-        const { station } = req.params;
-        if (!["station1", "station2"].includes(station)) {
-            return res.status(400).send("Invalid station specified");
-        }
-        const dirPath = path.join(__dirname, "sites", station, "input");
-        if (!fs.existsSync(dirPath)) {
-            return res.status(404).send("No saved stories");
-        }
-        fs.readdir(dirPath, (err, files) => {
-            if (err) {
-                console.error("Error reading directory:", err);
-                return res.status(500).send("Error loading story");
-            }
-            // Filter to only JSON files.
-            const jsonFiles = files.filter(file => file.endsWith(".json"));
-            if (jsonFiles.length === 0) {
-                return res.status(404).send("No saved stories");
-            }
-            // Sort the JSON files in descending order (newest first).
-            jsonFiles.sort((a, b) => parseInt(b) - parseInt(a));
-            const latestFile = jsonFiles[0];
-            const filePath = path.join(dirPath, latestFile);
-            fs.readFile(filePath, "utf8", (err, data) => {
-                if (err) {
-                    console.error("Error reading file:", err);
-                    return res.status(500).send("Error loading story");
-                }
-                res.json({ success: true, data: JSON.parse(data) });
-            });
-        });
-    });
-
-
 
     // Control Panel (only in dev mode)
     app.use("/cp", express.static(path.join(__dirname, "sites", "cp")));

@@ -42,7 +42,7 @@
               Date.now() +
               "_" +
               Math.random().toString(36).substring(2, 9),
-            storyPath: "input/story1.json",
+            storyPath: "input/story.json",
             debug: false,
           },
 
@@ -176,7 +176,7 @@
                   return '<div class="error">No options provided</div>';
 
                 // Create options with dividers
-                let optionsHTML = '';
+                let optionsHTML = "";
                 b.options.forEach((opt, i) => {
                   if (i > 0) {
                     // Add a divider before all options except the first one
@@ -304,7 +304,7 @@
               optionCount: blockData.optionCount,
               sentenceCount: blockData.sentenceCount,
               lexiconCategory: blockData.lexiconCategory,
-              storyId: "1" // Currently hard-coded for story1.json
+              storyId: "1", // Currently hard-coded for story.json
             };
 
             return fetch(`${this.config.serverUrl}/generate-dynamic`, {
@@ -346,7 +346,7 @@
                     dividerEl.textContent = "/";
                     container.appendChild(dividerEl);
                   }
-                  
+
                   const optEl = document.createElement("div");
                   optEl.className = "static-option";
                   optEl.dataset.index = i;
@@ -417,18 +417,19 @@
                 );
               }
             });
-            
+
             // Find and fade all dividers
             const dividers = container.querySelectorAll(".option-divider");
-            dividers.forEach(divider => {
+            dividers.forEach((divider) => {
               divider.classList.add("faded");
             });
 
             // Extract data
             const chosenText = elem.textContent;
-            const chosenIndex = type === "static" 
-              ? parseInt(elem.dataset.idx) 
-              : parseInt(elem.dataset.index);
+            const chosenIndex =
+              type === "static"
+                ? parseInt(elem.dataset.idx)
+                : parseInt(elem.dataset.index);
 
             // Record choice on server
             this.recordChoice(
@@ -455,10 +456,14 @@
             availableOptions
           ) {
             // Find the block data to get instruction and context blocks
-            const blockData = this.state.projectBlocks.find(b => b.id === blockID);
+            const blockData = this.state.projectBlocks.find(
+              (b) => b.id === blockID
+            );
             const instruction = blockData?.prompt || "";
-            const contextBlocks = (blockData?.context || []).filter(ctx => ctx.value);
-            
+            const contextBlocks = (blockData?.context || []).filter(
+              (ctx) => ctx.value
+            );
+
             fetch(`${this.config.serverUrl}/record-choice`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -470,7 +475,7 @@
                 chosenText,
                 availableOptions,
                 instruction,
-                contextBlocks
+                contextBlocks,
               }),
             }).catch((err) => {
               this.log("Error recording choice:", err);
@@ -568,7 +573,7 @@
             this.loadDynamicContentForPassage(nextEl).then(() => {
               // Scroll to top immediately
               window.scrollTo(0, 0);
-              
+
               // Simple approach: After fade-out completes, hide current and show next
               setTimeout(() => {
                 if (currentEl) {
@@ -577,15 +582,15 @@
                   currentEl.style.display = "none";
                   currentEl.classList.remove("fade-out");
                 }
-                
+
                 // Show next passage with fade-in
                 nextEl.style.display = "block";
                 nextEl.classList.add("active", "fade-in");
                 this.state.currentPassageIndex = nextIndex;
-                
+
                 // Set up the continue button
                 this.setupContinueButton(nextEl);
-                
+
                 // Clean up animation classes after fade-in completes
                 setTimeout(() => {
                   nextEl.classList.remove("fade-in");

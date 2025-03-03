@@ -223,6 +223,26 @@
                   v-model="block.titleName"
                   placeholder="Enter scene title"
                 />
+                <div style="margin-top: 10px;">
+                  <label>
+                    <input type="checkbox" v-model="block.useBannerArt" /> Use Banner Art
+                  </label>
+                </div>
+                <div v-if="block.useBannerArt" style="margin-top: 10px;">
+                  <label>Banner Art (63 characters wide):</label>
+                  <div style="position: relative; margin-top: 5px;">
+                    <div style="position: absolute; top: 0; right: 5px; font-size: 10px; color: #777; pointer-events: none;">
+                      63 characters
+                    </div>
+                    <textarea
+                      v-model="block.bannerArt"
+                      @input="enforceBannerArtWidth($event, block)"
+                      style="width: 63ch; font-family: monospace; resize: vertical; white-space: pre; overflow-x: auto; font-size: 14px; letter-spacing: normal;"
+                      rows="8"
+                      placeholder="Paste ASCII art here (each line will be padded to 63 characters)"
+                    ></textarea>
+                  </div>
+                </div>
               </template>
             </div>
             <!-- Block Information at the Bottom -->
@@ -306,6 +326,25 @@
           },
         },
         methods: {
+          enforceBannerArtWidth(event, block) {
+            // Process each line to ensure it's exactly 63 characters wide
+            const lines = block.bannerArt.split('\n');
+            const processedLines = lines.map(line => {
+              // Truncate if longer than 63 characters
+              if (line.length > 63) {
+                return line.substring(0, 63);
+              }
+              // Pad with spaces if shorter than 63 characters
+              else if (line.length < 63) {
+                return line.padEnd(63, ' ');
+              }
+              return line;
+            });
+            
+            // Update the banner art with processed lines
+            block.bannerArt = processedLines.join('\n');
+          },
+          
           debounceSaveProject() {
             clearTimeout(this._saveTimeout);
             this._saveTimeout = setTimeout(() => {
@@ -388,6 +427,8 @@
               type: "scene-header",
               titleName: "",
               sceneId: null,
+              useBannerArt: false,
+              bannerArt: "",
             });
           },
           removeBlock(index) {
@@ -484,6 +525,8 @@
                 return {
                   ...baseBlock,
                   titleName: block.titleName,
+                  useBannerArt: block.useBannerArt,
+                  bannerArt: block.bannerArt,
                 };
               }
               return baseBlock;
@@ -599,6 +642,8 @@
                         return {
                           ...baseBlock,
                           titleName: block.titleName || "",
+                          useBannerArt: block.useBannerArt || false,
+                          bannerArt: block.bannerArt || "",
                         };
                       default:
                         return baseBlock;

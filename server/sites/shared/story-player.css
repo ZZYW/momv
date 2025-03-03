@@ -121,7 +121,33 @@ body {
 
 .block-scene-header {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.scene-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.banner-art {
+    font-family: monospace;
+    white-space: pre;
+    margin: 0;
+    padding: 0;
+    width: 63ch;
+    overflow-x: auto;
+    text-align: left;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.1;
+    letter-spacing: normal;
+}
+
+.scene-title {
+    text-align: center;
 }
 
 /* ================ */

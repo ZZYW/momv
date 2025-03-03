@@ -19,7 +19,7 @@
 
     /* --- Typography --- */
     --font-family-default: monospace;
-    --font-family-narrative: serif;
+    --font-family-narrative: monospace; /* Changed from serif to monospace */
     --font-size-base: 14px;
     --font-size-toolbar: 14px;
     --font-size-button: 14px;
@@ -60,6 +60,11 @@ body {
     color: var(--color-text-body);
 }
 
+/* Set all form elements to use monospace */
+input, textarea, select, button {
+    font-family: var(--font-family-default);
+}
+
 textarea {
     resize: none;
     width: 100%;
@@ -80,7 +85,7 @@ textarea {
     overflow-y: auto !important;
     resize: vertical !important;
     min-height: 120px;
-    font-family: var(--font-family-narrative);
+    font-family: var(--font-family-default);
     font-size: 14px;
     line-height: 1.4;
     padding: 8px;
@@ -142,7 +147,7 @@ textarea {
     margin: var(--margin-toolbar-button);
     padding: 10px 15px;
     font-size: var(--font-size-button);
-    font-family: monospace;
+    font-family: var(--font-family-default);
     cursor: pointer;
     border: none;
     background: var(--color-bg-toolbar);
@@ -276,7 +281,7 @@ button:hover .tooltip {
    Plain Block (Narrative Textarea)
    --------------------------------------------------- */
 .narrative-textarea {
-    font-family: var(--font-family-narrative);
+    font-family: var(--font-family-default);
     background-color: var(--color-bg-narrative);
     color: var(--color-text-narrative);
     font-size: var(--font-size-narrative);
@@ -309,7 +314,7 @@ button:hover .tooltip {
 .static-options-container input {
     margin-bottom: var(--margin-static-option);
     padding: 5px;
-    font-family: var(--font-family-narrative);
+    font-family: var(--font-family-default);
     font-size: var(--font-size-narrative);
     border: 1px solid var(--color-border-input);
 }

@@ -209,7 +209,36 @@ document.addEventListener("alpine:init", () => {
             <div class="dynamic-word-container" data-uuid="${b.id}"></div>
           </div>`,
 
-        "scene-header": (b) => `<div class="scene-header"> ░▒▓ ${b.titleName || "Scene"} ▓▒░</div>`,
+        "scene-header": (b) => {
+          // Generate the scene header HTML
+          let bannerArtHTML = '';
+          
+          if (b.useBannerArt && b.bannerArt) {
+            // Process banner art to ensure each line is exactly 63 characters
+            const lines = b.bannerArt.split('\n');
+            const processedLines = lines.map(line => {
+              // Truncate if longer than 63 characters
+              if (line.length > 63) {
+                return line.substring(0, 63);
+              }
+              // Pad with spaces if shorter than 63 characters
+              else if (line.length < 63) {
+                return line.padEnd(63, ' ');
+              }
+              return line;
+            });
+            
+            const processedBannerArt = processedLines.join('\n');
+            bannerArtHTML = `<pre class="banner-art">${processedBannerArt}</pre>`;
+          }
+          
+          return `
+            <div class="scene-header">
+              ${bannerArtHTML}
+              <div class="scene-title"> ░▒▓ ${b.titleName || "Scene"} ▓▒░</div>
+            </div>
+          `;
+        },
       };
 
       // Use the appropriate renderer or return an error message

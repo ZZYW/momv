@@ -16,9 +16,10 @@
    ```
 
 3. Configure environment variables:
-   Create a `.env` file in the root directory with the following:
+   The project uses the `dotevn` package. So, create a `.env` file in the root directory with the following:
    ```
-   DASHSCOPE_API_KEY=your_dashscope_api_key
+   DASHSCOPE_API_KEY=your_dashscope_api_key # ⚠ MANDATORY
+   PRINTER_IP=000.000.000.000 # ⚠ MANDATORY set the ip to the printer if you want the printing function to work
    PORT=3001 # Optional, defaults to 3001
    ```
 

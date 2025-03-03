@@ -12,8 +12,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/escpos": "^2.5.5",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
+    "escpos": "3.0.0-alpha.6",
+    "escpos-network": "3.0.0-alpha.5",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3",
     "lowdb": "^7.0.1",

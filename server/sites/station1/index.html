@@ -20,16 +20,23 @@
         transition: opacity 3s ease, background-color 0.2s ease,
           border-color 0.2s ease;
       }
+      .ascii-border {
+        white-space: nowrap;
+        overflow: hidden;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
     <div x-data="storyPlayer" x-init="init()">
       <div id="player-data"></div>
+      <div class="ascii-border top" id="ascii-top">+------------------+</div>
       <div id="passage-container">
         <!-- Passages will be rendered here -->
       </div>
     </div>
 
     <script src="/shared/story-player.js"></script>
+    <script src="/shared/ascii-designer.js"></script>
   </body>
 </html>

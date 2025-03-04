@@ -133,6 +133,9 @@
       <button class="tab-button" onclick="openTab(event, 'api-tab')">
         API Tests
       </button>
+      <button class="tab-button" onclick="openTab(event, 'story-tab')">
+        Story Tester
+      </button>
       <button class="tab-button" onclick="openTab(event, 'preview-tab')">
         Template Preview
       </button>
@@ -244,6 +247,130 @@
         <button class="button-primary" onclick="testPrinter()">
           Print Text
         </button>
+      </div>
+    </div>
+
+    <!-- Story Tester Tab -->
+    <div id="story-tab" class="tab-content">
+      <h2>Story API Tester</h2>
+      <p>Test the Story Retriever API functions to fetch story data, compile texts, and more.</p>
+
+      <!-- Function Tabs -->
+      <div style="margin-bottom: 20px; border-bottom: 1px solid #ddd;">
+        <div style="display: flex; gap: 5px; overflow-x: auto;">
+          <button id="btnGetStoryBlocks" class="tab-button active" onclick="switchStoryFunction('getStoryBlocks', this)">getStoryBeforeBlockByPlayer</button>
+          <button id="btnGetBlockData" class="tab-button" onclick="switchStoryFunction('getBlockData', this)">getBlockData</button>
+          <button id="btnCompileStory" class="tab-button" onclick="switchStoryFunction('compileStory', this)">compileStoryForPlayer</button>
+          <button id="btnChoiceSummary" class="tab-button" onclick="switchStoryFunction('choiceSummary', this)">compileChoiceSummaryForBlock</button>
+        </div>
+      </div>
+
+      <!-- Function Parameter Sections -->
+      <div class="section">
+        <!-- Function description placeholders -->
+        <div id="getStoryBlocksDesc">
+          <div style="margin-bottom: 15px;">
+            <strong>getStoryBeforeBlockByPlayer</strong>: Gets story blocks up to a specific block, optionally filtered by player and block type.
+          </div>
+        </div>
+        <div id="getBlockDataDesc" style="display: none;">
+          <div style="margin-bottom: 15px;">
+            <strong>getBlockData</strong>: Retrieves a single block with all static and dynamic data for a specific block ID.
+          </div>
+        </div>
+        <div id="compileStoryDesc" style="display: none;">
+          <div style="margin-bottom: 15px;">
+            <strong>compileStoryForPlayer</strong>: Compiles story text for a specific player, optionally up to a specific block.
+          </div>
+        </div>
+        <div id="choiceSummaryDesc" style="display: none;">
+          <div style="margin-bottom: 15px;">
+            <strong>compileChoiceSummaryForBlock</strong>: Compiles a summary of player choices for a specific block.
+          </div>
+        </div>
+
+        <!-- Parameters in row layout -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
+          <!-- Common Parameters -->
+          <div class="form-group" id="storyIdGroup">
+            <label for="storyTestStoryId">storyId:</label>
+            <select id="storyTestStoryId">
+              <option value="1">1 (Station 1)</option>
+              <option value="2">2 (Station 2)</option>
+              <option value="0">0 (Both Stories)</option>
+            </select>
+          </div>
+          
+          <div class="form-group" id="playerIdGroup">
+            <label for="storyTestPlayerId">playerId:</label>
+            <select id="storyTestPlayerId">
+              <option value="">null (Anonymous)</option>
+              <!-- Player IDs will be populated dynamically -->
+            </select>
+          </div>
+          
+          <!-- Get Story Blocks Parameters -->
+          <div class="form-group" id="blockIdGroup">
+            <label for="storyBlocksBlockId">blockId:</label>
+            <select id="storyBlocksBlockId">
+              <option value="">null (All Blocks)</option>
+              <!-- Block IDs will be populated dynamically -->
+            </select>
+          </div>
+          
+          <div class="form-group" id="blockTypeGroup">
+            <label for="storyBlocksType">blockType:</label>
+            <select id="storyBlocksType">
+              <option value="">null (All Types)</option>
+              <option value="plain">plain</option>
+              <option value="static">static</option>
+              <option value="scene-header">scene-header</option>
+              <option value="dynamic-text">dynamic-text</option>
+              <option value="dynamic-option">dynamic-option</option>
+            </select>
+          </div>
+          
+          <!-- Get Block Data Parameters -->
+          <div class="form-group" id="blockDataIdGroup" style="display: none;">
+            <label for="blockDataBlockId">blockId:</label>
+            <select id="blockDataBlockId" required>
+              <!-- Block IDs will be populated dynamically -->
+            </select>
+          </div>
+          
+          <!-- Compile Story Parameters -->
+          <div class="form-group" id="compileBlockIdGroup" style="display: none;">
+            <label for="compileStoryBlockId">blockId:</label>
+            <select id="compileStoryBlockId">
+              <option value="">null (All Blocks)</option>
+              <!-- Block IDs will be populated dynamically -->
+            </select>
+          </div>
+          
+          <!-- Choice Summary Parameters -->
+          <div class="form-group" id="choiceSummaryIdGroup" style="display: none;">
+            <label for="choiceSummaryBlockId">blockId:</label>
+            <select id="choiceSummaryBlockId" required>
+              <!-- Block IDs will be populated dynamically, filtered to only static blocks -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Utilities Section -->
+        <div style="margin-top: 15px;">
+          <div class="button-group">
+            <button class="button-primary" onclick="executeStoryTest()">Execute Function</button>
+            <button onclick="copyStoryResultToClipboard()">Copy Result</button>
+            <button onclick="loadPlayerIds()">Refresh Player List</button>
+            <button onclick="loadStoryData()">Refresh Story Data</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Function Result -->
+      <div class="section">
+        <h3>Result</h3>
+        <pre id="story-test-result" style="max-height: 500px; overflow: auto;">Results will appear here...</pre>
       </div>
     </div>
 
@@ -598,7 +725,263 @@
     // Initialize the form fields on page load
     document.addEventListener("DOMContentLoaded", function () {
       updateFormFields();
+      initializeStoryTester();
     });
+
+    // ------- Story Tester Functions -------
+
+    // Cached data for dropdowns
+    let allBlocks = [];
+    let playerIds = [];
+    let staticBlocks = [];
+    let currentStoryFunction = 'getStoryBlocks';
+
+    // Initialize story tester forms
+    async function initializeStoryTester() {
+      // Set up story ID change listener
+      document.getElementById('storyTestStoryId').addEventListener('change', loadStoryData);
+
+      // Initial data load
+      await Promise.all([
+        loadPlayerIds(),
+        loadStoryData()
+      ]);
+    }
+
+    // Switch between different story functions
+    function switchStoryFunction(functionName, buttonElement) {
+      // Update current function
+      currentStoryFunction = functionName;
+      
+      // Update active button styling
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      buttonElement.classList.add('active');
+      
+      // Hide all parameter sections
+      document.getElementById('getStoryBlocksDesc').style.display = 'none';
+      document.getElementById('getBlockDataDesc').style.display = 'none';
+      document.getElementById('compileStoryDesc').style.display = 'none';
+      document.getElementById('choiceSummaryDesc').style.display = 'none';
+      
+      // Hide all specific parameter groups
+      document.getElementById('blockIdGroup').style.display = 'none';
+      document.getElementById('blockTypeGroup').style.display = 'none';
+      document.getElementById('blockDataIdGroup').style.display = 'none';
+      document.getElementById('compileBlockIdGroup').style.display = 'none';
+      document.getElementById('choiceSummaryIdGroup').style.display = 'none';
+      
+      // Common parameters visibility
+      document.getElementById('storyIdGroup').style.display = 'block';
+      document.getElementById('playerIdGroup').style.display = 'block';
+      
+      // Show function-specific parameters
+      switch (functionName) {
+        case 'getStoryBlocks':
+          document.getElementById('getStoryBlocksDesc').style.display = 'block';
+          document.getElementById('blockIdGroup').style.display = 'block';
+          document.getElementById('blockTypeGroup').style.display = 'block';
+          break;
+          
+        case 'getBlockData':
+          document.getElementById('getBlockDataDesc').style.display = 'block';
+          document.getElementById('blockDataIdGroup').style.display = 'block';
+          break;
+          
+        case 'compileStory':
+          document.getElementById('compileStoryDesc').style.display = 'block';
+          document.getElementById('compileBlockIdGroup').style.display = 'block';
+          break;
+          
+        case 'choiceSummary':
+          document.getElementById('choiceSummaryDesc').style.display = 'block';
+          document.getElementById('storyIdGroup').style.display = 'none'; // No storyId for choice summary
+          document.getElementById('playerIdGroup').style.display = 'none'; // No playerId for choice summary
+          document.getElementById('choiceSummaryIdGroup').style.display = 'block';
+          break;
+      }
+    }
+
+    // Load player IDs for dropdown
+    async function loadPlayerIds() {
+      try {
+        const response = await fetch('/data');
+        const data = await response.json();
+        
+        if (data && data.players) {
+          playerIds = Object.keys(data.players);
+          
+          // Populate player ID dropdown
+          const playerSelect = document.getElementById('storyTestPlayerId');
+          
+          // Clear existing options except the first one
+          while (playerSelect.options.length > 1) {
+            playerSelect.remove(1);
+          }
+          
+          // Add player IDs
+          playerIds.forEach(playerId => {
+            const option = document.createElement('option');
+            option.value = playerId;
+            option.textContent = playerId;
+            playerSelect.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading player IDs:', error);
+        document.getElementById('story-test-result').textContent = `Error loading player IDs: ${error.message}`;
+      }
+    }
+
+    // Load story blocks based on selected story ID
+    async function loadStoryData() {
+      try {
+        document.getElementById('story-test-result').textContent = 'Loading story data...';
+        const storyId = document.getElementById('storyTestStoryId').value;
+        
+        // Fetch story blocks
+        const response = await fetch(`/story/blocks?storyId=${storyId}`);
+        const data = await response.json();
+        
+        if (data && data.success && data.blocks) {
+          allBlocks = data.blocks;
+          staticBlocks = allBlocks.filter(block => block.type === 'static');
+          
+          // Populate block ID dropdowns
+          populateBlockDropdowns();
+          document.getElementById('story-test-result').textContent = `Loaded ${allBlocks.length} blocks from story ${storyId}, including ${staticBlocks.length} static blocks.`;
+        }
+      } catch (error) {
+        console.error('Error loading story data:', error);
+        document.getElementById('story-test-result').textContent = `Error loading story data: ${error.message}`;
+      }
+    }
+
+    // Populate all block ID dropdowns
+    function populateBlockDropdowns() {
+      // Function to populate a specific dropdown
+      function populateDropdown(selectId, blocks, includeEmptyOption = true) {
+        const select = document.getElementById(selectId);
+        
+        // Clear existing options
+        select.innerHTML = '';
+        
+        // Add empty option if needed
+        if (includeEmptyOption) {
+          const emptyOption = document.createElement('option');
+          emptyOption.value = '';
+          emptyOption.textContent = 'null (All Blocks)';
+          select.appendChild(emptyOption);
+        }
+        
+        // Add block options
+        blocks.forEach(block => {
+          const option = document.createElement('option');
+          option.value = block.id;
+          
+          // Create a descriptive label
+          let label = `${block.id.substring(0, 8)}... (${block.type})`;
+          
+          // Add more context based on block type
+          if (block.type === 'plain' && block.text) {
+            label += `: "${block.text.substring(0, 20)}${block.text.length > 20 ? '...' : ''}"`;
+          } else if (block.type === 'static' && block.options) {
+            label += `: [${block.options.join(', ')}]`;
+          } else if (block.type === 'scene-header' && block.titleName) {
+            label += `: ${block.titleName}`;
+          }
+          
+          option.textContent = label;
+          select.appendChild(option);
+        });
+      }
+      
+      // Populate all dropdowns
+      populateDropdown('storyBlocksBlockId', allBlocks, true);
+      populateDropdown('blockDataBlockId', allBlocks, false);
+      populateDropdown('compileStoryBlockId', allBlocks, true);
+      populateDropdown('choiceSummaryBlockId', staticBlocks, false);
+    }
+
+    // Execute the selected story function
+    async function executeStoryTest() {
+      try {
+        const storyId = document.getElementById('storyTestStoryId').value;
+        const playerId = document.getElementById('storyTestPlayerId').value;
+        let url = '';
+        
+        // Show loading state
+        document.getElementById('story-test-result').textContent = 'Loading...';
+        
+        switch (currentStoryFunction) {
+          case 'getStoryBlocks': {
+            const blockId = document.getElementById('storyBlocksBlockId').value;
+            const blockType = document.getElementById('storyBlocksType').value;
+            
+            // Build URL with query parameters
+            url = `/story/blocks?storyId=${storyId}`;
+            if (playerId) url += `&playerId=${playerId}`;
+            if (blockId) url += `&blockId=${blockId}`;
+            if (blockType) url += `&blockType=${blockType}`;
+            break;
+          }
+          
+          case 'getBlockData': {
+            const blockId = document.getElementById('blockDataBlockId').value;
+            if (!blockId) {
+              throw new Error('Block ID is required');
+            }
+            
+            url = `/story/block/${blockId}`;
+            if (playerId) url += `?playerId=${playerId}`;
+            break;
+          }
+          
+          case 'compileStory': {
+            const blockId = document.getElementById('compileStoryBlockId').value;
+            
+            url = `/story/compile?storyId=${storyId}`;
+            if (playerId) url += `&playerId=${playerId}`;
+            if (blockId) url += `&blockId=${blockId}`;
+            break;
+          }
+          
+          case 'choiceSummary': {
+            const blockId = document.getElementById('choiceSummaryBlockId').value;
+            if (!blockId) {
+              throw new Error('Block ID is required');
+            }
+            
+            url = `/story/choices/${blockId}`;
+            break;
+          }
+        }
+        
+        // Make API request
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        // Display result
+        document.getElementById('story-test-result').textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        console.error('Error executing story test:', error);
+        document.getElementById('story-test-result').textContent = `Error: ${error.message}`;
+      }
+    }
+
+    // Copy story test result to clipboard
+    function copyStoryResultToClipboard() {
+      const resultText = document.getElementById('story-test-result').textContent;
+      navigator.clipboard
+        .writeText(resultText)
+        .then(() => {
+          alert("Results copied to clipboard!");
+        })
+        .catch((err) => {
+          alert("Failed to copy: " + err);
+        });
+    }
   </script>
 </body>
 

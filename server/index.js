@@ -8,6 +8,12 @@ import { recordChoice } from "./controllers/choiceController.js";
 import { askLLM, previewAIPrompt } from "./controllers/aiController.js";
 import { assignCodename, validateCodename, saveCodename } from "./controllers/codenameController.js";
 import { printText } from "./controllers/printerController.js";
+import { 
+  getStoryBeforeBlockByPlayer, 
+  getBlockData, 
+  compileStoryForPlayer, 
+  compileChoiceSummaryForBlock 
+} from "./controllers/storyRetriever.js";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
@@ -109,6 +115,66 @@ if (central_backend_url) {
     app.post("/record-choice", recordChoice);
     app.post("/generate-dynamic", askLLM);
     app.post("/preview-prompt", previewAIPrompt);
+
+    // Story API endpoints
+    app.get("/story/blocks", async (req, res) => {
+      try {
+        const { playerId, blockId, storyId = 1, blockType } = req.query;
+        const blocks = await getStoryBeforeBlockByPlayer(
+          playerId || null,
+          blockId || null,
+          parseInt(storyId, 10),
+          blockType || null
+        );
+        res.json({ success: true, blocks });
+      } catch (error) {
+        console.error("Error in /story/blocks:", error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.get("/story/block/:blockId", async (req, res) => {
+      try {
+        const { blockId } = req.params;
+        const { playerId } = req.query;
+        const block = await getBlockData(blockId, playerId || null);
+        
+        if (!block) {
+          return res.status(404).json({ success: false, error: "Block not found" });
+        }
+        
+        res.json({ success: true, block });
+      } catch (error) {
+        console.error("Error in /story/block/:blockId:", error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.get("/story/compile", async (req, res) => {
+      try {
+        const { playerId, storyId = 1, blockId } = req.query;
+        const compiledText = await compileStoryForPlayer(
+          playerId || null,
+          parseInt(storyId, 10),
+          blockId || null
+        );
+        res.json({ success: true, compiledText });
+      } catch (error) {
+        console.error("Error in /story/compile:", error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.get("/story/choices/:blockId", async (req, res) => {
+      try {
+        const { blockId } = req.params;
+        const summary = await compileChoiceSummaryForBlock(blockId);
+        res.json({ success: true, summary });
+      } catch (error) {
+        console.error("Error in /story/choices/:blockId:", error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
 
     // Printer endpoint
     app.post("/print", (req, res) => {

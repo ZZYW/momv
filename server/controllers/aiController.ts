@@ -3,19 +3,44 @@ import {
   fetchContextInfo, 
   formatContextString, 
   craftPrompt,
-  previewPrompt
+  previewPrompt,
+  BlockType,
+  ContextRef,
+  PassageContext
 } from '../utils/promptCrafter.js';
 import { sendPromptToLLM } from '../utils/aiCommunicator.js';
 import fs from 'fs/promises';
 import path from 'path';
 import db from '../db.js';
+import { Request, Response } from 'express';
+import { Player, DynamicContent } from '../db.js';
+
+/**
+ * Request body for AI request
+ */
+interface AskLLMRequestBody {
+  message: string;
+  playerID: string;
+  contextRefs?: ContextRef[];
+  blockType: BlockType;
+  optionCount?: number;
+  sentenceCount?: number;
+  lexiconCategory?: string;
+  blockId: string;
+  storyId?: string;
+}
+
+/**
+ * Preview prompt request body
+ */
+interface PreviewPromptRequestBody extends AskLLMRequestBody {}
 
 /**
  * Gets all blocks from a story file
  * @param {string} storyId - The ID of the story
  * @returns {Promise<Array>} - Array of story blocks
  */
-export const getStoryBlocks = async (storyId) => {
+export const getStoryBlocks = async (storyId: string): Promise<any[]> => {
     try {
         // Dynamically build the path based on storyId which corresponds to the station number
         const storyPath = path.join(process.cwd(), 'server', 'sites', `station${storyId}`, 'input', 'story.json');
@@ -33,9 +58,9 @@ export const getStoryBlocks = async (storyId) => {
  * @param {string} blockId - ID of the dynamic block
  * @param {string} storyId - ID of the story
  * @param {string} playerID - ID of the player (to get their choices)
- * @returns {Promise<Object>} - Passage context object with text before the dynamic block
+ * @returns {Promise<PassageContext | null>} - Passage context object with text before the dynamic block
  */
-export const getPassageContext = async (blockId, storyId, playerID) => {
+export const getPassageContext = async (blockId: string, storyId: string, playerID: string): Promise<PassageContext | null> => {
     const blocks = await getStoryBlocks(storyId);
     if (!blocks.length) return null;
 
@@ -146,10 +171,10 @@ export const getPassageContext = async (blockId, storyId, playerID) => {
 
 /**
  * Controller to handle AI generation requests
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
  */
-export const askLLM = async (req, res) => {
+export const askLLM = async (req: Request, res: Response): Promise<void> => {
     const {
         message,
         playerID,
@@ -160,7 +185,7 @@ export const askLLM = async (req, res) => {
         lexiconCategory,
         blockId,
         storyId = "1" // Default to story1 if not specified
-    } = req.body;
+    } = req.body as AskLLMRequestBody;
 
     try {
         // Step 1: Get block-specific instructions
@@ -172,7 +197,7 @@ export const askLLM = async (req, res) => {
         });
 
         // Step 2: Get passage context if this is a dynamic block
-        let passageContext = null;
+        let passageContext: PassageContext | null = null;
         if (blockType.startsWith('dynamic-') && blockId) {
             passageContext = await getPassageContext(blockId, storyId, playerID);
         }
@@ -198,23 +223,24 @@ export const askLLM = async (req, res) => {
         await db.read();
         // Ensure db structure exists
         if (!db.data.players[playerID]) {
-            db.data.players[playerID] = { choices: {}, dynamicContent: {} };
+            db.data.players[playerID] = { choices: {}, dynamicContent: {} } as Player;
         } else if (!db.data.players[playerID].dynamicContent) {
             db.data.players[playerID].dynamicContent = {};
         }
         
         // Store the dynamic content with its metadata
-        db.data.players[playerID].dynamicContent[blockId] = {
+        const dynamicContent: DynamicContent = {
             blockType,
             content: finalContent,
             timestamp: new Date().toISOString()
         };
+        db.data.players[playerID].dynamicContent[blockId] = dynamicContent;
         
         await db.write();
 
         // Step 7: Return processed result to client
         res.json(finalContent);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error in askLLM:", error.message);
         console.error("Stack trace:", error.stack);
 
@@ -231,10 +257,10 @@ export const askLLM = async (req, res) => {
 /**
  * Controller to preview the prompt that will be sent to the AI
  * This helps writers understand how their templates will look when composed
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
  */
-export const previewAIPrompt = async (req, res) => {
+export const previewAIPrompt = async (req: Request, res: Response): Promise<void> => {
     const {
         message,
         playerID,
@@ -245,17 +271,17 @@ export const previewAIPrompt = async (req, res) => {
         lexiconCategory,
         blockId,
         storyId = "1" // Default to story1 if not specified
-    } = req.body;
+    } = req.body as PreviewPromptRequestBody;
 
     try {
         // Step 1: Get passage context if this is a dynamic block
-        let passageContext = null;
+        let passageContext: PassageContext | null = null;
         if (blockType.startsWith('dynamic-') && blockId) {
             passageContext = await getPassageContext(blockId, storyId, playerID);
         }
         
         // Step 2: Get context information if provided - omit for Station 2
-        let contextInfo = [];
+        let contextInfo: any[] = [];
         if (storyId !== "2" && contextRefs && contextRefs.length > 0) {
             contextInfo = await fetchContextInfo(contextRefs, playerID, storyId);
         }
@@ -277,7 +303,7 @@ export const previewAIPrompt = async (req, res) => {
             preview: promptPreview,
             message: '这是将发送给AI的提示预览，供创作者参考'
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating prompt preview:", error.message);
         console.error("Stack trace:", error.stack);
 

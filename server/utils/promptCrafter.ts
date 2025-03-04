@@ -1,4 +1,5 @@
 import db from '../db.js';
+import { Player } from '../db.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,7 +15,7 @@ const MASTER_TEMPLATE = fs.readFileSync(templatePath, 'utf8');
 /**
  * Helper function to extract templates from the master template string
  */
-const getTemplate = (tag) => {
+const getTemplate = (tag: string): string => {
   const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 's');
   const match = MASTER_TEMPLATE.match(regex);
   return match ? match[1].trim() : '';
@@ -26,9 +27,74 @@ const LANGUAGE_REQUIREMENT = getTemplate('language_requirement');
 const RESPONSE_FORMAT = getTemplate('response_format');
 
 /**
+ * Block types supported by the application
+ */
+export type BlockType = 'dynamic-option' | 'dynamic-text' | 'dynamic-word';
+
+/**
+ * Parameters for block instructions
+ */
+export interface BlockInstructionsParams {
+  blockType: BlockType;
+  optionCount?: number;
+  sentenceCount?: number;
+  lexiconCategory?: string;
+}
+
+/**
+ * Context information for a player's choice
+ */
+export interface ContextInfo {
+  availableOptions?: string[];
+  chosenText?: string;
+  isFromStation1?: boolean;
+}
+
+/**
+ * Parameters for preview prompt
+ */
+export interface PreviewPromptParams {
+  blockType: BlockType;
+  message?: string;
+  optionCount?: number;
+  sentenceCount?: number;
+  lexiconCategory?: string;
+  contextInfo?: ContextInfo[];
+  passageContext?: PassageContext | null;
+  storyId?: string;
+}
+
+/**
+ * Reference to a context block
+ */
+export interface ContextRef {
+  value: string;
+  includeAll?: boolean;
+  station1Choices?: boolean;
+}
+
+/**
+ * Passage context for a dynamic block
+ */
+export interface PassageContext {
+  textBeforeDynamic: string;
+}
+
+/**
+ * Block structure from story.json
+ */
+export interface StoryBlock {
+  id: string;
+  type: string;
+  text?: string;
+  options?: string[];
+  titleName?: string;
+}
+
+/**
  * Prompt templates for different block types in natural language.
  */
-export const PROMPT_TEMPLATES = {
+export const PROMPT_TEMPLATES: Record<BlockType, string> = {
   "dynamic-option": getTemplate('dynamic_option'),
   "dynamic-text": getTemplate('dynamic_text'),
   "dynamic-word": getTemplate('dynamic_word')
@@ -58,16 +124,11 @@ export const EXTENDED_PROMPT_TEMPLATE = getTemplate('extended_prompt');
 
 /**
  * Creates instructions based on block type and properties in natural language format.
- * @param {Object} params - Parameter object
- * @param {string} params.blockType - Type of block (dynamic-option, dynamic-text, dynamic-word)
- * @param {number} params.optionCount - Number of options to generate
- * @param {number} params.sentenceCount - Number of sentences to generate
- * @param {string} params.lexiconCategory - Category of word to generate
+ * @param {BlockInstructionsParams} params - Parameter object
  * @returns {string} - Crafted instructions in natural language
  */
-export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, lexiconCategory }) => {
+export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, lexiconCategory }: BlockInstructionsParams): string => {
   let template = PROMPT_TEMPLATES[blockType] || "";
-  let formatTemplate = "";
 
   // Replace placeholders with actual values based on block type
   if (blockType === "dynamic-option" && optionCount) {
@@ -86,7 +147,7 @@ export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, le
   }
   else if (blockType === "dynamic-word" && lexiconCategory) {
     template = template
-      .replace('{word_category}', lexiconCategory)
+      .replace('{word_category}', lexiconCategory || '')
       .replace('{writer_role}', WRITER_ROLE)
       .replace('{language_requirement}', LANGUAGE_REQUIREMENT)
       .replace('{response_format}', RESPONSE_FORMAT);
@@ -97,14 +158,14 @@ export const getBlockInstructions = ({ blockType, optionCount, sentenceCount, le
 
 /**
  * Retrieve context information in a human-friendly format.
- * @param {Array} contextRefs - References to context blocks
+ * @param {ContextRef[]} contextRefs - References to context blocks
  * @param {string} currentPlayerID - Current player's ID
  * @param {string} storyId - ID of the current story
- * @returns {Promise<Array>} - Context information
+ * @returns {Promise<ContextInfo[]>} - Context information
  */
-export const fetchContextInfo = async (contextRefs, currentPlayerID, storyId = "1") => {
+export const fetchContextInfo = async (contextRefs: ContextRef[], currentPlayerID: string, storyId = "1"): Promise<ContextInfo[]> => {
   await db.read();
-  const contextInfo = [];
+  const contextInfo: ContextInfo[] = [];
   const players = db.data.players || {};
 
   // For station2, automatically include all static choices from station1
@@ -132,7 +193,8 @@ export const fetchContextInfo = async (contextRefs, currentPlayerID, storyId = "
 
     if (includeAll) {
       for (const playerId in players) {
-        const playerChoices = players[playerId].choices || {};
+        const player = players[playerId] as Player;
+        const playerChoices = player.choices || {};
         if (playerChoices[blockId]) {
           const { availableOptions, chosenText } = playerChoices[blockId];
           contextInfo.push({ availableOptions, chosenText });
@@ -147,13 +209,13 @@ export const fetchContextInfo = async (contextRefs, currentPlayerID, storyId = "
 };
 
 // Helper function to get story blocks - import from aiController
-const getStoryBlocks = async (storyId) => {
+const getStoryBlocks = async (storyId: string | number): Promise<StoryBlock[]> => {
   try {
-    const fs = await import('fs/promises');
-    const path = await import('path');
+    const fsPromises = await import('fs/promises');
+    const pathModule = await import('path');
     // Dynamically build the path based on storyId which corresponds to the station number
-    const storyPath = path.join(process.cwd(), 'server', 'sites', `station${storyId}`, 'input', 'story.json');
-    const storyData = await fs.readFile(storyPath, 'utf-8');
+    const storyPath = pathModule.join(process.cwd(), 'server', 'sites', `station${storyId}`, 'input', 'story.json');
+    const storyData = await fsPromises.readFile(storyPath, 'utf-8');
     const story = JSON.parse(storyData);
     return story.blocks || [];
   } catch (error) {
@@ -164,17 +226,17 @@ const getStoryBlocks = async (storyId) => {
 
 /**
  * Formats context information into a readable natural language string
- * @param {Array} contextInfo - Array of context objects
+ * @param {ContextInfo[]} contextInfo - Array of context objects
  * @returns {string} - Formatted context string in natural language
  */
-export const formatContextString = (contextInfo) => {
+export const formatContextString = (contextInfo: ContextInfo[]): string => {
   if (!contextInfo || contextInfo.length === 0) return "";
 
   // Group contexts by station
   const station1Choices = contextInfo.filter(ctx => ctx.isFromStation1);
   const station2Choices = contextInfo.filter(ctx => !ctx.isFromStation1);
   
-  let formattedItems = [];
+  let formattedItems: string[] = [];
   
   // Format player choices section
   formattedItems.push("--- 玩家历史选择 ---");
@@ -236,11 +298,15 @@ export const formatContextString = (contextInfo) => {
  * @param {string} message - The main message/prompt
  * @param {string} contextString - Formatted context string
  * @param {string} instructions - Block-specific instructions
- * @param {Object} [passageContext] - The surrounding passage context (optional)
- * @param {string} passageContext.textBeforeDynamic - All text from the story shown before this dynamic block (from all previous scenes/passages)
+ * @param {PassageContext | null} [passageContext] - The surrounding passage context (optional)
  * @returns {string} - Complete prompt in natural language
  */
-export const craftPrompt = (message, contextString, instructions, passageContext) => {
+export const craftPrompt = (
+  message: string,
+  contextString: string,
+  instructions: string,
+  passageContext?: PassageContext | null
+): string => {
   if (passageContext && passageContext.textBeforeDynamic !== undefined) {
     return EXTENDED_PROMPT_TEMPLATE
       .replace('{message}', message || "")
@@ -257,19 +323,19 @@ export const craftPrompt = (message, contextString, instructions, passageContext
 
 /**
  * Preview function to see what the final composed prompt will look like
- * @param {Object} params - Parameter object with all prompt components
+ * @param {PreviewPromptParams} params - Parameter object with all prompt components
  * @returns {string} - The complete prompt that will be sent to the LLM
  */
 export const previewPrompt = ({
   blockType,
-  message,
+  message = "",
   optionCount,
   sentenceCount,
   lexiconCategory,
-  contextInfo,
+  contextInfo = [],
   passageContext,
   storyId = "1"
-}) => {
+}: PreviewPromptParams): string => {
   const instructions = getBlockInstructions({
     blockType,
     optionCount,

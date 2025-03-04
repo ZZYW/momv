@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "rootDir": "./server",
+    "baseUrl": "./server",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": true,
+    "paths": {
+      "*": [
+        "../node_modules/*"
+      ]
+    }
+  },
+  "include": [
+    "server/**/*.ts",
+    "server/**/*.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -137,17 +137,29 @@ async function getStoryData(storyId: number | string | Array<number | string>): 
 function filterBlocks(blocks: StoryBlock[], { blockId = null, blockType = null }: BlockFilterOptions): StoryBlock[] {
   let filteredBlocks = [...blocks];
   
-  // Filter blocks up to the specified blockId
+  // IMPORTANT: For "up to this block" feature to work correctly:
+  // We need to include all blocks BEFORE the current block, not the block itself
+  
+  // Filter blocks up to the specified blockId (but not including it)
   if (blockId) {
+    console.log(`Filtering blocks up to ID: ${blockId}`);
     const blockIndex = filteredBlocks.findIndex(block => block.id === blockId);
+    
     if (blockIndex !== -1) {
-      filteredBlocks = filteredBlocks.slice(0, blockIndex + 1);
+      console.log(`Found block at index ${blockIndex}, filtering to include blocks 0-${blockIndex-1}`);
+      // Only include blocks BEFORE the current block (do not include the current block)
+      filteredBlocks = filteredBlocks.slice(0, blockIndex);
+      console.log(`After filtering, have ${filteredBlocks.length} blocks`);
+    } else {
+      console.log(`Block ID ${blockId} not found in blocks array`);
     }
   }
   
   // Filter by block type if specified
   if (blockType) {
+    const beforeCount = filteredBlocks.length;
     filteredBlocks = filteredBlocks.filter(block => block.type === blockType);
+    console.log(`Type filtering: ${beforeCount} -> ${filteredBlocks.length} blocks (type: ${blockType})`);
   }
   
   return filteredBlocks;
@@ -476,5 +488,7 @@ export {
   getBlockData,
   compileStoryForPlayer,
   compileChoiceSummaryForBlock,
-  getStoryBlocks
+  getStoryBlocks,
+  compileStoryText,
+  filterBlocks
 };

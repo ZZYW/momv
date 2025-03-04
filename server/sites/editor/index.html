@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="editor.css" />
   </head>
   <body>
-    <!-- Dynamic Block Template (for Dynamic Option / Text / Word) -->
+    <!-- Dynamic Block Template (simplified with just a textarea and cheatsheet) -->
     <script type="text/x-template" id="dynamic-block-template">
       <div>
         <div class="dynamic-input-row">
@@ -15,79 +15,40 @@
             Block Name:
             <input type="text" v-model="block.blockName" />
           </div>
-          <div v-if="isOption">
-            Option Count:
-            <input type="number" v-model.number="block.optionCount" />
-          </div>
-          <div v-else-if="isText">
-            Sentence Count:
-            <input type="number" v-model.number="block.sentenceCount" />
-          </div>
-          <div v-else-if="isWord">
-            Lexicon Category:
-            <select v-model="block.lexiconCategory">
-              <option value="noun">Noun</option>
-              <option value="adverb">Adverb</option>
-              <option value="adjective">Adjective</option>
-            </select>
-          </div>
         </div>
-        <!-- Prompt Section (common to all dynamic blocks) -->
+        <!-- Cheatsheet section (collapsible) -->
+        <div style="margin-top: 10px; margin-bottom: 10px">
+          <button @click="toggleCheatsheet" class="cheatsheet-toggle">
+            {{ showCheatsheet ? 'Hide Cheatsheet' : 'Show Cheatsheet' }}
+          </button>
+          <div v-if="showCheatsheet" class="cheatsheet-content">
+            <ul>
+            <li><code>{get story so far for this player}</code></li>
+            <p>compile the story so far till this point in a human-format paragraph, including the selections and dynamically generated content</p>
+            </ul>
+            <p><strong>Decisions Query:</strong></p>
+            <ul>
+            <li><code>{get decisions of question#X by this player, from story Y}</code><ul>
+            <li><strong>Format:</strong> <code>question#&lt;ID&gt;</code>, <code>story &lt;ID&gt;</code>.</li>
+            <li><strong>Multiple IDs:</strong> Comma-separate question &amp; story IDs (e.g., <code>question#q1,q2 by this player, from story 1,2</code>).</li>
+            <li><strong>Example:</strong> <code>{get decisions of question#123e4567-e89b-12d3-a456-426614174000 by this player, from story 1}</code></li>
+            </ul>
+            </li>
+            </ul>
+          </div>
+
+        </div>
+        <!-- Prompt Section (simplified to just a textarea) -->
         <div style="margin-top: 5px; margin-bottom: 5px">
           Prompt:
           <br />
           <textarea
             v-model="block.prompt"
             class="scrollable-textarea"
-            rows="8"
-            placeholder="Enter prompt text..."
-            style="overflow-y: auto; resize: vertical; height: 120px;"
+            rows="14"
+            placeholder="Enter your prompt here with full autonomy. Use {} for dynamic queries (see cheatsheet)."
+            style="overflow-y: auto; resize: vertical; height: 220px;"
           ></textarea>
-        </div>
-        <!-- Unified Context Section -->
-        <div style="margin-bottom: 5px; display: flex; align-items: center">
-          Context:
-          <button @click="emitAddContext" style="margin-left: 5px">+</button>
-        </div>
-        <div class="context-list">
-          <div
-            v-for="(ctx, ctxIndex) in block.context"
-            :key="ctxIndex"
-            class="context-item"
-          >
-            <select v-model="ctx.value">
-              <option value="">-- none --</option>
-              <option
-                v-for="blockItem in parentContextBlocks"
-                :key="blockItem.id"
-                :value="blockItem.id"
-              >
-                <template v-if="blockItem.type === 'dynamic-option'">
-                  {{ getIndex(blockItem) + 1 }} - {{ blockItem.blockName }} - [{{ blockItem.id }}]
-                </template>
-                <template v-else-if="blockItem.type === 'static'">
-                  {{ getIndex(blockItem) + 1 }} - Static Option Block - [{{ blockItem.id }}]
-                </template>
-                <template v-else-if="blockItem.type === 'dynamic-text'">
-                  {{ getIndex(blockItem) + 1 }} - {{ blockItem.blockName }} (Dynamic Text) - [{{ blockItem.id }}]
-                </template>
-                <template v-else-if="blockItem.type === 'dynamic-word'">
-                  {{ getIndex(blockItem) + 1 }} - {{ blockItem.blockName }} (Dynamic Word) - [{{ blockItem.id }}]
-                </template>
-              </option>
-            </select>
-            <div class="context-checkbox">
-              <input
-                type="checkbox"
-                v-model="ctx.includeAll"
-                :id="'include-checkbox-' + block.id + '-' + ctxIndex"
-              />
-              <label :for="'include-checkbox-' + block.id + '-' + ctxIndex">
-                Include all previous players response
-              </label>
-            </div>
-            <button @click="emitRemoveContext(ctxIndex)">x</button>
-          </div>
         </div>
       </div>
     </script>
@@ -106,27 +67,25 @@
         <div class="block-operations">
           <button @click="addPlainBlock">
             + Plain Block
-            <span class="tooltip">Add a simple text block for narrative content</span>
+            <span class="tooltip"
+              >Add a simple text block for narrative content</span
+            >
           </button>
           <button @click="addStaticOptionBlock">
             + Static Option
-            <span class="tooltip">Add a block with predefined player choices</span>
+            <span class="tooltip"
+              >Add a block with predefined player choices</span
+            >
           </button>
-          <button @click="addDynamicOptionBlock">
-            + Dynamic Option Block
-            <span class="tooltip">Add a block with AI-generated player choices</span>
-          </button>
-          <button @click="addDynamicTextBlock">
-            + Dynamic Text Block
-            <span class="tooltip">Add a block with AI-generated narrative text</span>
-          </button>
-          <button @click="addDynamicWordBlock">
-            + Dynamic Word Block
-            <span class="tooltip">Add a block with AI-generated vocabulary</span>
+          <button @click="addDynamicBlock">
+            + Dynamic Block
+            <span class="tooltip">Add a block with a custom AI prompt</span>
           </button>
           <button @click="addSceneHeaderBlock">
             + Scene Header Block
-            <span class="tooltip">Add a header to mark the beginning of a new scene</span>
+            <span class="tooltip"
+              >Add a header to mark the beginning of a new scene</span
+            >
           </button>
         </div>
         <div class="utility-operations">
@@ -136,7 +95,9 @@
           </button>
           <button @click="exportJson">
             Export Project as JSON
-            <span class="tooltip">Download the project as a JSON file for backup</span>
+            <span class="tooltip"
+              >Download the project as a JSON file for backup</span
+            >
           </button>
           <button @click="importJson">
             Import Project
@@ -203,15 +164,9 @@
                 </button>
               </template>
 
-              <!-- Dynamic Blocks (Option, Text, Word) -->
-              <template
-                v-if="['dynamic-option','dynamic-text','dynamic-word'].includes(block.type)"
-              >
-                <dynamic-block
-                  :block="block"
-                  @add-context="addContext"
-                  @remove-context="removeContext"
-                ></dynamic-block>
+              <!-- Dynamic Block -->
+              <template v-if="block.type === 'dynamic'">
+                <dynamic-block :block="block"></dynamic-block>
               </template>
 
               <!-- Scene Header Block -->
@@ -223,21 +178,39 @@
                   v-model="block.titleName"
                   placeholder="Enter scene title"
                 />
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px">
                   <label>
-                    <input type="checkbox" v-model="block.useBannerArt" /> Use Banner Art
+                    <input type="checkbox" v-model="block.useBannerArt" /> Use
+                    Banner Art
                   </label>
                 </div>
-                <div v-if="block.useBannerArt" style="margin-top: 10px;">
+                <div v-if="block.useBannerArt" style="margin-top: 10px">
                   <label>Banner Art (63 characters wide):</label>
-                  <div style="position: relative; margin-top: 5px;">
-                    <div style="position: absolute; top: 0; right: 5px; font-size: 10px; color: #777; pointer-events: none;">
+                  <div style="position: relative; margin-top: 5px">
+                    <div
+                      style="
+                        position: absolute;
+                        top: 0;
+                        right: 5px;
+                        font-size: 10px;
+                        color: #777;
+                        pointer-events: none;
+                      "
+                    >
                       63 characters
                     </div>
                     <textarea
                       v-model="block.bannerArt"
                       @input="enforceBannerArtWidth($event, block)"
-                      style="width: 63ch; font-family: monospace; resize: vertical; white-space: pre; overflow-x: auto; font-size: 14px; letter-spacing: normal;"
+                      style="
+                        width: 63ch;
+                        font-family: monospace;
+                        resize: vertical;
+                        white-space: pre;
+                        overflow-x: auto;
+                        font-size: 14px;
+                        letter-spacing: normal;
+                      "
                       rows="8"
                       placeholder="Paste ASCII art here (each line will be padded to 63 characters)"
                     ></textarea>
@@ -270,12 +243,7 @@
         computed: {
           contextBlocks() {
             return this.blocks.filter((b) =>
-              [
-                "dynamic-option",
-                "static",
-                "dynamic-text",
-                "dynamic-word",
-              ].includes(b.type)
+              ["dynamic", "static"].includes(b.type)
             );
           },
           // Compute the target station from the URL.
@@ -328,23 +296,23 @@
         methods: {
           enforceBannerArtWidth(event, block) {
             // Process each line to ensure it's exactly 63 characters wide
-            const lines = block.bannerArt.split('\n');
-            const processedLines = lines.map(line => {
+            const lines = block.bannerArt.split("\n");
+            const processedLines = lines.map((line) => {
               // Truncate if longer than 63 characters
               if (line.length > 63) {
                 return line.substring(0, 63);
               }
               // Pad with spaces if shorter than 63 characters
               else if (line.length < 63) {
-                return line.padEnd(63, ' ');
+                return line.padEnd(63, " ");
               }
               return line;
             });
-            
+
             // Update the banner art with processed lines
-            block.bannerArt = processedLines.join('\n');
+            block.bannerArt = processedLines.join("\n");
           },
-          
+
           debounceSaveProject() {
             clearTimeout(this._saveTimeout);
             this._saveTimeout = setTimeout(() => {
@@ -387,37 +355,13 @@
             const id = this.generateUUID();
             this.blocks.push({ id, type: "static", options: [] });
           },
-          addDynamicOptionBlock() {
+          addDynamicBlock() {
             const id = this.generateUUID();
             this.blocks.push({
               id,
-              type: "dynamic-option",
-              blockName: "xxx",
-              optionCount: 3,
-              prompt: "",
-              context: [],
-            });
-          },
-          addDynamicTextBlock() {
-            const id = this.generateUUID();
-            this.blocks.push({
-              id,
-              type: "dynamic-text",
+              type: "dynamic",
               blockName: "",
-              sentenceCount: 1,
               prompt: "",
-              context: [],
-            });
-          },
-          addDynamicWordBlock() {
-            const id = this.generateUUID();
-            this.blocks.push({
-              id,
-              type: "dynamic-word",
-              blockName: "",
-              lexiconCategory: "noun",
-              prompt: "",
-              context: [],
             });
           },
           addSceneHeaderBlock() {
@@ -451,12 +395,6 @@
           },
           removeStaticOption(block, index) {
             block.options.splice(index, 1);
-          },
-          addContext(block) {
-            block.context.push({ value: "", includeAll: false });
-          },
-          removeContext(block, ctxIndex) {
-            block.context.splice(ctxIndex, 1);
           },
           // Updated playStory() to use the parameterized endpoint based on the computed station.
           playStory() {
@@ -497,29 +435,11 @@
                 return { ...baseBlock, text: block.text };
               } else if (block.type === "static") {
                 return { ...baseBlock, options: [...block.options] };
-              } else if (block.type === "dynamic-option") {
+              } else if (block.type === "dynamic") {
                 return {
                   ...baseBlock,
                   blockName: block.blockName,
-                  optionCount: block.optionCount,
                   prompt: block.prompt,
-                  context: JSON.parse(JSON.stringify(block.context)),
-                };
-              } else if (block.type === "dynamic-text") {
-                return {
-                  ...baseBlock,
-                  blockName: block.blockName,
-                  sentenceCount: block.sentenceCount,
-                  prompt: block.prompt,
-                  context: JSON.parse(JSON.stringify(block.context)),
-                };
-              } else if (block.type === "dynamic-word") {
-                return {
-                  ...baseBlock,
-                  blockName: block.blockName,
-                  lexiconCategory: block.lexiconCategory,
-                  prompt: block.prompt,
-                  context: JSON.parse(JSON.stringify(block.context)),
                 };
               } else if (block.type === "scene-header") {
                 return {
@@ -608,35 +528,21 @@
                             ? block.options
                             : [],
                         };
+                      case "dynamic":
+                        return {
+                          ...baseBlock,
+                          blockName: block.blockName || "",
+                          prompt: block.prompt || "",
+                        };
+                      // Handle legacy dynamic block types
                       case "dynamic-option":
-                        return {
-                          ...baseBlock,
-                          blockName: block.blockName || "",
-                          optionCount: block.optionCount || 3,
-                          prompt: block.prompt || "",
-                          context: Array.isArray(block.context)
-                            ? block.context
-                            : [],
-                        };
                       case "dynamic-text":
-                        return {
-                          ...baseBlock,
-                          blockName: block.blockName || "",
-                          sentenceCount: block.sentenceCount || 1,
-                          prompt: block.prompt || "",
-                          context: Array.isArray(block.context)
-                            ? block.context
-                            : [],
-                        };
                       case "dynamic-word":
                         return {
                           ...baseBlock,
+                          type: "dynamic", // Convert old type to new unified type
                           blockName: block.blockName || "",
-                          lexiconCategory: block.lexiconCategory || "noun",
                           prompt: block.prompt || "",
-                          context: Array.isArray(block.context)
-                            ? block.context
-                            : [],
                         };
                       case "scene-header":
                         return {
@@ -741,7 +647,9 @@
               const parsedData = JSON.parse(savedData);
               this.autosaveTime = parsedData.autosave || "";
               this.blocks = parsedData.blocks || [];
-              console.log(`Loaded project from localStorage for ${this.station}`);
+              console.log(
+                `Loaded project from localStorage for ${this.station}`
+              );
             } catch (error) {
               console.error("Error parsing saved project", error);
             }
@@ -755,26 +663,19 @@
       app.component("dynamic-block", {
         template: "#dynamic-block-template",
         props: ["block"],
+        data() {
+          return {
+            showCheatsheet: false, // Cheatsheet is collapsed by default
+          };
+        },
         computed: {
-          isOption() {
-            return this.block.type === "dynamic-option";
-          },
-          isText() {
-            return this.block.type === "dynamic-text";
-          },
-          isWord() {
-            return this.block.type === "dynamic-word";
-          },
           parentContextBlocks() {
             return this.$parent.contextBlocks;
           },
         },
         methods: {
-          emitAddContext() {
-            this.$emit("add-context", this.block);
-          },
-          emitRemoveContext(ctxIndex) {
-            this.$emit("remove-context", this.block, ctxIndex);
+          toggleCheatsheet() {
+            this.showCheatsheet = !this.showCheatsheet;
           },
           getIndex(blockItem) {
             return this.$parent.blocks.indexOf(blockItem);

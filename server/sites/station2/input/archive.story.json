@@ -26,10 +26,11 @@
     },
     {
       "id": "0e0d53a3-1b54-4ceb-996f-323a035a8fda",
-      "type": "dynamic",
+      "type": "dynamic-option",
       "blockName": "xxx",
-      "generateOptions": true,
-      "prompt": "请基于玩家在第一站作出的选择，生成三个有关\"声音感知方式\"的选项。\n\n以下是玩家在第一站（站点1）的选择：\n{get decisions of question#all by this player, from story 1}\n\n这些选项应该体现出玩家的人格特点和心理倾向，并且与声音感知的主题相关。每个选项应该是一个表达方式，如\"直觉的\"、\"冥想的\"、\"共鸣的\"等。",
+      "optionCount": 3,
+      "prompt": "",
+      "context": [],
       "sceneId": 1
     },
     {
@@ -61,17 +62,29 @@
     },
     {
       "id": "f2ddc987-358b-4810-b423-a2bb74c5a1fc",
-      "type": "dynamic",
+      "type": "dynamic-text",
       "blockName": "",
-      "prompt": "根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n\n玩家在第一站的选择：\n{get decisions of question#all by this player, from story 1}\n\n玩家在本站的选择：\n{get decisions of question#0e0d53a3-1b54-4ceb-996f-323a035a8fda by this player, from story 2}\n{get decisions of question#7fe62d39-3d81-4eb4-9b3b-f333f95e3307 by this player, from story 2}\n\n综合考虑玩家的选择历史，回到原文中，用白描的方式，陈述出玩家应如何清晰地洞察目前情况下潜在的模式和能量。\n",
+      "sentenceCount": 5,
+      "prompt": "根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n回到原文中，结合对玩家的选择的分析，用白描的方式，陈述出玩家应如何清晰地洞察目前情况下潜在的模式和能量。\n",
+      "context": [],
       "sceneId": 1
     },
     {
       "id": "592997f0-60e6-4c9c-851b-42bf7702a2b0",
-      "type": "dynamic",
+      "type": "dynamic-option",
       "blockName": "xxx",
-      "generateOptions": true,
-      "prompt": "基于玩家的所有选择和我们对玩家的分析，生成4个关于小吴可能的\"欲望\"或\"追求\"的选项。\n\n完整的选择历史：\n{get story so far for this player}\n\n这些选项应当非常个性化，反映玩家之前所作的所有选择所暗示的价值观和心理特征。每个选项应该是深刻而有哲理的，反映出人生中可能的追求方向。",
+      "optionCount": 4,
+      "prompt": "讲小吴可能的欲望",
+      "context": [
+        {
+          "value": "28cfdc37-ecfb-4698-b2db-a139405f22b6",
+          "includeAll": false
+        },
+        {
+          "value": "592997f0-60e6-4c9c-851b-42bf7702a2b0",
+          "includeAll": false
+        }
+      ],
       "sceneId": 1
     }
   ]

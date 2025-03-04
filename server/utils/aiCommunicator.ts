@@ -7,18 +7,30 @@ const openai = new OpenAI({
 });
 
 /**
- * Block types supported by the application
+ * Block type supported by the application
  */
-export type BlockType = 'dynamic-option' | 'dynamic-text' | 'dynamic-word';
+export type BlockType = 'dynamic';
+
+/**
+ * Options for dynamic blocks
+ */
+export interface DynamicBlockOptions {
+  generateOptions?: boolean;
+}
 
 /**
  * Sends a prompt to the LLM and returns the response
  * @param {string} prompt - The prompt to send to the LLM
- * @param {BlockType} blockType - Type of block (for parsing fallbacks)
+ * @param {BlockType} blockType - Type of block
+ * @param {DynamicBlockOptions} options - Options for the dynamic block
  * @returns {Promise<string | string[]>} - Parsed response
  * @throws {Error} - If there's an error communicating with the API
  */
-export const sendPromptToLLM = async (prompt: string, blockType: BlockType): Promise<string | string[]> => {
+export const sendPromptToLLM = async (
+  prompt: string, 
+  blockType: BlockType,
+  options: DynamicBlockOptions = {}
+): Promise<string | string[]> => {
     if (!process.env.DASHSCOPE_API_KEY) {
         throw new Error("API key not found. Set DASHSCOPE_API_KEY in environment variables.");
     }
@@ -46,7 +58,7 @@ export const sendPromptToLLM = async (prompt: string, blockType: BlockType): Pro
 
     console.log(`Returned result: ----\n${reply}\n----\n\n`);
 
-    return parseResponse(reply, blockType);
+    return parseResponse(reply, options);
 };
 
 /**
@@ -77,10 +89,10 @@ function cleanMessage(message: string): string {
 /**
  * Parses the response from the LLM into a usable format
  * @param {string} reply - The cleaned reply from the LLM
- * @param {BlockType} blockType - Type of block (for fallback extraction)
+ * @param {DynamicBlockOptions} options - Options for the dynamic block
  * @returns {string | string[]} - Parsed content (string, array, or raw text)
  */
-function parseResponse(reply: string, blockType: BlockType): string | string[] {
+function parseResponse(reply: string, options: DynamicBlockOptions): string | string[] {
     try {
         // First attempt: try standard JSON parsing
         let jsonMatch = reply.match(/\{[\s\S]*\}/);
@@ -103,15 +115,15 @@ function parseResponse(reply: string, blockType: BlockType): string | string[] {
         // Second attempt: use robust regex-based parsing
         console.log("Using robust regex-based parsing for LLM response");
 
-        // For dynamic-option (array of options)
-        if (blockType === "dynamic-option") {
+        // For options generation (array of options)
+        if (options.generateOptions) {
             // Look for "deliverable": [...]
             const arrayMatch = reply.match(/"deliverable"\s*:\s*\[([\s\S]*?)\]/);
             if (arrayMatch) {
                 // Extract items from the array
                 const arrayContent = arrayMatch[1];
                 // Split by commas not inside quotes, clean up and filter empty items
-                const options = arrayContent
+                const optionsList = arrayContent
                     .split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
                     .map(item => {
                         // Clean up each item
@@ -122,13 +134,12 @@ function parseResponse(reply: string, blockType: BlockType): string | string[] {
                     })
                     .filter(item => item); // Filter empty items
 
-                console.log(`Extracted ${options.length} options via regex parser`);
-                return options;
+                console.log(`Extracted ${optionsList.length} options via regex parser`);
+                return optionsList;
             }
-        }
-
-        // For dynamic-text (single text block)
-        if (blockType === "dynamic-text") {
+        } 
+        // For standard text generation
+        else {
             // Look for "deliverable": "..."
             const textMatch = reply.match(/"deliverable"\s*:\s*"([\s\S]*?)(?:"|$)/);
             if (textMatch) {
@@ -142,54 +153,39 @@ function parseResponse(reply: string, blockType: BlockType): string | string[] {
             }
         }
 
-        // For dynamic-word (single word)
-        if (blockType === "dynamic-word") {
-            // Look for "deliverable": "..."
-            const wordMatch = reply.match(/"deliverable"\s*:\s*"([\s\S]*?)(?:"|$)/);
-            if (wordMatch) {
-                const extractedWord = wordMatch[1]
-                    .replace(/\\"/g, '"')  // Fix escaped quotes
-                    .replace(/\\n/g, '\n') // Replace escaped newlines
-                    .trim();
-
-                console.log("Extracted word via regex parser");
-                return extractedWord;
-            }
-        }
-
         // If we get here, both parsing attempts failed
         console.error("Both standard and robust parsing failed");
-        return extractFallbackContent(reply, blockType);
+        return extractFallbackContent(reply, options);
 
     } catch (parseError) {
         console.error("Error in parseResponse function:", parseError);
         console.error("Raw reply:", reply);
-        return extractFallbackContent(reply, blockType);
+        return extractFallbackContent(reply, options);
     }
 }
 
 /**
  * Extracts usable content from a response when JSON parsing fails
  * @param {string} reply - The raw reply from the LLM
- * @param {BlockType} blockType - The type of block
+ * @param {DynamicBlockOptions} options - Options for the dynamic block
  * @returns {string | string[]} - Extracted content (string or array)
  */
-function extractFallbackContent(reply: string, blockType: BlockType): string | string[] {
+function extractFallbackContent(reply: string, options: DynamicBlockOptions): string | string[] {
     console.log("Using last-resort fallback content extraction");
 
-    // For dynamic options, look for numbered items or bullet points
-    if (blockType === "dynamic-option") {
+    // For options generation, look for numbered items or bullet points
+    if (options.generateOptions) {
         // Try to find options in various formats
 
         // 1. Try to find array-like structures with numbered items (1. Option A, 2. Option B)
         const numberedOptions = reply.match(/(?:\d+[\.\)、]|\*|\-)\s*([^\n\d\.\)、\*\-][^\n]*)/g);
         if (numberedOptions && numberedOptions.length > 0) {
-            const options = numberedOptions
+            const optionsList = numberedOptions
                 .map(opt => opt.replace(/^\d+[\.\)、]|\*|\-\s*/, '').trim())
                 .filter(opt => opt.length > 0);
 
-            console.log(`Extracted ${options.length} numbered options as fallback`);
-            if (options.length > 0) return options;
+            console.log(`Extracted ${optionsList.length} numbered options as fallback`);
+            if (optionsList.length > 0) return optionsList;
         }
 
         // 2. Try to find lines that might be options
@@ -219,14 +215,14 @@ function extractFallbackContent(reply: string, blockType: BlockType): string | s
         for (const pattern of chinesePatterns) {
             const match = reply.match(pattern);
             if (match) {
-                const options = match[1].trim()
+                const optionsList = match[1].trim()
                     .split(/\n+|[,，、|]/)
                     .map(o => o.trim())
                     .filter(o => o && o.length > 0);
 
-                if (options.length > 0) {
-                    console.log(`Extracted ${options.length} Chinese-pattern options as fallback`);
-                    return options;
+                if (optionsList.length > 0) {
+                    console.log(`Extracted ${optionsList.length} Chinese-pattern options as fallback`);
+                    return optionsList;
                 }
             }
         }
@@ -235,9 +231,8 @@ function extractFallbackContent(reply: string, blockType: BlockType): string | s
         console.log("Using default options as last resort");
         return ["选项 1", "选项 2", "选项 3", "选项 4"];
     }
-
-    // For dynamic text, try different extraction patterns
-    else if (blockType === "dynamic-text") {
+    // For standard text generation
+    else {
         // 1. Try common Chinese patterns
         const chinesePatterns = [
             /最终文本[:：]([\s\S]*?)(?:$|(?:思考|最终))/,    // "最终文本："
@@ -279,49 +274,9 @@ function extractFallbackContent(reply: string, blockType: BlockType): string | s
 
         return cleaned || "无法生成有效内容。";
     }
-
-    // For dynamic word, try different extraction patterns
-    else if (blockType === "dynamic-word") {
-        // 1. Try common Chinese patterns
-        const chinesePatterns = [
-            /最终词语[:：]([\s\S]*?)(?:$|(?:思考|最终))/,  // "最终词语："
-            /词语[:：]([\s\S]*?)(?:$|(?:思考|分析))/,      // "词语："
-            /单词[:：]([\s\S]*?)(?:$|(?:思考|分析))/       // "单词："
-        ];
-
-        for (const pattern of chinesePatterns) {
-            const match = reply.match(pattern);
-            if (match) {
-                console.log("Extracted word using Chinese pattern as fallback");
-                return match[1].trim();
-            }
-        }
-
-        // 2. Look for short, standalone words
-        const words = reply.split(/\n+/)
-            .map(line => line.trim())
-            .filter(line =>
-                line.length > 0 &&
-                line.length < 15 &&
-                !line.includes('{') &&
-                !line.includes('}') &&
-                !line.includes(':') &&
-                !line.includes('：')
-            );
-
-        if (words.length > 0) {
-            // Use the shortest one as it's likely to be just a word
-            words.sort((a, b) => a.length - b.length);
-            console.log("Using shortest standalone text as fallback word");
-            return words[0];
-        }
-
-        // 3. Last resort
-        return "词语";
-    }
-
-    // Generic fallback for unknown types
-    return blockType === "dynamic-option"
+    
+    // Generic fallback for unknown scenarios
+    return options.generateOptions
         ? ["选项 1", "选项 2", "选项 3", "选项 4"]
         : "无法解析内容。";
 }

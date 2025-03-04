@@ -190,7 +190,25 @@ document.addEventListener("alpine:init", () => {
 
           return `<div class="static-option-container">${optionsHTML}</div>`;
         },
-
+        
+        // New unified dynamic block type with generateOptions flag
+        "dynamic": (b) => {
+          if (b.generateOptions) {
+            return `
+              <div class="dynamic-container">
+                <div class="loading-indicator">Loading dynamic options... <span class="loading"></span></div>
+                <div class="dynamic-options-container" data-uuid="${b.id}"></div>
+              </div>`;
+          } else {
+            return `
+              <div class="dynamic-container">
+                <div class="loading-indicator">Generating content... <span class="loading"></span></div>
+                <div class="dynamic-text-container" data-uuid="${b.id}"></div>
+              </div>`;
+          }
+        },
+        
+        // Keep old dynamic types for backward compatibility
         "dynamic-option": (b) => `
           <div class="dynamic-container">
             <div class="loading-indicator">Loading dynamic options... <span class="loading"></span></div>
@@ -615,6 +633,23 @@ document.addEventListener("alpine:init", () => {
       console.log(`[FETCH] Preparing request for block ${blockID} with player ID: ${this.config.playerId}`);
       console.log(`[FETCH] Station ID: ${this.config.stationId}, Station Number: ${this.config.stationNumber}`);
 
+      // Determine the blockType to send to the server
+      let serverBlockType = blockType;
+      let generateOptions = false;
+      
+      // Handle the new unified dynamic type
+      if (blockData.type === 'dynamic') {
+        serverBlockType = 'dynamic';
+        generateOptions = !!blockData.generateOptions;
+        
+        // Also update the container type for rendering correctly later
+        if (generateOptions) {
+          blockType = 'dynamic-option';
+        } else {
+          blockType = 'dynamic-text';
+        }
+      }
+      
       const payload = {
         message: blockData.prompt || "",
         playerID: this.config.playerId,
@@ -622,10 +657,8 @@ document.addEventListener("alpine:init", () => {
         blockUUID: blockID, // keeping for backward compatibility
         instruction: blockData.prompt || "",
         contextRefs: (blockData.context || []).filter((ctx) => ctx.value),
-        blockType,
-        optionCount: blockData.optionCount,
-        sentenceCount: blockData.sentenceCount,
-        lexiconCategory: blockData.lexiconCategory,
+        blockType: serverBlockType,
+        generateOptions: generateOptions,
         storyId: this.config.stationNumber, // Use the numeric station ID as story ID
         _fetchTimestamp: new Date().getTime() // Add timestamp to identify unique requests
       };
@@ -686,9 +719,30 @@ document.addEventListener("alpine:init", () => {
         },
 
         "dynamic-text": (container, data) => {
-          container.innerHTML = `<div class="dynamic-text-result">${
-            data || ""
-          }</div>`;
+          // Handle different data formats: string, object, or array
+          let contentToDisplay = '';
+          
+          if (typeof data === 'string') {
+            // String data can be displayed directly
+            contentToDisplay = data;
+          } else if (typeof data === 'object' && data !== null) {
+            // For objects, check if they have a deliverable property (AI response structure)
+            if (data.deliverable) {
+              if (typeof data.deliverable === 'string') {
+                contentToDisplay = data.deliverable;
+              } else if (typeof data.deliverable === 'object' && data.deliverable !== null) {
+                // If deliverable is an object, format each key-value pair
+                contentToDisplay = Object.entries(data.deliverable)
+                  .map(([key, value]) => `<div class="dynamic-section"><h3>${key}</h3><p>${value}</p></div>`)
+                  .join('');
+              }
+            } else {
+              // Fallback: convert object to formatted JSON string
+              contentToDisplay = JSON.stringify(data, null, 2).replace(/\n/g, '<br>').replace(/\s\s/g, '&nbsp;&nbsp;');
+            }
+          }
+          
+          container.innerHTML = `<div class="dynamic-text-result">${contentToDisplay || ""}</div>`;
         },
 
         "dynamic-word": (container, data) => {

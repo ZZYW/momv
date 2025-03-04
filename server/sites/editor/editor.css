@@ -356,8 +356,48 @@ button:hover .tooltip {
     background-color: lightyellow;
 }
 
-.block[data-block-type="dynamic-option"],
-.block[data-block-type="dynamic-text"],
-.block[data-block-type="dynamic-word"] {
+.block[data-block-type="dynamic"] {
     background-color: #ffcccc;
+}
+
+/* ---------------------------------------------------
+   Cheatsheet Styles
+   --------------------------------------------------- */
+.cheatsheet-toggle {
+    background: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.cheatsheet-toggle:hover {
+    background: #e5e5e5;
+}
+
+.cheatsheet-content {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.cheatsheet-content h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.cheatsheet-content p {
+    margin: 8px 0;
+}
+
+.cheatsheet-content code {
+    background: #eee;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: monospace;
 }

@@ -136,9 +136,6 @@
       <button class="tab-button" onclick="openTab(event, 'story-tab')">
         Story Tester
       </button>
-      <button class="tab-button" onclick="openTab(event, 'preview-tab')">
-        Template Preview
-      </button>
     </div>
 
     <!-- Apps Tab -->
@@ -325,8 +322,7 @@
               <option value="plain">plain</option>
               <option value="static">static</option>
               <option value="scene-header">scene-header</option>
-              <option value="dynamic-text">dynamic-text</option>
-              <option value="dynamic-option">dynamic-option</option>
+              <option value="dynamic">dynamic</option>
             </select>
           </div>
           
@@ -374,111 +370,6 @@
       </div>
     </div>
 
-    <!-- Template Preview Tab -->
-    <div id="preview-tab" class="tab-content">
-      <h2>AI Prompt Template Preview</h2>
-      <p>
-        Use this tool to preview how template changes will appear in the final
-        AI prompt.
-      </p>
-
-      <div class="preview-container">
-        <div class="preview-form">
-          <div class="section">
-            <h3>Template Type</h3>
-            <div class="form-group">
-              <label for="blockType">Block Type:</label>
-              <select id="blockType" onchange="updateFormFields()">
-                <option value="dynamic-option">Dynamic Options</option>
-                <option value="dynamic-text" selected>Dynamic Text</option>
-                <option value="dynamic-word">Dynamic Word</option>
-              </select>
-            </div>
-
-            <div class="form-group" style="margin-top: 15px">
-              <label>Station:</label>
-              <div style="display: flex; gap: 15px; margin-top: 5px">
-                <div>
-                  <input type="radio" id="station1" name="station" value="station1" checked />
-                  <label for="station1">Station 1</label>
-                </div>
-                <div>
-                  <input type="radio" id="station2" name="station" value="station2" />
-                  <label for="station2">Station 2</label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>Dynamic Content Settings</h3>
-            <div id="dynamic-option-fields" style="display: none">
-              <div class="form-group">
-                <label for="optionCount">Number of Choices:</label>
-                <input type="number" id="optionCount" value="3" min="1" max="10" />
-              </div>
-            </div>
-
-            <div id="dynamic-text-fields">
-              <div class="form-group">
-                <label for="sentenceCount">Number of Sentences:</label>
-                <input type="number" id="sentenceCount" value="3" min="1" max="20" />
-              </div>
-            </div>
-
-            <div id="dynamic-word-fields" style="display: none">
-              <div class="form-group">
-                <label for="lexiconCategory">Word Category:</label>
-                <select id="lexiconCategory">
-                  <option value="名词" selected>名词 (Noun)</option>
-                  <option value="形容词">形容词 (Adjective)</option>
-                  <option value="副词">副词 (Adverb)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="customCategory">Custom Category:</label>
-                <input type="text" id="customCategory"
-                  placeholder="Enter a custom word category if not in the list above" />
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>Custom Message</h3>
-            <div class="form-group">
-              <label for="message">Custom Instruction:</label>
-              <textarea id="message" rows="3" placeholder="Enter custom instruction for the AI...">
-请创建一个神秘的场景描述</textarea>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>Player Context (Optional)</h3>
-            <div class="form-group">
-              <label for="playerID">Player ID:</label>
-              <input type="text" id="playerID" value="default" />
-            </div>
-
-            <div class="form-group">
-              <label for="contextRefs">Context References (comma separated):</label>
-              <input type="text" id="contextRefs" placeholder="e.g. block1,block2" />
-            </div>
-          </div>
-
-          <div class="button-group">
-            <button class="button-primary" onclick="previewPrompt()">
-              Generate Preview
-            </button>
-            <button onclick="copyToClipboard()">Copy to Clipboard</button>
-          </div>
-        </div>
-
-        <div class="preview-result">
-          <h3>Preview Result</h3>
-          <pre id="preview-response">Preview will appear here...</pre>
-        </div>
-      </div>
-    </div>
   </div>
 
   <h2>Response:</h2>
@@ -503,113 +394,6 @@
       evt.currentTarget.classList.add("active");
     }
 
-    // Update form fields based on selected block type
-    function updateFormFields() {
-      const blockType = document.getElementById("blockType").value;
-
-      // Hide all specific fields first
-      document.getElementById("dynamic-option-fields").style.display = "none";
-      document.getElementById("dynamic-text-fields").style.display = "none";
-      document.getElementById("dynamic-word-fields").style.display = "none";
-
-      // Show fields specific to the selected block type
-      if (blockType === "dynamic-option") {
-        document.getElementById("dynamic-option-fields").style.display =
-          "block";
-      } else if (blockType === "dynamic-text") {
-        document.getElementById("dynamic-text-fields").style.display =
-          "block";
-      } else if (blockType === "dynamic-word") {
-        document.getElementById("dynamic-word-fields").style.display =
-          "block";
-      }
-    }
-
-    // Generate prompt preview
-    function previewPrompt() {
-      const blockType = document.getElementById("blockType").value;
-      const message = document.getElementById("message").value;
-      const playerID = document.getElementById("playerID").value;
-
-      // Prepare the request body
-      const body = {
-        blockType: blockType,
-        message: message,
-        playerID: playerID,
-        contextRefs: [],
-      };
-
-      // Add context references if provided
-      const contextRefsInput = document.getElementById("contextRefs").value;
-      if (contextRefsInput.trim()) {
-        const refs = contextRefsInput.split(",").map((ref) => ref.trim());
-        body.contextRefs = refs.map((ref) => ({ value: ref }));
-      }
-
-      // Add block-specific parameters
-      if (blockType === "dynamic-option") {
-        body.optionCount = parseInt(
-          document.getElementById("optionCount").value
-        );
-      } else if (blockType === "dynamic-text") {
-        body.sentenceCount = parseInt(
-          document.getElementById("sentenceCount").value
-        );
-      } else if (blockType === "dynamic-word") {
-        // Check if custom category is provided, use it if available
-        const customCategory = document
-          .getElementById("customCategory")
-          .value.trim();
-        body.lexiconCategory =
-          customCategory || document.getElementById("lexiconCategory").value;
-      }
-
-      // Add storyId - default to "1" for station1
-      const station =
-        document.querySelector('input[name="station"]:checked')?.value ||
-        "station1";
-      body.storyId = station === "station2" ? "2" : "1";
-
-      // Update the preview-response element with a loading message
-      document.getElementById("preview-response").textContent =
-        "Loading preview...";
-
-      // Make the API request
-      fetch("/preview-prompt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error(`API error: ${res.status}`);
-          }
-          return res.json();
-        })
-        .then((data) => {
-          document.getElementById("preview-response").textContent =
-            data.preview;
-        })
-        .catch((err) => {
-          document.getElementById(
-            "preview-response"
-          ).textContent = `Error: ${err.message}`;
-        });
-    }
-
-    // Copy preview to clipboard
-    function copyToClipboard() {
-      const previewText =
-        document.getElementById("preview-response").textContent;
-      navigator.clipboard
-        .writeText(previewText)
-        .then(() => {
-          console.log("Preview copied to clipboard!");
-        })
-        .catch((err) => {
-          alert("Failed to copy: " + err);
-        });
-    }
 
     // Update response display for API tests
     function updateResponse(data) {

@@ -1,5 +1,10 @@
 /**
  * Handles story-related functions including retrieval, compilation, and player-specific data.
+ * 
+ * This module follows a layered approach:
+ * 1. Data loading/retrieval (loadStoryFile, getStoryBlocks)
+ * 2. Block processing (enhanceBlocksWithPlayerData)
+ * 3. Text assembly/formatting (renderBlock, compileStoryText)
  */
 
 import fs from 'fs/promises';
@@ -11,59 +16,143 @@ import db from '../db.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Cache for story data to avoid repeated file reads
-const storyCache = {
-  1: null,
-  2: null
-};
+/**
+ * Loads a single story file from disk
+ * 
+ * @param {number|string} storyId - The story ID (typically 1 or 2)
+ * @returns {Promise<Object>} The parsed story data
+ */
+async function loadStoryFile(storyId) {
+  try {
+    const numericStoryId = typeof storyId === 'string' ? parseInt(storyId, 10) : storyId;
+    const storyPath = path.join(__dirname, '..', 'sites', `station${numericStoryId}`, 'input', 'story.json');
+    const storyData = await fs.readFile(storyPath, 'utf8');
+    return JSON.parse(storyData);
+  } catch (error) {
+    console.error(`Error loading story file (ID: ${storyId}):`, error);
+    return { blocks: [] };
+  }
+}
 
 /**
- * Loads story data from JSON files
+ * Loads and combines multiple story files
  * 
- * @param {number|string} storyId - Which story to load (1, 2, or 0 for both)
- * @returns {Promise<Object|Array>} Story data object or array of merged stories
+ * @param {Array<number|string>} storyIds - Array of story IDs to load and combine
+ * @returns {Promise<Object>} Combined story data
  */
-async function loadStoryData(storyId) {
-  // Convert storyId to number if it's a string
-  const storyIdNum = typeof storyId === 'string' ? parseInt(storyId, 10) : storyId;
-  
-  // Check cache first
-  if (storyIdNum !== 0 && storyCache[storyIdNum]) {
-    return storyCache[storyIdNum];
-  }
-
+async function loadMultipleStories(storyIds) {
   try {
-    // Define story file paths using proper path resolution
-    // Using path.join with __dirname for reliability relative to file location
-    const story1Path = path.join(__dirname, '..', 'sites', 'station1', 'input', 'story.json');
-    const story2Path = path.join(__dirname, '..', 'sites', 'station2', 'input', 'story.json');
+    const storiesPromises = storyIds.map(id => loadStoryFile(id));
+    const stories = await Promise.all(storiesPromises);
     
-    if (storyIdNum === 1 || storyIdNum === 0) {
-      if (!storyCache[1]) {
-        const story1Data = await fs.readFile(story1Path, 'utf8');
-        storyCache[1] = JSON.parse(story1Data);
+    // Combine all blocks from all stories
+    const combinedBlocks = stories.reduce((allBlocks, story) => {
+      if (story && story.blocks && Array.isArray(story.blocks)) {
+        return [...allBlocks, ...story.blocks];
       }
-    }
+      return allBlocks;
+    }, []);
     
-    if (storyIdNum === 2 || storyIdNum === 0) {
-      if (!storyCache[2]) {
-        const story2Data = await fs.readFile(story2Path, 'utf8');
-        storyCache[2] = JSON.parse(story2Data);
-      }
-    }
-    
-    // Return the appropriate story data
-    if (storyIdNum === 0) {
-      // Merge story blocks for both stories
-      return {
-        blocks: [...storyCache[1].blocks, ...storyCache[2].blocks]
-      };
-    } else {
-      return storyCache[storyIdNum];
-    }
+    return { blocks: combinedBlocks };
   } catch (error) {
-    console.error(`Error loading story data (ID: ${storyId}):`, error);
+    console.error(`Error loading multiple stories (IDs: ${storyIds}):`, error);
     return { blocks: [] };
+  }
+}
+
+/**
+ * Main function to get story data - handles single story or multiple stories
+ * 
+ * @param {number|string|Array} storyId - Story ID(s) to load (1, 2, or [1,2] for both)
+ * @returns {Promise<Object>} Story data with blocks
+ */
+async function getStoryData(storyId) {
+  // If storyId is an array, load multiple stories
+  if (Array.isArray(storyId)) {
+    return loadMultipleStories(storyId);
+  }
+  
+  // Special case for storyId 0, which means "all stories"
+  if (storyId === 0 || storyId === '0') {
+    return loadMultipleStories([1, 2]);
+  }
+  
+  // Otherwise load a single story
+  return loadStoryFile(storyId);
+}
+
+/**
+ * Filter blocks by criteria (block ID, type)
+ * 
+ * @param {Array} blocks - Array of story blocks
+ * @param {Object} options - Filter options
+ * @param {string} [options.blockId] - If provided, blocks up to this ID
+ * @param {string} [options.blockType] - If provided, only blocks of this type
+ * @returns {Array} Filtered blocks
+ */
+function filterBlocks(blocks, { blockId = null, blockType = null }) {
+  let filteredBlocks = [...blocks];
+  
+  // Filter blocks up to the specified blockId
+  if (blockId) {
+    const blockIndex = filteredBlocks.findIndex(block => block.id === blockId);
+    if (blockIndex !== -1) {
+      filteredBlocks = filteredBlocks.slice(0, blockIndex + 1);
+    }
+  }
+  
+  // Filter by block type if specified
+  if (blockType) {
+    filteredBlocks = filteredBlocks.filter(block => block.type === blockType);
+  }
+  
+  return filteredBlocks;
+}
+
+/**
+ * Enhance blocks with player-specific data
+ * 
+ * @param {Array} blocks - Array of story blocks
+ * @param {string} playerId - The player's ID
+ * @returns {Promise<Array>} Blocks enhanced with player data
+ */
+async function enhanceBlocksWithPlayerData(blocks, playerId) {
+  if (!playerId) return blocks;
+  
+  try {
+    await db.read();
+    
+    // If no player data available, return blocks as-is
+    if (!db.data || !db.data.players || !db.data.players[playerId]) {
+      return blocks;
+    }
+    
+    const playerChoices = db.data.players[playerId].choices || {};
+    const playerDynamicContent = db.data.players[playerId].dynamicContent || {};
+    
+    // Enhance blocks with player-specific data
+    return blocks.map(block => {
+      const enhancedBlock = { ...block };
+      
+      // Add player's choice data to the block
+      if (playerChoices[block.id]) {
+        enhancedBlock.playerChoice = {
+          chosenIndex: playerChoices[block.id].chosenIndex,
+          chosenText: playerChoices[block.id].chosenText,
+          availableOptions: playerChoices[block.id].availableOptions
+        };
+      }
+      
+      // Add dynamic content if available
+      if (playerDynamicContent[block.id]) {
+        enhancedBlock.dynamicContent = playerDynamicContent[block.id].content;
+      }
+      
+      return enhancedBlock;
+    });
+  } catch (error) {
+    console.error('Error enhancing blocks with player data:', error);
+    return blocks; // Return original blocks on error
   }
 }
 
@@ -72,7 +161,7 @@ async function loadStoryData(storyId) {
  * 
  * @param {string|null} playerId - The unique identifier for a player
  * @param {string|null} blockId - The unique block identifier to retrieve up to
- * @param {number} storyId - Which story to retrieve (1, 2, or 0 for both)
+ * @param {number|string|Array} storyId - Which story to retrieve (1, 2, [1,2], or 0 for both)
  * @param {string|null} blockType - Filter by block type
  * @returns {Promise<Array>} Array of story blocks
  */
@@ -83,54 +172,20 @@ async function getStoryBeforeBlockByPlayer(
   blockType = null
 ) {
   try {
-    // Load the appropriate story data
-    const storyData = await loadStoryData(storyId);
+    // 1. Load the appropriate story data
+    const storyData = await getStoryData(storyId);
     
     if (!storyData || !storyData.blocks || storyData.blocks.length === 0) {
       return [];
     }
     
-    let blocks = [...storyData.blocks];
+    // 2. Filter blocks based on provided criteria
+    const filteredBlocks = filterBlocks(storyData.blocks, { blockId, blockType });
     
-    // Filter blocks up to the specified blockId
-    if (blockId) {
-      const blockIndex = blocks.findIndex(block => block.id === blockId);
-      if (blockIndex !== -1) {
-        blocks = blocks.slice(0, blockIndex + 1);
-      }
-    }
+    // 3. Enhance blocks with player-specific data if needed
+    const enhancedBlocks = await enhanceBlocksWithPlayerData(filteredBlocks, playerId);
     
-    // Filter by block type if specified
-    if (blockType) {
-      blocks = blocks.filter(block => block.type === blockType);
-    }
-    
-    // Apply player-specific data if playerId is provided
-    if (playerId) {
-      await db.read();
-      
-      // Ensure the players object exists in the database
-      if (db.data && db.data.players && db.data.players[playerId]) {
-        const playerChoices = db.data.players[playerId].choices || {};
-        
-        // Enhance blocks with player-specific data
-        blocks = blocks.map(block => {
-          const enhancedBlock = { ...block };
-          
-          // If the player has made a choice for this block, include it
-          if (playerChoices[block.id]) {
-            enhancedBlock.playerChoice = {
-              chosenIndex: playerChoices[block.id].chosenIndex,
-              chosenText: playerChoices[block.id].chosenText
-            };
-          }
-          
-          return enhancedBlock;
-        });
-      }
-    }
-    
-    return blocks;
+    return enhancedBlocks;
   } catch (error) {
     console.error('Error in getStoryBeforeBlockByPlayer:', error);
     return [];
@@ -146,30 +201,22 @@ async function getStoryBeforeBlockByPlayer(
  */
 async function getBlockData(blockId, playerId = null) {
   try {
-    // Try to find the block in both stories
-    const allStoryData = await loadStoryData(0);
+    // Get all story blocks (from both stories to ensure we find the block)
+    const allStoryData = await getStoryData(0);
     const block = allStoryData.blocks.find(b => b.id === blockId);
     
     if (!block) {
       return null;
     }
     
-    const result = { ...block };
-    
-    // Include player-specific choices if playerId is provided
-    if (playerId) {
-      await db.read();
-      
-      if (db.data && db.data.players && db.data.players[playerId] && 
-          db.data.players[playerId].choices && db.data.players[playerId].choices[blockId]) {
-        result.playerChoice = {
-          chosenIndex: db.data.players[playerId].choices[blockId].chosenIndex,
-          chosenText: db.data.players[playerId].choices[blockId].chosenText
-        };
-      }
+    // If no player ID provided, return the block as-is
+    if (!playerId) {
+      return { ...block };
     }
     
-    return result;
+    // Enhance the single block with player data
+    const [enhancedBlock] = await enhanceBlocksWithPlayerData([block], playerId);
+    return enhancedBlock;
   } catch (error) {
     console.error('Error in getBlockData:', error);
     return null;
@@ -177,100 +224,115 @@ async function getBlockData(blockId, playerId = null) {
 }
 
 /**
+ * Block renderers for different block types
+ * Each renderer converts a block to text representation
+ */
+const blockRenderers = {
+  'scene-header': (block, context) => {
+    return (context.compiledText ? '\n\n' : '') + block.titleName + '\n';
+  },
+  
+  'plain': (block) => block.text,
+  
+  'static': (block) => {
+    if (block.playerChoice) {
+      const chosenText = block.options[block.playerChoice.chosenIndex];
+      return `<${chosenText}> (choices given: ${block.options.join(', ')})`;
+    } else {
+      return `<choice not made> (options: ${block.options.join(', ')})`;
+    }
+  },
+  
+  'dynamic-text': (block) => {
+    // Get content from the dynamicContent property we set in enhanceBlocksWithPlayerData
+    if (block.dynamicContent) {
+      return block.dynamicContent;
+    }
+    
+    return `<dynamic content not generated for block ${block.id.substring(0, 8)}...>`;
+  },
+  
+  'dynamic-option': (block) => {
+    // First check if we have dynamic content
+    if (block.dynamicContent) {
+      // If we have both dynamic content and a player choice, format with choice
+      if (block.playerChoice && block.playerChoice.chosenText) {
+        const options = block.playerChoice.availableOptions || [];
+        return `<${block.playerChoice.chosenText}> (dynamic choices: ${options.join(', ')})`;
+      }
+      return block.dynamicContent;
+    }
+    
+    // Fall back to just showing the choice if available
+    if (block.playerChoice && block.playerChoice.chosenText) {
+      const options = block.playerChoice.availableOptions || [];
+      return `<${block.playerChoice.chosenText}> (dynamic choices: ${options.join(', ')})`;
+    }
+    
+    return `<dynamic choice not made>`;
+  },
+  
+  // Default renderer for any unhandled block types
+  'default': (block) => `<${block.type} block: ${block.id.substring(0, 8)}...>`
+};
+
+/**
+ * Render a single block as text
+ * 
+ * @param {Object} block - The block to render
+ * @param {Object} context - Context data for rendering
+ * @returns {string} Text representation of the block
+ */
+function renderBlock(block, context) {
+  // Get the appropriate renderer for this block type, or use default
+  const renderer = blockRenderers[block.type] || blockRenderers.default;
+  return renderer(block, context);
+}
+
+/**
+ * Compile blocks into readable text
+ * 
+ * @param {Array} blocks - The blocks to compile
+ * @param {Object} context - Compilation context (e.g., playerId)
+ * @returns {string} Compiled story text
+ */
+function compileStoryText(blocks, context = {}) {
+  let compiledText = "";
+  
+  // Process each block
+  for (const block of blocks) {
+    // Update context with current state
+    const blockContext = {
+      ...context,
+      compiledText
+    };
+    
+    // Render this block and add to compiled text
+    compiledText += renderBlock(block, blockContext);
+  }
+  
+  return compiledText;
+}
+
+/**
  * Compiles story text for a specific player
  *
  * @param {string} playerId - the player's unique ID
- * @param {number} storyId - the story to compile (1, 2, or 0 for both)
+ * @param {number|string|Array} storyId - the story to compile (1, 2, [1,2], or 0 for both)
  * @param {string|null} blockId - if provided, compile story up to this block
  * @return {Promise<string>} a single or multi-paragraph string of compiled story text
  */
 async function compileStoryForPlayer(playerId, storyId, blockId = null) {
   try {
-    // Get all relevant blocks
+    // 1. Get all relevant blocks with player data
     const blocks = await getStoryBeforeBlockByPlayer(playerId, blockId, storyId);
     
     if (!blocks || blocks.length === 0) {
       return "";
     }
     
-    // Process blocks into a coherent text narrative
-    let compiledText = "";
-    
-    for (const block of blocks) {
-      // For scene headers, add a line break and the title
-      if (block.type === "scene-header") {
-        if (compiledText) {
-          compiledText += "\n\n";
-        }
-        compiledText += block.titleName + "\n";
-        continue;
-      }
-      
-      // For plain text blocks, just add the text
-      if (block.type === "plain") {
-        compiledText += block.text;
-        continue;
-      }
-      
-      // For static choice blocks, add the player's choice with annotation
-      if (block.type === "static") {
-        if (block.playerChoice) {
-          // Add the chosen option with parentheses annotation showing available options
-          const chosenText = block.options[block.playerChoice.chosenIndex];
-          compiledText += `<${chosenText}> (choices given: ${block.options.join(', ')})`;
-        } else {
-          // If no choice was made, show all options in brackets
-          compiledText += `<choice not made> (options: ${block.options.join(', ')})`;
-        }
-        continue;
-      }
-      
-      // For dynamic-text blocks, get the generated content from the database
-      if (block.type === "dynamic-text") {
-        // Check if this player has this block in their choices (where dynamic content would be stored)
-        await db.read();
-        
-        if (db.data && db.data.players && playerId && db.data.players[playerId] && 
-            db.data.players[playerId].choices && db.data.players[playerId].choices[block.id]) {
-          
-          const dynamicContent = db.data.players[playerId].choices[block.id].generatedContent;
-          
-          if (dynamicContent) {
-            compiledText += dynamicContent;
-          } else {
-            compiledText += `<dynamic content not found for block ${block.id.substring(0, 8)}...>`;
-          }
-        } else {
-          // If no dynamic content found, provide a descriptive placeholder
-          compiledText += `<dynamic content not generated>`;
-        }
-        continue;
-      }
-      
-      // For dynamic-option blocks, handle similarly to dynamic-text
-      if (block.type === "dynamic-option") {
-        await db.read();
-        
-        if (db.data && db.data.players && playerId && db.data.players[playerId] && 
-            db.data.players[playerId].choices && db.data.players[playerId].choices[block.id]) {
-          
-          const choice = db.data.players[playerId].choices[block.id];
-          const options = choice.availableOptions;
-          const chosenText = choice.chosenText;
-          
-          if (chosenText && options) {
-            compiledText += `<${chosenText}> (dynamic choices: ${options.join(', ')})`;
-          } else {
-            compiledText += `<dynamic choice not found for block ${block.id.substring(0, 8)}...>`;
-          }
-        } else {
-          compiledText += `<dynamic choice not made>`;
-        }
-        continue;
-      }
-    }
-    
-    return compiledText;
+    // 2. Compile blocks into text
+    return compileStoryText(blocks, { playerId });
   } catch (error) {
     console.error('Error in compileStoryForPlayer:', error);
     return "";
@@ -292,7 +354,7 @@ async function compileChoiceSummaryForBlock(blockId) {
     }
     
     // Find the block to get the available options
-    const allStoryData = await loadStoryData(0);
+    const allStoryData = await getStoryData(0);
     const block = allStoryData.blocks.find(b => b.id === blockId);
     
     if (!block || !block.options) {
@@ -304,7 +366,7 @@ async function compileChoiceSummaryForBlock(blockId) {
     let totalChoices = 0;
     
     // Initialize counts for all options
-    block.options.forEach((option, index) => {
+    block.options.forEach((option) => {
       choiceCounts[option] = 0;
     });
     
@@ -346,7 +408,7 @@ async function compileChoiceSummaryForBlock(blockId) {
  */
 async function getStoryBlocks(storyId) {
   try {
-    const storyData = await loadStoryData(storyId);
+    const storyData = await getStoryData(storyId);
     return storyData.blocks || [];
   } catch (error) {
     console.error(`Error in getStoryBlocks(${storyId}):`, error);

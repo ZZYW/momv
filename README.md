@@ -150,8 +150,45 @@ The Control Panel includes a dedicated Template Preview tab that allows writers 
 
 This feature helps writers understand and refine the prompt templates without needing to know the technical details of the API.
 
+## Testing
+
+### Running Route Tests
+
+The project includes a comprehensive test suite to verify that all API endpoints and routes are functioning correctly:
+
+1. Install test dependencies:
+   ```
+   npm install
+   ```
+
+2. Run the tests:
+   ```
+   npm test
+   ```
+
+The test suite:
+- Tests all API endpoints
+- Verifies static file serving
+- Checks story routes functionality
+- Tests editor routes (in development mode)
+- Handles both successful and error responses
+
+To run a specific test file:
+```
+npm test -- test/routes.test.js
+```
+
+### Adding New Tests
+
+When adding new routes or modifying existing ones, update the test suite accordingly:
+
+1. Add new test cases to the appropriate describe block in `test/routes.test.js`
+2. Follow the existing pattern for API testing
+3. Make sure to handle both success cases and potential errors
+
 ## Troubleshooting
 
 - If dynamic content fails to generate, check your `DASHSCOPE_API_KEY` environment variable
 - For database issues, you may need to delete the `database.json` file and restart the server
 - Station issues can often be resolved by checking browser console errors
+- If tests are failing, check that you have the necessary environment variables set

@@ -1,105 +1,42 @@
 import express from "express";
-import cors from "cors";
 import path from "path";
-import fs from "fs";
-import { compilePlayable } from "./controllers/compileController.js";
-import { getData, postData } from "./controllers/dataController.js";
-import { recordChoice } from "./controllers/choiceController.js";
-import { askLLM, previewAIPrompt } from "./controllers/aiController.js";
-import { assignCodename, validateCodename, saveCodename } from "./controllers/codenameController.js";
-import { printText } from "./controllers/printerController.js";
-import { 
-  getStoryBeforeBlockByPlayer, 
-  getBlockData, 
-  compileStoryForPlayer, 
-  compileChoiceSummaryForBlock 
-} from "./controllers/storyRetriever.js";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
-// If defined, CENTRAL_BACKEND_URL is used for station routes.
-const central_backend_url = process.env.CENTRAL_BACKEND_URL;
-// Check production mode based on command line arguments.
-const isProd = process.argv.includes("prod");
+// Import config
+import config from "./config/config.js";
+const { PORT, isProd, central_backend_url } = config;
 
-const PORT = process.env.PORT || 3001;
+// Import middleware
+import setupGlobalMiddleware from "./middleware/globalMiddleware.js";
+
+// Import routes
+import staticRoutes from "./routes/staticRoutes.js";
+import apiRoutes from "./routes/apiRoutes.js";
+import storyRoutes from "./routes/storyRoutes.js";
+import editorRoutes from "./routes/editorRoutes.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Global Middleware
-app.use(cors());
-app.use(express.json());
-app.use((req, res, next) => {
-    res.set({
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-        "Surrogate-Control": "no-store",
-    });
-    next();
-});
+// Set up global middleware
+setupGlobalMiddleware(app);
 
-app.use("/assets", express.static(path.join(__dirname, "assets")));
+// Set up static routes
+app.use(staticRoutes);
 
-// Make utils directory accessible for codename components
-app.use("/utils", express.static(path.join(__dirname, "utils")));
-
-// ----------------------------------------------
-// Editor Routes (always local – dev mode only)
-// ----------------------------------------------
+// Handle different modes
 if (!isProd) {
-    // Serve two editor front ends—one for station1 and one for station2.
-    app.use("/editor/station1", express.static(path.join(__dirname, "sites", "editor")));
-    app.use("/editor/station2", express.static(path.join(__dirname, "sites", "editor")));
-
-    // Editor API routes (parameterized by station)
-    // The compile-playable route is used exclusively by the editor.
-    app.post("/compile-playable/:station", (req, res) => {
-        const { station } = req.params;
-        if (!["station1", "station2"].includes(station)) {
-            return res.status(400).send("Invalid station specified");
-        }
-        // Optionally, pass station info to compilePlayable if needed.
-        compilePlayable(req, res);
-    });
-
-    // Save story JSON locally in the corresponding station's input folder.
-    app.post("/save-story-json/:station", (req, res) => {
-        const { station } = req.params;
-        if (!["station1", "station2"].includes(station)) {
-            return res.status(400).send("Invalid station specified");
-        }
-        const { blocks } = req.body;
-        if (!blocks || !Array.isArray(blocks)) {
-            return res.status(400).send("Missing or invalid blocks data");
-        }
-        const dirPath = path.join(__dirname, "sites", station, "input");
-        console.log(`Saving the file into ${dirPath}`);
-        if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-        }
-        // Generate a filename using the current epoch timestamp.
-        const filePath = path.join(dirPath, `story.json`);
-        fs.writeFile(filePath, JSON.stringify({ blocks }, null, 2), (err) => {
-            if (err) {
-                console.error("Error writing story JSON file:", err);
-                return res.status(500).send("Error saving story");
-            }
-            res.json({ success: true, filePath });
-        });
-    });
-
-    // Control Panel (only in dev mode)
-    app.use("/cp", express.static(path.join(__dirname, "sites", "cp")));
+    // Development mode - use local routes
+    app.use(editorRoutes);
+    console.log("Development mode: Editor and Control Panel are being served.");
 } else {
     console.log("Production mode: Editor and Control Panel are not being served.");
 }
 
-// -------------------------------------------------
-// Station Routes (used by station1 and station2)
-// -------------------------------------------------
+// Handle API routes
 if (central_backend_url) {
     console.log(`Proxying station API routes to central backend at ${central_backend_url}`);
     app.use("/data", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
@@ -110,115 +47,13 @@ if (central_backend_url) {
     app.use("/validate-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
     app.use("/print", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
 } else {
-    app.get("/data", getData);
-    app.post("/data", postData);
-    app.post("/record-choice", recordChoice);
-    app.post("/generate-dynamic", askLLM);
-    app.post("/preview-prompt", previewAIPrompt);
-
-    // Story API endpoints
-    app.get("/story/blocks", async (req, res) => {
-      try {
-        const { playerId, blockId, storyId = 1, blockType } = req.query;
-        const blocks = await getStoryBeforeBlockByPlayer(
-          playerId || null,
-          blockId || null,
-          parseInt(storyId, 10),
-          blockType || null
-        );
-        res.json({ success: true, blocks });
-      } catch (error) {
-        console.error("Error in /story/blocks:", error);
-        res.status(500).json({ success: false, error: error.message });
-      }
-    });
-
-    app.get("/story/block/:blockId", async (req, res) => {
-      try {
-        const { blockId } = req.params;
-        const { playerId } = req.query;
-        const block = await getBlockData(blockId, playerId || null);
-        
-        if (!block) {
-          return res.status(404).json({ success: false, error: "Block not found" });
-        }
-        
-        res.json({ success: true, block });
-      } catch (error) {
-        console.error("Error in /story/block/:blockId:", error);
-        res.status(500).json({ success: false, error: error.message });
-      }
-    });
-
-    app.get("/story/compile", async (req, res) => {
-      try {
-        const { playerId, storyId = 1, blockId } = req.query;
-        const compiledText = await compileStoryForPlayer(
-          playerId || null,
-          parseInt(storyId, 10),
-          blockId || null
-        );
-        res.json({ success: true, compiledText });
-      } catch (error) {
-        console.error("Error in /story/compile:", error);
-        res.status(500).json({ success: false, error: error.message });
-      }
-    });
-
-    app.get("/story/choices/:blockId", async (req, res) => {
-      try {
-        const { blockId } = req.params;
-        const summary = await compileChoiceSummaryForBlock(blockId);
-        res.json({ success: true, summary });
-      } catch (error) {
-        console.error("Error in /story/choices/:blockId:", error);
-        res.status(500).json({ success: false, error: error.message });
-      }
-    });
-
-    // Printer endpoint
-    app.post("/print", (req, res) => {
-        console.log("Received print request:", req.body);
-        const { text } = req.body;
-
-        if (!text) {
-            return res.status(400).json({ error: "Missing text parameter" });
-        }
-
-        printText(text);
-    });
-
-    // Fix: Ensure codename endpoints are properly registered 
-    console.log("Registering codename endpoints");
-    app.post("/assign-codename", (req, res) => {
-        console.log("Received assignCodename request:", req.body);
-        return assignCodename(req, res);
-    });
-
-    app.post("/validate-codename", (req, res) => {
-        console.log("Received validateCodename request:", req.body);
-        return validateCodename(req, res);
-    });
-
-    app.post("/save-codename", (req, res) => {
-        console.log("Received saveCodename request:", req.body);
-        return saveCodename(req, res);
-    });
+    // Use local API routes
+    app.use(apiRoutes);
+    // Mount story routes under /story prefix
+    app.use("/story", storyRoutes);
 }
 
-// ---------------------------------
-// Static Site Routes
-// ---------------------------------
-
-// Shared resources
-app.use("/shared", express.static(path.join(__dirname, "sites", "shared")));
-
-// Station 1: Accessible at http://localhost:3001/station1
-app.use("/station1", express.static(path.join(__dirname, "sites", "station1")));
-
-// Station 2: Accessible at http://localhost:3001/station2
-app.use("/station2", express.static(path.join(__dirname, "sites", "station2")));
-
+// Start the server
 app.listen(PORT, () => {
     const baseUrl = `http://localhost:${PORT}`;
 
@@ -267,5 +102,4 @@ app.listen(PORT, () => {
     | Station 2:         ${baseUrl}/station2          
     +--------------------------------------------------------------------------+
     `);
-
 });

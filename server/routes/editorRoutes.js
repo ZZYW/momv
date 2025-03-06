@@ -6,13 +6,15 @@ import { compilePlayable } from "../controllers/compileController.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const parentDir = path.dirname(__dirname);
+const serverDir = path.dirname(__dirname);
+const rootDir = path.dirname(serverDir);
+const clientDir = path.join(rootDir, "client");
 
 const router = express.Router();
 
 // Serve two editor front ends—one for station1 and one for station2
-router.use("/editor/station1", express.static(path.join(parentDir, "sites", "editor")));
-router.use("/editor/station2", express.static(path.join(parentDir, "sites", "editor")));
+router.use("/editor/station1", express.static(path.join(clientDir, "src/sites", "editor")));
+router.use("/editor/station2", express.static(path.join(clientDir, "src/sites", "editor")));
 
 // Editor API routes (parameterized by station)
 // The compile-playable route is used exclusively by the editor.
@@ -35,7 +37,7 @@ router.post("/save-story-json/:station", (req, res) => {
     if (!blocks || !Array.isArray(blocks)) {
         return res.status(400).send("Missing or invalid blocks data");
     }
-    const dirPath = path.join(parentDir, "sites", station, "input");
+    const dirPath = path.join(clientDir, "src/sites", station, "input");
     console.log(`Saving the file into ${dirPath}`);
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
@@ -52,6 +54,6 @@ router.post("/save-story-json/:station", (req, res) => {
 });
 
 // Control Panel (only in dev mode)
-router.use("/cp", express.static(path.join(parentDir, "sites", "cp")));
+router.use("/cp", express.static(path.join(clientDir, "src/sites", "cp")));
 
 export default router;

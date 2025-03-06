@@ -71,7 +71,9 @@ export interface RenderContext {
 async function loadStoryFile(storyId: number | string): Promise<StoryData> {
   try {
     const numericStoryId = typeof storyId === 'string' ? parseInt(storyId, 10) : storyId;
-    const storyPath = path.join(__dirname, '..', 'sites', `station${numericStoryId}`, 'input', 'story.json');
+    const rootDir = path.dirname(path.dirname(__dirname));
+    const clientDir = path.join(rootDir, 'client');
+    const storyPath = path.join(clientDir, 'src', 'sites', `station${numericStoryId}`, 'input', 'story.json');
     const storyData = await fs.readFile(storyPath, 'utf8');
     return JSON.parse(storyData);
   } catch (error) {

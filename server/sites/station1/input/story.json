@@ -89,7 +89,7 @@
       "type": "static",
       "sceneId": 3,
       "options": [
-        " 磨剪子磨菜刀",
+        "磨剪子磨菜刀",
         "破烂儿——换钱",
         "西瓜包熟包甜，不甜不要钱"
       ]
@@ -145,7 +145,7 @@
       "type": "dynamic",
       "sceneId": 4,
       "blockName": "",
-      "prompt": "根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n\n故事:\n\n{get story so far for this player}\n...\n\n玩家之前的选择：\n{get decisions of question#4fc887b3-72b8-4614-8c97-f21061e4e7cb by this player, from story 1}\n{get decisions of question#190c1850-b5e9-4be4-8053-3837e36ebbb9 by this player, from story 1}\n\n回到原文中, 结合对玩家的分析，用白描的方式，陈述出主人公回忆中中学时期的一系列行为，以及它周围的可能出现的人的行为，和环境的变化。"
+      "prompt": "以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n\n玩家之前的选择：\n{get decisions of question#4fc887b3-72b8-4614-8c97-f21061e4e7cb by this player, from story 1}\n{get decisions of question#190c1850-b5e9-4be4-8053-3837e36ebbb9 by this player, from story 1}\n\n迄今为止的故事：\n\n{get story so far for this player}\n\n\n\n请结合对玩家的分析，用白描的方式，陈述出主人公回忆中中学时期的一系列行为，以及它周围的可能出现的人的行为，和环境的变化。书写3-5个句子，词语应表达丰富、富有暗示性，与叙述情境相关No Speculation or Interpretation; Avoids Inner Thoughts and Feelings; Focus on Facts; Focus on Facts."
     },
     {
       "id": "8df42d47-25c3-4fe8-933b-99ff47f9a828",
@@ -254,13 +254,13 @@
       "type": "dynamic",
       "sceneId": 5,
       "blockName": "",
-      "prompt": "根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n\n玩家之前的所有选择：\n{get decisions of question#all by this player, from story 1}\n\n回到原文中， 结合对玩家的选择的分析，用白描的方式，陈述出三个婴儿的境遇。他们被送到的人家的人的背景。他们成长中发生的事情。他们长大后的职业。用细节描述一件他们长大后发生的事情。\n对第一个婴儿的描写反映出玩家的遗憾。\n对第二·个婴儿的描写反映出玩家对现实的态度。\n对第三个婴儿的描写反映出玩家的对未来的可能做出的选择。\n"
+      "prompt": "\n以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n玩家之前的所有选择：\n{get decisions of question#all by this player, from story 1}\n\n回到原文中， 结合对玩家的选择的分析，用白描的方式，陈述出三个婴儿的境遇。他们被送到的人家的人的背景。他们成长中发生的事情。他们长大后的职业。用细节描述一件他们长大后发生的事情。\n对第一个婴儿的描写反映出玩家的遗憾。\n对第二个婴儿的描写反映出玩家对现实的态度。\n对第三个婴儿的描写反映出玩家的对未来的可能做出的选择。\nNo Speculation or Interpretation; Avoids Inner Thoughts and Feelings; Focus on Facts; Focus on Facts.每一个婴儿的故事用三句话之内表达。"
     },
     {
       "id": "50c5d8be-a98a-446f-bc22-d4605e8deada",
       "type": "plain",
       "sceneId": 5,
-      "text": "。游戏结束。小吴起身离开了游戏机厅，重新踏上山路。\n"
+      "text": "..看到这里，电子游戏结束了。\n\n小吴起身离开了游戏机厅，重新踏上山路。\n"
     },
     {
       "id": "57f60306-fb1f-4b9b-a5d4-928eb652e416",

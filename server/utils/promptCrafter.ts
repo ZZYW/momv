@@ -52,19 +52,27 @@ export const craftPrompt = async (
       console.log('craftPrompt: Hydration complete');
     }
 
-    // Step 2: Append appropriate response format instructions based on options
-    let responseFormatInstructions = "\n\n请以JSON格式回复，包含两个字段：\n";
-    responseFormatInstructions += "1. \"reasoning\"：你的创作思路和考虑\n";
+    // Step 2: Append strict response format instructions
+    let responseFormatInstructions = `
+
+  你必须严格按照以下JSON格式回复。其他格式都不被接受：
+  1. "reasoning"：(必填) 你的创作思路和考虑`;
 
     if (options.generateOptions) {
-      responseFormatInstructions += "2. \"deliverable\"：一个选项数组，如[\"选项1\", \"选项2\", \"选项3\"]\n";
-      responseFormatInstructions += "\nJSON Schema:\n";
-      responseFormatInstructions += `{"$schema":"http://json-schema.org/draft-04/schema#","type":"object","properties":{"reasoning":{"type":"string"},"deliverable":{"type":"array","items":{}}},"required":["reasoning","deliverable"]}`;
+      responseFormatInstructions += `
+  2. "deliverable"：(必填) 一个包含3-5个选项的数组，格式如["选项1", "选项2", "选项3"]
+
+  严格遵守此JSON Schema:
+  {"$schema":"http://json-schema.org/draft-04/schema#","type":"object","properties":{"reasoning":{"type":"string","minLength":1},"deliverable":{"type":"array","items":{"type":"string"},"minItems":3,"maxItems":5}},"required":["reasoning","deliverable"],"additionalProperties":false}`;
     } else {
-      responseFormatInstructions += "2. \"deliverable\"：生成的文本内容\n";
-      responseFormatInstructions += "\nJSON Schema:\n";
-      responseFormatInstructions += `{"$schema":"http://json-schema.org/draft-04/schema#","type":"object","properties":{"reasoning":{"type":"string"},"deliverable":{"type":"string"}},"required":["reasoning","deliverable"]}`;
+      responseFormatInstructions += `
+  2. "deliverable"：(必填) 生成的文本内容，不得为空
+
+  严格遵守此JSON Schema:
+  {"$schema":"http://json-schema.org/draft-04/schema#","type":"object","properties":{"reasoning":{"type":"string","minLength":1},"deliverable":{"type":"string","minLength":1}},"required":["reasoning","deliverable"],"additionalProperties":false}`;
     }
+
+    responseFormatInstructions += "\n注意：回复必须是可以被JSON.parse()直接解析的格式。";
 
     return hydratedMessage + responseFormatInstructions;
   } catch (error) {

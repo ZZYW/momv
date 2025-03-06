@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: mountain-of-many-voices
+    env: node
+    buildCommand: npm install
+    startCommand: node server/index.js prod
+    envVars:
+      - key: NODE_VERSION
+        value: 18.12.1
+      - key: PORT
+        value: 10000
+      - key: DASHSCOPE_API_KEY
+        sync: false # This will require you to set it in the Render dashboard
+    autoDeploy: false # You'll deploy manually

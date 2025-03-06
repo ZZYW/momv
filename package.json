@@ -5,6 +5,7 @@
   "main": "server/index.js",
   "scripts": {
     "dev": "tsx server/index.js",
+    "start": "tsx server/index.js prod",
     "prod": "tsx server/index.js prod",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
@@ -14,6 +15,9 @@
   "type": "module",
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@types/escpos": "^2.5.5",
     "axios": "^1.7.9",
@@ -25,14 +29,14 @@
     "http-proxy-middleware": "^3.0.3",
     "lowdb": "^7.0.1",
     "openai": "^4.86.1",
-    "tsx": "^4.7.1"
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/mocha": "^10.0.6",
     "@types/node": "^22.13.5",
-    "mocha": "^10.3.0",
-    "typescript": "^5.4.3"
+    "mocha": "^10.3.0"
   }
 }

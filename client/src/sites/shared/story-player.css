@@ -146,8 +146,7 @@ body {
     letter-spacing: normal;
 }
 
-.scene-title {
-}
+.scene-title {}
 
 /* ================ */
 /* = TEXT CONTENT = */
@@ -222,16 +221,23 @@ h2 {
 /* =================== */
 .dynamic-container {
     /* placeholder */
+    opacity: 0.9;
 }
 
 .dynamic-text-result {
     /* font-style: italic; */
+    opacity: 0.9;
     /* font-size: 18px; */
+    filter: url('#wavy');
+    /* Add some padding to avoid text being cut off by the filter */
+    padding: 2px 0;
 }
 
 .dynamic-word {
+    opacity: 0.9;
     font-weight: bold;
     border-bottom: 1px dotted #666;
+    filter: url('#wavy');
 }
 
 /* ============== */

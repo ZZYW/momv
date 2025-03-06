@@ -6,6 +6,35 @@ document.addEventListener("alpine:init", () => {
   }
   window._storyPlayerDataInitialized = true;
   
+  // Add SVG filters for wavy text effect
+  const svgFilters = document.createElement('div');
+  svgFilters.innerHTML = `
+    <svg width="0" height="0" style="position:absolute;">
+      <defs>
+        <filter id="wavy" filterUnits="userSpaceOnUse" x="0" y="0">
+          <feTurbulence id="wave-animation" numOctaves="1" seed="1" baseFrequency="0.01 0.03">
+          </feTurbulence>
+          <feDisplacementMap scale="5" in="SourceGraphic"></feDisplacementMap>
+        </filter>
+      </defs>
+    </svg>
+  `;
+  document.body.appendChild(svgFilters);
+  
+  // Add the animation using JavaScript for better browser support
+  setTimeout(() => {
+    const turbulence = document.getElementById('wave-animation');
+    if (turbulence) {
+      let phase = 0;
+      
+      setInterval(() => {
+        phase += 0.03;
+        let y = Math.sin(phase) * 0.015 + 0.03;
+        turbulence.setAttribute('baseFrequency', `0.01 ${y.toFixed(4)}`);
+      }, 60);
+    }
+  }, 100);
+  
   console.log('[ALPINE] Initializing storyPlayer data component');
   
   Alpine.data("storyPlayer", () => ({

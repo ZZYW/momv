@@ -253,7 +253,8 @@ document.addEventListener("alpine:init", () => {
           return `
             <div class="scene-header">
               ${bannerArtHTML}
-              <div class="scene-title"> ░▒▓ ${b.titleName || "Scene"} ▓▒░</div>
+              <div class="scene-title">${b.titleName || "Scene"}</div>
+              <div>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - </div>
             </div>
           `;
         },

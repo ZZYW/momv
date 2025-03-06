@@ -17,6 +17,58 @@
         transition: opacity 3s ease, background-color 0.2s ease,
           border-color 0.2s ease;
       }
+      
+      /* ASCII border styling */
+      .ascii-border {
+        white-space: nowrap;
+        overflow: hidden;
+        text-align: center;
+        font-family: monospace;
+      }
+      
+      /* Static ASCII border styling */
+      .with-static-borders {
+        position: relative;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      
+      .static-vertical-border {
+        position: absolute;
+        top: 0;
+        font-family: monospace;
+        line-height: 1.5;
+        pointer-events: none;
+      }
+      
+      .left-border {
+        left: 0;
+        text-align: left;
+      }
+      
+      .right-border {
+        right: 0;
+        text-align: right;
+      }
+      
+      /* ASCII-styled continue button */
+      .navigation-container {
+        text-align: center;
+        margin-top: 20px;
+      }
+      
+      .next-link {
+        display: inline-block;
+        background: none !important;
+        color: #eaeaea !important;
+        border: none !important;
+        font-family: monospace;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        margin: 0 auto;
+        position: relative;
+      }
     </style>
   </head>
   <body>

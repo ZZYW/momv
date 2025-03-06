@@ -37,20 +37,54 @@
         background: none !important;
         color: #eaeaea !important;
         border: none !important;
-        font-family: monospace;
         text-align: center;
         text-decoration: none;
         cursor: pointer;
         margin: 0 auto;
         position: relative;
       }
+      
+      /* Static ASCII border styling */
+      .with-static-borders {
+        position: relative;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      
+      .static-vertical-border {
+        position: absolute;
+        top: 0;
+        font-family: monospace;
+        line-height: 1.5;
+        pointer-events: none;
+      }
+      
+      .left-border {
+        left: 0;
+        text-align: left;
+      }
+      
+      .right-border {
+        right: 0;
+        text-align: right;
+      }
     </style>
   </head>
   <body>
     <div x-data="storyPlayer" x-init="init()">
       <div id="player-data"></div>
-      <div class="ascii-border top" id="ascii-top">+------------------+</div>
-      <div id="passage-container">
+      <div class="ascii-border top" id="ascii-top">+-------------------------------------------------------------+</div>
+      <div id="passage-container" class="with-static-borders">
+        <!-- Left vertical border -->
+        <div class="static-vertical-border left-border">
+          |<br>|<br>|<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.
+        </div>
+        
+        <!-- Right vertical border -->
+        <div class="static-vertical-border right-border">
+          |<br>|<br>|<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.
+        </div>
+        
         <!-- Passages will be rendered here -->
       </div>
     </div>

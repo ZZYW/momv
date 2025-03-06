@@ -192,11 +192,22 @@ function initializeStoryPlayer() {
       setTimeout(() => {
         console.log(`[INIT] Creating Alpine component at ${new Date().toISOString()}`);
         
-        // Initialize Alpine.js with the storyPlayer component
+        // Initialize Alpine.js with the storyPlayer component and static ASCII borders
         storyContainer.innerHTML = `
           <div x-data="storyPlayer" x-init="init()">
             <div id="player-data"></div>
-            <div id="passage-container">
+            <div class="ascii-border top" id="ascii-top">+-------------------------------------------------------------+</div>
+            <div id="passage-container" class="with-static-borders">
+              <!-- Left vertical border -->
+              <div class="static-vertical-border left-border">
+                |<br>|<br>|<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.
+              </div>
+              
+              <!-- Right vertical border -->
+              <div class="static-vertical-border right-border">
+                |<br>|<br>|<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.
+              </div>
+              
               <!-- Passages will be rendered here -->
             </div>
             <div id="status-bar" x-text="'Story Player ID: ' + config.playerId"></div>

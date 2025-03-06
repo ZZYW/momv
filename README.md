@@ -39,13 +39,7 @@
 
 ### Creating Stories
 1. Open the editor at http://localhost:3001/editor/station1
-2. Use the toolbar to add different types of blocks:
-   - **Plain Block**: Simple narrative text
-   - **Static Option**: Pre-authored choices for the reader
-   - **Dynamic Option**: AI-generated choices
-   - **Dynamic Text**: AI-generated narrative passages
-   - **Dynamic Word**: AI-generated lexical items
-   - **Scene Header**: Organizes content into scenes
+2. Use the toolbar to add different types of blocks
 3. Configure each block as needed, adding prompts and context references
 4. Click "Save Project" to store your work locally
 5. Click "Play" to preview your story
@@ -57,7 +51,6 @@
 4. Navigate through the story using the continue button
 
 ## Architecture
-
 MOMV consists of several key components:
 
 ### Server
@@ -89,20 +82,6 @@ CENTRAL_BACKEND_URL=http://main-server:3001
 
 This allows multiple stations to share the same story state and user data.
 
-## File Structure
-```
-momv/
-├── server/             # Server-side code
-│   ├── controllers/    # API endpoint controllers
-│   ├── utils/          # Utility functions and AI prompt crafting
-│   └── sites/          # Web interfaces
-│       ├── station1/   # Station 1 interface and story files
-│       ├── station2/   # Station 2 interface 
-│       ├── editor/     # Story editor interface
-│       └── cp/         # Control panel for testing API endpoints
-├── database.json       # LowDB database file (created automatically)
-└── package.json        # Project dependencies
-```
 
 ## AI Functionality
 
@@ -113,82 +92,3 @@ MOMV uses structured prompts to generate contextually appropriate narrative cont
 - **Dynamic Words**: Generates individual words (nouns, adjectives, adverbs) that add texture to the narrative
 
 The AI system is specifically tuned for Chinese language generation using Qwen-Max model through DashScope API.
-
-## Development
-
-### Adding New Block Types
-To extend the platform with new interactive elements:
-1. Update the editor interface in `server/sites/editor/index.html`
-2. Add rendering logic in station template files
-3. Implement any necessary backend support in controllers
-
-### AI Prompt Templates
-The system uses natural language templates for AI generation, located in `server/utils/templates.ejs`. These templates are designed to be writer-friendly and easily customizable.
-
-#### Key Template Features:
-- **Natural Language Format**: Templates use plain language instead of technical XML tags
-- **Modular Structure**: Common elements are extracted to reduce duplication
-- **Descriptive Variables**: Clear variable names like `{number_of_sentences}` make templates intuitive
-- **Preview Functionality**: Use the `/preview-prompt` API endpoint to see the complete prompt before sending to AI
-
-#### Customizing Templates:
-1. Open `server/utils/templates.ejs`
-2. Edit the relevant section (dynamic-option, dynamic-text, dynamic-word)
-3. Maintain the existing variable placeholders (e.g., `{number_of_choices}`)
-4. Save your changes and restart the server
-5. Use the preview functionality to test your changes
-
-#### Template Preview Tool
-The Control Panel includes a dedicated Template Preview tab that allows writers to visually test how template changes affect the final AI prompts:
-
-1. Open the Control Panel at http://localhost:3001/cp
-2. Click on the "Template Preview" tab
-3. Select the block type (dynamic-option, dynamic-text, or dynamic-word)
-4. Fill in the required parameters (number of choices, sentences, or word category)
-5. Add a custom message
-6. Click "Generate Preview" to see the exact prompt that will be sent to the AI
-
-This feature helps writers understand and refine the prompt templates without needing to know the technical details of the API.
-
-## Testing
-
-### Running Route Tests
-
-The project includes a comprehensive test suite to verify that all API endpoints and routes are functioning correctly:
-
-1. Install test dependencies:
-   ```
-   npm install
-   ```
-
-2. Run the tests:
-   ```
-   npm test
-   ```
-
-The test suite:
-- Tests all API endpoints
-- Verifies static file serving
-- Checks story routes functionality
-- Tests editor routes (in development mode)
-- Handles both successful and error responses
-
-To run a specific test file:
-```
-npm test -- test/routes.test.js
-```
-
-### Adding New Tests
-
-When adding new routes or modifying existing ones, update the test suite accordingly:
-
-1. Add new test cases to the appropriate describe block in `test/routes.test.js`
-2. Follow the existing pattern for API testing
-3. Make sure to handle both success cases and potential errors
-
-## Troubleshooting
-
-- If dynamic content fails to generate, check your `DASHSCOPE_API_KEY` environment variable
-- For database issues, you may need to delete the `database.json` file and restart the server
-- Station issues can often be resolved by checking browser console errors
-- If tests are failing, check that you have the necessary environment variables set

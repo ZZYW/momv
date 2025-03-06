@@ -7,7 +7,7 @@
     "dev": "tsx server/index.js",
     "prod": "tsx server/index.js prod",
     "typecheck": "tsc --noEmit",
-    "build": "tsc",
+    "build": "",
     "test": "NODE_OPTIONS='--import tsx' mocha --timeout 10000 test/**/*.test.js"
   },
   "keywords": [],

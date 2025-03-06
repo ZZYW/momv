@@ -3,7 +3,7 @@ let validatedPlayerId = null;
 
 // Initialize codename verification system
 function initializeCodenameVerification() {
-  const serverUrl = "http://localhost:3001";
+  const serverUrl = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
   const verifyButton = document.getElementById("verify-button");
   const errorMessage = document.getElementById("error-message");
   const verificationOverlay = document.getElementById("codename-verification");

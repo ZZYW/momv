@@ -40,7 +40,8 @@ document.addEventListener("alpine:init", () => {
   Alpine.data("storyPlayer", () => ({
     // ===== CONFIGURATION =====
     config: {
-      serverUrl: "http://localhost:3001",
+      // Dynamically determine server URL based on current hostname
+      serverUrl: window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin,
       // For station2, use the validated player ID if available
       playerId: window.VALIDATED_PLAYER_ID || 
         ("player_" +

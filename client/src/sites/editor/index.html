@@ -401,8 +401,9 @@
             this.updateSceneIds();
             // Use the computed station value
             const station = this.station;
-            // TODO: parametrize server url
-            fetch(`http://localhost:3001/save-story-json/${station}`, {
+            const serverUrl = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
+            
+            fetch(`${serverUrl}/save-story-json/${station}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ blocks: this.blocks }),
@@ -411,8 +412,7 @@
               .then((data) => {
                 if (data.success) {
                   // Open the corresponding station's page in a new window
-                  // TODO: parametrize server url
-                  window.open(`http://localhost:3001/${station}`, "_blank");
+                  window.open(`${serverUrl}/${station}`, "_blank");
                 } else {
                   console.error("Error saving story JSON:", data);
                 }
@@ -609,7 +609,9 @@
               autosave: this.autosaveTime,
               blocks: this.blocks,
             };
-            fetch(`http://localhost:3001/save-story-json/${this.station}`, {
+            const serverUrl = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
+            
+            fetch(`${serverUrl}/save-story-json/${this.station}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(project),

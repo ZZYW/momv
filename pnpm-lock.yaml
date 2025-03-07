@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@node-escpos/core':
+        specifier: ^0.6.0
+        version: 0.6.0
+      '@node-escpos/usb-adapter':
+        specifier: ^0.3.1
+        version: 0.3.1
       '@types/escpos':
         specifier: ^2.5.5
         version: 2.5.5
@@ -20,12 +26,6 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
-      escpos:
-        specifier: 3.0.0-alpha.6
-        version: 3.0.0-alpha.6
-      escpos-network:
-        specifier: 3.0.0-alpha.5
-        version: 3.0.0-alpha.5
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -213,6 +213,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@node-escpos/adapter@0.0.1':
+    resolution: {integrity: sha512-I1RT6GjwxkzqCZBJ27XVDvSwPEzpP4aPJfjWCym5LY2Zj1o+fSXcIOMnR/U5cp4FZTFfERFcQpkDvMAHu+qnHA==}
+
+  '@node-escpos/core@0.6.0':
+    resolution: {integrity: sha512-6JccIYy0o5epBcLE9GcxT19YTL4ydQeP3TPj3grsFjHmGZ+D6whwXtGZ5VosW6PbU01dXtxJG2IotPtZPLWTqA==}
+
+  '@node-escpos/usb-adapter@0.3.1':
+    resolution: {integrity: sha512-n1e3k73nN6RJAmbRNSrVD3zjlkFvDiXB9u2UsH4V2UxSqU4FFbBO6zn3aVMFJU/SAoIa5GWZqBnRvaH/Q9DAZw==}
+
   '@types/body-parser@1.19.5':
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
 
@@ -243,6 +252,9 @@ packages:
   '@types/mocha@10.0.10':
     resolution: {integrity: sha512-xPyYSz1cMPnJQhl0CLMH68j3gprKZaTjG3s5Vi+fDgx+uhG9NOXwbVt52eFS8ECyXhyKcjDLCBEqBExKuiZb7Q==}
 
+  '@types/ndarray@1.0.14':
+    resolution: {integrity: sha512-oANmFZMnFQvb219SSBIhI1Ih/r4CvHDOzkWyJS/XRqkMrGH5/kaPSA1hQhdIBzouaE+5KpE/f5ylI9cujmckQg==}
+
   '@types/node-fetch@2.6.12':
     resolution: {integrity: sha512-8nneRWKCg3rMtF69nLQJnOYUcbafYeFSjqkw3jCRLsqkWFlHaoQrr5mXmofFGOx3DKn7UfmBMyov8ySvLRVldA==}
 
@@ -251,6 +263,9 @@ packages:
 
   '@types/node@22.13.9':
     resolution: {integrity: sha512-acBjXdRJ3A6Pb3tqnw9HZmyR3Fiol3aGxRCK1x3d+6CDAMjl7I649wpSd+yNURCjbOUGu9tqtLKnTGxmK6CyGw==}
+
+  '@types/qr-image@3.2.9':
+    resolution: {integrity: sha512-vmqTI+ehoC07jtzjT9Dc+3eMpXTgdluD9orVHtp9bN1gE81SnOuMe9+EwmRuWfTH04YNyk1mihI/Vr7BIhUCZg==}
 
   '@types/qs@6.9.18':
     resolution: {integrity: sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==}
@@ -263,6 +278,9 @@ packages:
 
   '@types/serve-static@1.15.7':
     resolution: {integrity: sha512-W8Ym+h8nhuRwaKPaDw34QUkwsGi6Rc4yYqvKFo5rm2FUEhCFbzVWrxXUxuKK8TASjWsysJY0nsmNCGhCOIsrOw==}
+
+  '@types/w3c-web-usb@1.0.10':
+    resolution: {integrity: sha512-CHgUI5kTc/QLMP8hODUHhge0D4vx+9UiAwIGiT0sTy/B2XpdX1U5rJt6JSISgr6ikRT7vxV9EVAFeYZqUnl1gQ==}
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -510,13 +528,6 @@ packages:
   escape-string-regexp@4.0.0:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
-
-  escpos-network@3.0.0-alpha.5:
-    resolution: {integrity: sha512-H/K0nOBqXJ7yKmhN6OJIJgEgnnRGY2/18YWlJOmwEljoaO5LJ2fc0ofM7n/zn6ijNrXBAiQWwr5OHGYccJ/VPg==}
-
-  escpos@3.0.0-alpha.6:
-    resolution: {integrity: sha512-c8AkmO6i9+Jjp1+KWlS3Bv/1VspaS1VSM+UX4XMN/7ICwnrdgF0Y4Oi+8kJxIit7M9xXEdN6ry//7Vbgr/Q0dw==}
-    engines: {node: '>=8.x'}
 
   etag@1.8.1:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
@@ -849,6 +860,10 @@ packages:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
     engines: {node: '>= 0.6'}
 
+  node-addon-api@8.3.1:
+    resolution: {integrity: sha512-lytcDEdxKjGJPTLEfW4mYMigRezMlyJY8W4wxJK8zE533Jlb8L8dRuObJFWg2P+AuOIxoCgKF+2Oq4d4Zd0OUA==}
+    engines: {node: ^18 || ^20 || >= 21}
+
   node-bitmap@0.0.1:
     resolution: {integrity: sha512-Jx5lPaaLdIaOsj2mVLWMWulXF6GQVdyLvNSxmiYCvZ8Ma2hfKX0POoR2kgKOqz+oFsRreq0yYZjQ2wjE9VNzCA==}
     engines: {node: '>=v0.6.5'}
@@ -865,6 +880,10 @@ packages:
     peerDependenciesMeta:
       encoding:
         optional: true
+
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -1117,6 +1136,10 @@ packages:
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
+  usb@2.15.0:
+    resolution: {integrity: sha512-BA9r7PFxyYp99wps1N70lIqdPb2Utcl2KkWohDtWUmhDBeM5hDH1Zl/L/CZvWxd5W3RUCNm1g+b+DEKZ6cHzqg==}
+    engines: {node: '>=12.22.0 <13.0 || >=14.17.0'}
+
   utils-merge@1.0.1:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
@@ -1251,6 +1274,27 @@ snapshots:
   '@esbuild/win32-x64@0.25.0':
     optional: true
 
+  '@node-escpos/adapter@0.0.1':
+    dependencies:
+      eventemitter3: 4.0.7
+
+  '@node-escpos/core@0.6.0':
+    dependencies:
+      '@node-escpos/adapter': 0.0.1
+      '@types/ndarray': 1.0.14
+      '@types/qr-image': 3.2.9
+      eventemitter3: 4.0.7
+      get-pixels: 3.3.3
+      iconv-lite: 0.6.3
+      mutable-buffer: 2.2.5
+      ndarray: 1.0.19
+      qr-image: 3.2.0
+
+  '@node-escpos/usb-adapter@0.3.1':
+    dependencies:
+      '@node-escpos/adapter': 0.0.1
+      usb: 2.15.0
+
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
@@ -1292,6 +1336,8 @@ snapshots:
 
   '@types/mocha@10.0.10': {}
 
+  '@types/ndarray@1.0.14': {}
+
   '@types/node-fetch@2.6.12':
     dependencies:
       '@types/node': 22.13.9
@@ -1304,6 +1350,10 @@ snapshots:
   '@types/node@22.13.9':
     dependencies:
       undici-types: 6.20.0
+
+  '@types/qr-image@3.2.9':
+    dependencies:
+      '@types/node': 22.13.9
 
   '@types/qs@6.9.18': {}
 
@@ -1319,6 +1369,8 @@ snapshots:
       '@types/http-errors': 2.0.4
       '@types/node': 22.13.9
       '@types/send': 0.17.4
+
+  '@types/w3c-web-usb@1.0.10': {}
 
   abort-controller@3.0.0:
     dependencies:
@@ -1577,15 +1629,6 @@ snapshots:
   escape-html@1.0.3: {}
 
   escape-string-regexp@4.0.0: {}
-
-  escpos-network@3.0.0-alpha.5: {}
-
-  escpos@3.0.0-alpha.6:
-    dependencies:
-      get-pixels: 3.3.3
-      iconv-lite: 0.6.3
-      mutable-buffer: 2.2.5
-      qr-image: 3.2.0
 
   etag@1.8.1: {}
 
@@ -1958,6 +2001,8 @@ snapshots:
 
   negotiator@0.6.3: {}
 
+  node-addon-api@8.3.1: {}
+
   node-bitmap@0.0.1: {}
 
   node-domexception@1.0.0: {}
@@ -1965,6 +2010,8 @@ snapshots:
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
+
+  node-gyp-build@4.8.4: {}
 
   normalize-path@3.0.0: {}
 
@@ -2236,6 +2283,12 @@ snapshots:
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  usb@2.15.0:
+    dependencies:
+      '@types/w3c-web-usb': 1.0.10
+      node-addon-api: 8.3.1
+      node-gyp-build: 4.8.4
 
   utils-merge@1.0.1: {}
 

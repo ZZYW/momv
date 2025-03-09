@@ -68,6 +68,21 @@
    ```bash
    npm install
    ```
+6. **创建环境配置文件**：
+   
+   对于**Station 1**（主服务器）, 创建 `.env` 文件:
+   ```bash
+   echo "DASHSCOPE_API_KEY=your_dashscope_api_key" > .env
+   echo "PORT=3001" >> .env
+   ```
+   将 `your_dashscope_api_key` 替换为提供的 API 密钥。
+   
+   对于**Station 2**, 创建 `.env` 文件:
+   ```bash
+   echo "PORT=3001" > .env
+   echo "CENTRAL_BACKEND_URL=http://STATION1_IP:3001" >> .env
+   ```
+   将 `STATION1_IP` 替换为 Station 1 的 IP 地址（Station 1 启动时会显示）。
 
 ### 1.3 配置自启动脚本及快捷方式
 
@@ -93,10 +108,16 @@
      ipconfig getifaddr en0
      ```  
      若用 Wi-Fi 则可能需要 `ipconfig getifaddr en1`，视网卡接口名称而定。  
-   - 记下此 IP（例如 `192.168.1.50`），稍后要写入到 Station2 的脚本里（或在 `.env` 中）作为 `CENTRAL_BACKEND_URL`。
+   - 记下此 IP（例如 `192.168.1.50`），更新 Station2 的 `.env` 文件中的 `CENTRAL_BACKEND_URL` 值。
+     ```bash
+     # 在 Station2 上，更新 .env 文件
+     cd ~/momv
+     echo "PORT=3001" > .env
+     echo "CENTRAL_BACKEND_URL=http://192.168.1.50:3001" >> .env
+     ```
+     （将 `192.168.1.50` 替换为你获取到的 Station1 实际 IP 地址）
 
-> 若你已将 IP 硬编码在 `start02.sh`，请将 Station1 IP 写到脚本中。  
-> 如果网络环境变动，IP 改了，就需重新修改脚本或 `.env`。
+> 注意：如果网络环境变动，IP 改变，需要更新 Station2 的 `.env` 文件中的 IP 地址。
 
 ---
 

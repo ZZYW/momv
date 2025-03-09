@@ -2,10 +2,15 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import dotenv from 'dotenv';
 
-// Import config
-import config from "./config/config.js";
-const { PORT, isProd, central_backend_url } = config;
+// Load environment variables from .env file
+dotenv.config();
+
+// Set config from environment variables
+const PORT = process.env.PORT || 3001;
+const isProd = process.argv.includes("prod");
+const central_backend_url = process.env.CENTRAL_BACKEND_URL;
 
 // Import middleware
 import setupGlobalMiddleware from "./middleware/globalMiddleware.js";

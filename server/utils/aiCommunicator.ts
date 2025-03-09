@@ -1,8 +1,12 @@
 import OpenAI from "openai";
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Initialize OpenAI client using DashScope API
 const openai = new OpenAI({
-    apiKey: process.env.DASHSCOPE_API_KEY, // Ensure environment variable is set
+    apiKey: process.env.DASHSCOPE_API_KEY,
     baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
 });
 
@@ -32,7 +36,7 @@ export const sendPromptToLLM = async (
   options: DynamicBlockOptions = {}
 ): Promise<string | string[]> => {
     if (!process.env.DASHSCOPE_API_KEY) {
-        throw new Error("API key not found. Set DASHSCOPE_API_KEY in environment variables.");
+        throw new Error("API key not found. Please make sure DASHSCOPE_API_KEY is set in your .env file.");
     }
 
     for (let index = 0; index < 4; index++) {

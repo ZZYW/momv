@@ -7,33 +7,28 @@ echo "Starting Mountain of Many Voices - Station 2"
 echo "启动众鸣山项目 - 服务器2"
 echo "=========================================================="
 
-# Create .env file if it doesn't exist
-# 如果.env文件不存在，则创建
-if [ ! -f ~/.momv/.env ]; then
-  echo "Creating .env file... | 创建环境配置文件..."
-  mkdir -p ~/.momv
-  
-  # Prompt for Station1 IP if not provided
-  # 如果未提供服务器1的IP，则提示输入
-  echo "Enter Station1 IP address (or press Enter to enter it later):"
-  echo "请输入服务器1的IP地址（或按Enter键稍后输入）："
-  read STATION1_IP
-  
-  if [ -z "$STATION1_IP" ]; then
-    STATION1_IP="192.168.1.50" # Default placeholder
-    echo "Using placeholder IP. Please edit ~/.momv/.env with the correct Station1 IP"
-    echo "使用默认IP。请编辑 ~/.momv/.env 文件，填入正确的服务器1 IP地址"
-  fi
-  
-  cat > ~/.momv/.env << EOL
-PORT=3001
-CENTRAL_BACKEND_URL=http://${STATION1_IP}:3001
-EOL
+# Check if .env file exists
+# 检查.env文件是否存在
+if [ ! -f .env ]; then
+  echo "ERROR: No .env file found at $(pwd)/.env"
+  echo "错误：未找到配置文件 .env"
+  echo ""
+  echo "Please create a .env file with the following content:"
+  echo "请创建一个包含以下内容的.env文件："
+  echo "-------------------------------------------"
+  echo "PORT=3001"
+  echo "CENTRAL_BACKEND_URL=http://STATION1_IP:3001"
+  echo "-------------------------------------------"
+  echo ""
+  echo "Replace STATION1_IP with the IP address of Station 1"
+  echo "将 STATION1_IP 替换为服务器1的IP地址"
+  echo ""
+  echo "Exiting... | 退出中..."
+  exit 1
 fi
 
-# Navigate to project directory
-# 进入项目目录
-cd ~/momv
+# Already in the project directory
+# 已经在项目目录中
 
 # Start the server in production mode, with remote central backend
 # 以生产模式启动服务器，连接到远程中央后端

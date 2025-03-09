@@ -8,22 +8,25 @@ echo "启动众鸣山项目 - 服务器1（主服务器）"
 echo "Checking for printer connection... | 检查打印机连接..."
 echo "=========================================================="
 
-# Create .env file if it doesn't exist
-# 如果.env文件不存在，则创建
-if [ ! -f ~/.momv/.env ]; then
-  echo "Creating .env file... | 创建环境配置文件..."
-  mkdir -p ~/.momv
-  cat > ~/.momv/.env << EOL
-DASHSCOPE_API_KEY=your_dashscope_api_key
-PORT=3001
-EOL
-  echo "Please edit ~/.momv/.env with your DashScope API key"
-  echo "请编辑 ~/.momv/.env 文件，填入正确的DashScope API密钥"
+# Check if .env file exists
+# 检查.env文件是否存在
+if [ ! -f .env ]; then
+  echo "ERROR: No .env file found at $(pwd)/.env"
+  echo "错误：未找到配置文件 .env"
+  echo ""
+  echo "Please create a .env file with the following content:"
+  echo "请创建一个包含以下内容的.env文件："
+  echo "-------------------------------------------"
+  echo "DASHSCOPE_API_KEY=your_dashscope_api_key"
+  echo "PORT=3001"
+  echo "-------------------------------------------"
+  echo ""
+  echo "Exiting... | 退出中..."
+  exit 1
 fi
 
-# Navigate to project directory
-# 进入项目目录
-cd ~/momv
+# Already in the project directory
+# 已经在项目目录中
 
 # Get the current IP address for troubleshooting
 # 获取当前IP地址以便故障排除

@@ -17,7 +17,7 @@ type QueryType = 'compiledStory' | 'decisions' | 'unknown';
  */
 interface PlaceholderQuery {
   type: QueryType;
-  target?: 'thisPlayer' | 'all';
+  target?: 'thisPlayer' | 'all' | 'nobody';
   questionIds?: string[];
   storyIds?: string[];
   isAll?: boolean;
@@ -88,6 +88,14 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
       target: 'thisPlayer'
     };
   }
+  
+  // Check for story so far for nobody
+  if (queryText.match(/^story so far for nobody$/i)) {
+    return {
+      type: 'compiledStory',
+      target: 'nobody'
+    };
+  }
 
   // Check for decisions query
   // Format: decisions of question#X by [this player|all], from story Y
@@ -125,7 +133,7 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
   }
 
   // If no recognized pattern matches
-  const errorMessage = `Unrecognized placeholder format. Got: "${queryText}". Expected formats: "story so far for this player" or "decisions of question#[ID] by [this player|all], from story [ID]"`;
+  const errorMessage = `Unrecognized placeholder format. Got: "${queryText}". Expected formats: "story so far for this player", "story so far for nobody", or "decisions of question#[ID] by [this player|all], from story [ID]"`;
   console.error(errorMessage);
 
   return {
@@ -188,32 +196,56 @@ function findPlaceholders(text: string): Placeholder[] {
 
 /**
  * Get compiled story for a player up to the current dynamic block
- * @param playerId - The player's ID
+ * @param playerId - The player's ID, or 'nobody' for a version without player choices
  * @param blockId - The current block ID (to compile story up to this point)
+ * @param target - The target specifier ('thisPlayer' or 'nobody')
  * @returns The compiled story text
  */
-async function getCompiledStory(playerId: string, blockId: string | null): Promise<string> {
-  console.log(`Getting compiled story for player: ${playerId} up to block: ${blockId || 'end'}`);
+async function getCompiledStory(playerId: string, blockId: string | null, target: 'thisPlayer' | 'nobody' = 'thisPlayer'): Promise<string> {
+  console.log(`Getting compiled story for ${target === 'nobody' ? 'nobody' : `player: ${playerId}`} up to block: ${blockId || 'end'}`);
 
   try {
     // If blockId is provided, get story only up to this point
     if (blockId) {
-      // Use getStoryBeforeBlockByPlayer to get array of blocks
-      const storyBlocks = await getStoryBeforeBlockByPlayer(playerId, blockId);
+      // For 'nobody' target, we skip player choices
+      if (target === 'nobody') {
+        // Get story blocks without player data
+        const storyBlocks = await getStoryBeforeBlockByPlayer(null, blockId);
+        
+        // Check if blocks were retrieved successfully and it's an array
+        if (!storyBlocks || !Array.isArray(storyBlocks)) {
+          console.error('Failed to retrieve story blocks or result is not an array');
+          return "No story compiled yet.";
+        }
+        
+        // Compile without player context
+        const compiledText = compileStoryText(storyBlocks, {});
+        return compiledText || "No story compiled yet.";
+      } else {
+        // Regular flow for a specific player
+        const storyBlocks = await getStoryBeforeBlockByPlayer(playerId, blockId);
 
-      // Check if blocks were retrieved successfully and it's an array
-      if (!storyBlocks || !Array.isArray(storyBlocks)) {
-        console.error('Failed to retrieve story blocks or result is not an array');
-        return "No story compiled yet.";
+        // Check if blocks were retrieved successfully and it's an array
+        if (!storyBlocks || !Array.isArray(storyBlocks)) {
+          console.error('Failed to retrieve story blocks or result is not an array');
+          return "No story compiled yet.";
+        }
+
+        // Use compileStoryText to convert blocks to text
+        const compiledText = compileStoryText(storyBlocks, { playerId });
+        return compiledText || "No story compiled yet.";
       }
-
-      // Use compileStoryText to convert blocks to text
-      const compiledText = compileStoryText(storyBlocks, { playerId });
-      return compiledText || "No story compiled yet.";
     } else {
       // Otherwise get the full story (fallback)
-      const compiledText = await compileStoryForPlayer(playerId, 0); // 0 means all stories
-      return compiledText || "No story compiled yet.";
+      if (target === 'nobody') {
+        // Get all blocks without player data
+        const storyBlocks = await getStoryBeforeBlockByPlayer(null, null);
+        return compileStoryText(storyBlocks, {}) || "No story compiled yet.";
+      } else {
+        // Regular flow for a specific player
+        const compiledText = await compileStoryForPlayer(playerId, 0); // 0 means all stories
+        return compiledText || "No story compiled yet.";
+      }
     }
   } catch (error: any) {
     console.error('Error getting compiled story:', error);
@@ -353,8 +385,13 @@ async function interpretDynamicBlock(text: string, context: DynamicBlockContext 
       // Process based on query type
       if (query.type === 'compiledStory') {
         console.log('Getting compiled story up to current block...');
-        replacement = await getCompiledStory(playerIdStr, blockId);
-        console.log('Compiled story length:', replacement.length);
+        if (query.target === 'nobody') {
+          replacement = await getCompiledStory(playerIdStr, blockId, 'nobody');
+          console.log('Compiled story (for nobody) length:', replacement.length);
+        } else {
+          replacement = await getCompiledStory(playerIdStr, blockId, 'thisPlayer');
+          console.log('Compiled story length:', replacement.length);
+        }
       }
       else if (query.type === 'decisions' && query.questionIds && query.storyIds && query.target) {
         console.log('Getting decisions...');

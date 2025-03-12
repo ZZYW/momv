@@ -103,6 +103,10 @@
             Import Project
             <span class="tooltip">Load a project from a JSON file</span>
           </button>
+          <button @click="loadStoryJson">
+            Load JSON from story
+            <span class="tooltip">Load the story.json from the corresponding station's input directory</span>
+          </button>
           <button @click="saveProject">
             Save Project
             <span class="tooltip">Save the project to the server</span>
@@ -653,6 +657,102 @@
                   currentSceneId === 1 ? 1 : currentSceneId - 1;
               }
             }
+          },
+          // This function loads the story.json from the corresponding station's input directory
+          loadStoryJson() {
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            const serverUrl = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
+            
+            // Always confirm with the user before loading from disk, regardless of whether the editor has content
+            if (!confirm(`Are you sure you want to load the story.json from disk? This will override the current editor's content!`)) {
+              return;
+            }
+            
+            // Fetch the story.json from the corresponding station's input directory
+            fetch(`${serverUrl}/${this.station}/input/story.json`)
+              .then((res) => {
+                if (!res.ok) {
+                  throw new Error(`Failed to fetch story.json (${res.status} ${res.statusText})`);
+                }
+                return res.json();
+              })
+              .then((data) => {
+                try {
+                  // Use the same processing logic as importJson
+                  if (!data.blocks || !Array.isArray(data.blocks)) {
+                    alert('Error: Invalid story.json format. The file must contain a "blocks" array.');
+                    return;
+                  }
+                  
+                  // Process the imported blocks using the same logic as importJson
+                  const processedBlocks = data.blocks.map((block) => {
+                    // Ensure ID field is consistent
+                    const id = block.id || block.uuid || this.generateUUID();
+                    
+                    // Create a properly structured block based on type
+                    const baseBlock = {
+                      id,
+                      type: block.type,
+                      sceneId: block.sceneId,
+                    };
+                    
+                    switch (block.type) {
+                      case "plain":
+                        return { ...baseBlock, text: block.text || "" };
+                      case "static":
+                        return {
+                          ...baseBlock,
+                          options: Array.isArray(block.options) ? block.options : [],
+                        };
+                      case "dynamic":
+                        return {
+                          ...baseBlock,
+                          blockName: block.blockName || "",
+                          prompt: block.prompt || "",
+                        };
+                      // Handle legacy dynamic block types
+                      case "dynamic-option":
+                      case "dynamic-text":
+                      case "dynamic-word":
+                        return {
+                          ...baseBlock,
+                          type: "dynamic", // Convert old type to new unified type
+                          blockName: block.blockName || "",
+                          prompt: block.prompt || "",
+                        };
+                      case "scene-header":
+                        return {
+                          ...baseBlock,
+                          titleName: block.titleName || "",
+                          useBannerArt: block.useBannerArt || false,
+                          bannerArt: block.bannerArt || "",
+                        };
+                      default:
+                        return baseBlock;
+                    }
+                  });
+                  
+                  // Update the project data
+                  this.blocks = processedBlocks;
+                  this.updateAutosaveTime();
+                  this.autoSaveProject();
+                  
+                  // Display success message
+                  alert(`Successfully loaded story.json from ${this.station}/input/`);
+                } catch (error) {
+                  console.error(`Error processing story.json:`, error);
+                  alert(`Error processing story.json: ${error.message}`);
+                }
+              })
+              .catch((err) => {
+                console.error(`Error loading story.json:`, err);
+                alert(`Error loading story.json: ${err.message}`);
+              });
+            
+            this.$nextTick(() => {
+              window.scrollTo(scrollX, scrollY);
+            });
           },
         },
         mounted() {

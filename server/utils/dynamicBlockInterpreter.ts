@@ -99,7 +99,7 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
 
   // Check for decisions query
   // Format: decisions of question#X by [this player|all], from story Y
-  // Use a more permissive pattern for the question ID to handle UUIDs with hyphens
+  // Updated to support both 3-digit IDs and legacy UUIDs
   const decisionsRegex = /^decisions of question#([a-zA-Z0-9\-\,]+) by (this player|all), from story ([0-9\,]+)$/i;
 
   console.log('Query text:', queryText);

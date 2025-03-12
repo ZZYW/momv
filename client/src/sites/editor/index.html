@@ -15,6 +15,12 @@
             Block Name:
             <input type="text" v-model="block.blockName" />
           </div>
+          <div style="margin-top: 5px;">
+            <label>
+              <input type="checkbox" v-model="block.generateOptions" />
+              Generate Options (dynamic choice block)
+            </label>
+          </div>
         </div>
         <!-- Cheatsheet section (collapsible) -->
         <div style="margin-top: 10px; margin-bottom: 10px">
@@ -381,6 +387,7 @@
               type: "dynamic",
               blockName: "",
               prompt: "",
+              generateOptions: false,
             });
           },
           addSceneHeaderBlock() {
@@ -459,6 +466,7 @@
                   ...baseBlock,
                   blockName: block.blockName,
                   prompt: block.prompt,
+                  generateOptions: !!block.generateOptions,
                 };
               } else if (block.type === "scene-header") {
                 return {
@@ -552,16 +560,25 @@
                           ...baseBlock,
                           blockName: block.blockName || "",
                           prompt: block.prompt || "",
+                          generateOptions: !!block.generateOptions,
                         };
-                      // Handle legacy dynamic block types
+                      // Handle legacy dynamic block types (convert to unified dynamic type)
                       case "dynamic-option":
+                        return {
+                          ...baseBlock,
+                          type: "dynamic", // Convert to unified type
+                          blockName: block.blockName || "",
+                          prompt: block.prompt || "",
+                          generateOptions: true, // This was an option-generating block
+                        };
                       case "dynamic-text":
                       case "dynamic-word":
                         return {
                           ...baseBlock,
-                          type: "dynamic", // Convert old type to new unified type
+                          type: "dynamic", // Convert to unified type
                           blockName: block.blockName || "",
                           prompt: block.prompt || "",
+                          generateOptions: false, // This was a text-generating block
                         };
                       case "scene-header":
                         return {
@@ -710,16 +727,25 @@
                           ...baseBlock,
                           blockName: block.blockName || "",
                           prompt: block.prompt || "",
+                          generateOptions: !!block.generateOptions,
                         };
-                      // Handle legacy dynamic block types
+                      // Handle legacy dynamic block types (convert to unified dynamic type)
                       case "dynamic-option":
+                        return {
+                          ...baseBlock,
+                          type: "dynamic", // Convert to unified type
+                          blockName: block.blockName || "",
+                          prompt: block.prompt || "",
+                          generateOptions: true, // This was an option-generating block
+                        };
                       case "dynamic-text":
                       case "dynamic-word":
                         return {
                           ...baseBlock,
-                          type: "dynamic", // Convert old type to new unified type
+                          type: "dynamic", // Convert to unified type
                           blockName: block.blockName || "",
                           prompt: block.prompt || "",
+                          generateOptions: false, // This was a text-generating block
                         };
                       case "scene-header":
                         return {

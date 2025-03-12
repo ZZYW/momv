@@ -278,9 +278,10 @@ async function getDecisions(
         storyIds.map(id => parseInt(id, 10))
       );
 
-      // Filter to only question blocks (static and dynamic-option)
+      // Filter to only question blocks (static or dynamic with generateOptions)
       const questionBlocks = allBlocks.filter(block =>
-        block.type === 'static' || block.type === 'dynamic-option'
+        block.type === 'static' || 
+        (block.type === 'dynamic' && block.generateOptions === true)
       );
 
       // Replace 'all' with the actual question IDs

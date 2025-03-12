@@ -238,24 +238,6 @@ document.addEventListener("alpine:init", () => {
           }
         },
         
-        // Keep old dynamic types for backward compatibility
-        "dynamic-option": (b) => `
-          <div class="dynamic-container">
-            <div class="loading-indicator">Loading dynamic options... <span class="loading"></span></div>
-            <div class="dynamic-options-container" data-uuid="${b.id}"></div>
-          </div>`,
-
-        "dynamic-text": (b) => `
-          <div class="dynamic-container">
-            <div class="loading-indicator">Generating text... <span class="loading"></span></div>
-            <div class="dynamic-text-container" data-uuid="${b.id}"></div>
-          </div>`,
-
-        "dynamic-word": (b) => `
-          <div class="dynamic-container">
-            <div class="loading-indicator">Generating word... <span class="loading"></span></div>
-            <div class="dynamic-word-container" data-uuid="${b.id}"></div>
-          </div>`,
 
         "scene-header": (b) => {
           // Generate the scene header HTML
@@ -635,12 +617,18 @@ document.addEventListener("alpine:init", () => {
     },
 
     getDynamicContainerType(container) {
-      if (container.classList.contains("dynamic-options-container"))
-        return "dynamic-option";
+      // For unified dynamic type, use the container class to determine rendering approach
+      if (container.classList.contains("dynamic-options-container")) {
+        // If the container is for options, return the unified 'dynamic' type
+        // The renderDynamicContent function will handle rendering based on container class
+        return "dynamic"; 
+      }
       if (container.classList.contains("dynamic-text-container"))
-        return "dynamic-text";
+        return "dynamic"; // Unified type for text content
       if (container.classList.contains("dynamic-word-container"))
-        return "dynamic-word";
+        return "dynamic"; // Unified type for word content
+        
+      // If no specific container class is found, return empty string
       return "";
     },
 
@@ -665,21 +653,21 @@ document.addEventListener("alpine:init", () => {
       console.log(`[FETCH] Station ID: ${this.config.stationId}, Station Number: ${this.config.stationNumber}`);
 
       // Determine the blockType to send to the server
-      let serverBlockType = blockType;
+      let serverBlockType = 'dynamic'; // Always use the unified 'dynamic' block type for server
       let generateOptions = false;
       
-      // Handle the new unified dynamic type
+      // Handle block types to determine generateOptions flag
       if (blockData.type === 'dynamic') {
-        serverBlockType = 'dynamic';
+        // For unified dynamic block, use its generateOptions property
         generateOptions = !!blockData.generateOptions;
-        
-        // Also update the container type for rendering correctly later
-        if (generateOptions) {
-          blockType = 'dynamic-option';
-        } else {
-          blockType = 'dynamic-text';
-        }
+      } else if (blockData.type === 'dynamic-option') {
+        // For legacy dynamic-option, set generateOptions to true
+        generateOptions = true;
       }
+      
+      // Keep the original blockType for rendering
+      // This allows the renderDynamicContent function to properly handle both 
+      // unified and legacy block types
       
       const payload = {
         message: blockData.prompt || "",
@@ -722,64 +710,82 @@ document.addEventListener("alpine:init", () => {
     },
 
     renderDynamicContent(container, data, blockType, blockID) {
-      const renderers = {
-        "dynamic-option": (container, data, blockID) => {
-          const options = Array.isArray(data) ? data : ["?", "?", "?"];
-          container.innerHTML = "";
+      // Render function for option-generating blocks
+      const renderOptions = (container, data, blockID) => {
+        const options = Array.isArray(data) ? data : ["?", "?", "?"];
+        container.innerHTML = "";
 
-          options.forEach((opt, i) => {
-            // Add divider before all options except the first one
-            if (i > 0) {
-              const dividerEl = document.createElement("div");
-              dividerEl.className = "option-divider";
-              dividerEl.textContent = "/";
-              container.appendChild(dividerEl);
-            }
-
-            const optEl = document.createElement("div");
-            optEl.className = "static-option";
-            optEl.dataset.index = i;
-            optEl.textContent = opt;
-
-            optEl.addEventListener("click", () => {
-              this.selectOption(optEl, blockID, "dynamic-option");
-            });
-
-            container.appendChild(optEl);
-          });
-        },
-
-        "dynamic-text": (container, data) => {
-          // Handle different data formats: string, object, or array
-          let contentToDisplay = '';
-          
-          if (typeof data === 'string') {
-            // String data can be displayed directly
-            contentToDisplay = data;
-          } else if (typeof data === 'object' && data !== null) {
-            // For objects, check if they have a deliverable property (AI response structure)
-            if (data.deliverable) {
-              if (typeof data.deliverable === 'string') {
-                contentToDisplay = data.deliverable;
-              } else if (typeof data.deliverable === 'object' && data.deliverable !== null) {
-                // If deliverable is an object, format each key-value pair
-                contentToDisplay = Object.entries(data.deliverable)
-                  .map(([key, value]) => `<div class="dynamic-section"><h3>${key}</h3><p>${value}</p></div>`)
-                  .join('');
-              }
-            } else {
-              // Fallback: convert object to formatted JSON string
-              contentToDisplay = JSON.stringify(data, null, 2).replace(/\n/g, '<br>').replace(/\s\s/g, '&nbsp;&nbsp;');
-            }
+        options.forEach((opt, i) => {
+          // Add divider before all options except the first one
+          if (i > 0) {
+            const dividerEl = document.createElement("div");
+            dividerEl.className = "option-divider";
+            dividerEl.textContent = "/";
+            container.appendChild(dividerEl);
           }
-          
-          container.innerHTML = `<div class="dynamic-text-result">${contentToDisplay || ""}</div>`;
+
+          const optEl = document.createElement("div");
+          optEl.className = "static-option";
+          optEl.dataset.index = i;
+          optEl.textContent = opt;
+
+          optEl.addEventListener("click", () => {
+            this.selectOption(optEl, blockID, "dynamic");
+          });
+
+          container.appendChild(optEl);
+        });
+      };
+
+      // Render function for text-generating blocks
+      const renderText = (container, data) => {
+        // Handle different data formats: string, object, or array
+        let contentToDisplay = '';
+        
+        if (typeof data === 'string') {
+          // String data can be displayed directly
+          contentToDisplay = data;
+        } else if (typeof data === 'object' && data !== null) {
+          // For objects, check if they have a deliverable property (AI response structure)
+          if (data.deliverable) {
+            if (typeof data.deliverable === 'string') {
+              contentToDisplay = data.deliverable;
+            } else if (typeof data.deliverable === 'object' && data.deliverable !== null) {
+              // If deliverable is an object, format each key-value pair
+              contentToDisplay = Object.entries(data.deliverable)
+                .map(([key, value]) => `<div class="dynamic-section"><h3>${key}</h3><p>${value}</p></div>`)
+                .join('');
+            }
+          } else {
+            // Fallback: convert object to formatted JSON string
+            contentToDisplay = JSON.stringify(data, null, 2).replace(/\n/g, '<br>').replace(/\s\s/g, '&nbsp;&nbsp;');
+          }
+        }
+        
+        container.innerHTML = `<div class="dynamic-text-result">${contentToDisplay || ""}</div>`;
+      };
+
+      // Unified renderer system that handles both legacy and new types
+      const renderers = {
+        // Unified dynamic block renderer based on block type
+        "dynamic": (container, data, blockID) => {
+          // Check if this container is for options or text based on class
+          if (container.classList.contains("dynamic-options-container")) {
+            renderOptions(container, data, blockID);
+          } else {
+            renderText(container, data);
+          }
         },
 
+        // Legacy handlers for backward compatibility (use the same rendering functions)
+        "dynamic-option": (container, data, blockID) => {
+          renderOptions(container, data, blockID);
+        },
+        "dynamic-text": (container, data) => {
+          renderText(container, data);
+        },
         "dynamic-word": (container, data) => {
-          container.innerHTML = `<span class="dynamic-word">${
-            data || ""
-          }</span>`;
+          container.innerHTML = `<span class="dynamic-word">${data || ""}</span>`;
         },
       };
 
@@ -836,10 +842,10 @@ document.addEventListener("alpine:init", () => {
 
       // Extract data
       const chosenText = elem.textContent;
-      const chosenIndex =
-        type === "static"
-          ? parseInt(elem.dataset.idx)
-          : parseInt(elem.dataset.index);
+      const chosenIndex = 
+        type === "static" 
+          ? parseInt(elem.dataset.idx) 
+          : parseInt(elem.dataset.index); // Works for both 'dynamic' and legacy types
 
       // Record choice on server
       this.recordChoice(

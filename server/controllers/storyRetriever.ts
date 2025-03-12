@@ -28,6 +28,9 @@ export interface StoryBlock {
   titleName?: string;
   playerChoice?: PlayerChoice;
   dynamicContent?: string | string[];
+  prompt?: string;
+  blockName?: string;
+  generateOptions?: boolean;
 }
 
 /**
@@ -303,38 +306,41 @@ const blockRenderers: Record<string, (block: StoryBlock, context: RenderContext)
     }
   },
   
-  'dynamic-text': (block) => {
-    // Get content from the dynamicContent property we set in enhanceBlocksWithPlayerData
-    if (block.dynamicContent) {
-      const content = block.dynamicContent;
-      // Handle both string and string[] by converting arrays to strings if needed
-      return typeof content === 'string' ? content : content.join('\n');
-    }
-    
-    return `<dynamic content not generated for block ${block.id.substring(0, 8)}...>`;
-  },
   
-  'dynamic-option': (block) => {
-    // First check if we have dynamic content
-    if (block.dynamicContent) {
-      // If we have both dynamic content and a player choice, format with choice
+  // Unified dynamic block handler
+  'dynamic': (block) => {
+    // Check if this is an option-generating block
+    if (block.generateOptions) {
+      // First check if we have dynamic content
+      if (block.dynamicContent) {
+        // If we have both dynamic content and a player choice, format with choice
+        if (block.playerChoice && block.playerChoice.chosenText) {
+          const options = block.playerChoice.availableOptions || [];
+          return `<${block.playerChoice.chosenText}> (dynamic choices: ${options.join(', ')})`;
+        }
+        // Format dynamic content: convert array to string if needed
+        return Array.isArray(block.dynamicContent) 
+          ? block.dynamicContent.join(', ')
+          : block.dynamicContent;
+      }
+      
+      // Fall back to just showing the choice if available
       if (block.playerChoice && block.playerChoice.chosenText) {
         const options = block.playerChoice.availableOptions || [];
         return `<${block.playerChoice.chosenText}> (dynamic choices: ${options.join(', ')})`;
       }
-      // Format dynamic content: convert array to string if needed
-      return Array.isArray(block.dynamicContent) 
-        ? block.dynamicContent.join(', ')
-        : block.dynamicContent;
+      
+      return `<dynamic choice not made>`;
+    } else {
+      // Handle as a text-generating block
+      if (block.dynamicContent) {
+        const content = block.dynamicContent;
+        // Handle both string and string[] by converting arrays to strings if needed
+        return typeof content === 'string' ? content : content.join('\n');
+      }
+      
+      return `<dynamic content not generated for block ${block.id.substring(0, 8)}...>`;
     }
-    
-    // Fall back to just showing the choice if available
-    if (block.playerChoice && block.playerChoice.chosenText) {
-      const options = block.playerChoice.availableOptions || [];
-      return `<${block.playerChoice.chosenText}> (dynamic choices: ${options.join(', ')})`;
-    }
-    
-    return `<dynamic choice not made>`;
   },
   
   // Default renderer for any unhandled block types

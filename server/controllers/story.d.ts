@@ -36,6 +36,9 @@ export interface StoryBlock {
   /** AI prompt for dynamic blocks */
   prompt?: string;
   
+  /** Flag to determine if the dynamic block should generate options */
+  generateOptions?: boolean;
+  
   /** Context references for dynamic blocks */
   context?: ContextReference[];
   
@@ -53,9 +56,7 @@ export type StoryBlockType =
   | 'scene-header'  // Scene title/heading
   | 'plain'         // Regular text content
   | 'static'        // Fixed set of options for player to choose
-  | 'dynamic-text'  // AI-generated text content
-  | 'dynamic-option'// AI-generated options for player to choose
-  | 'dynamic-word'; // AI-generated word/short phrase
+  | 'dynamic';      // Universal AI-generated content (text or options based on generateOptions flag)
 
 /**
  * Player's choice for a specific block

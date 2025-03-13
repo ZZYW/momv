@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="editor.css" />
   </head>
   <body>
-    <!-- Dynamic Block Template (simplified with just a textarea and cheatsheet) -->
+    <!-- Dynamic Block Template (simplified with just a textarea) -->
     <script type="text/x-template" id="dynamic-block-template">
       <div>
         <div class="dynamic-input-row">
@@ -22,55 +22,15 @@
             </label>
           </div>
         </div>
-        <!-- Cheatsheet section (collapsible) -->
+        <!-- Prompt Section -->
         <div style="margin-top: 10px; margin-bottom: 10px">
-          <button @click="toggleCheatsheet" class="cheatsheet-toggle">
-            {{ showCheatsheet ? 'Hide Cheatsheet' : 'Show Cheatsheet' }}
-          </button>
-          <div v-if="showCheatsheet" class="cheatsheet-content">
-            <ul>
-            <li><code>{get story so far for this player}</code></li>
-            <p>compile the story so far till this point in a human-format paragraph, including the selections and dynamically generated content</p>
-            </ul>
-            <p><strong>Decisions Query:</strong></p>
-            <ul>
-            <li><code>{get decisions of question#X by this player, from story Y}</code><ul>
-            <li><strong>Format:</strong> <code>question#&lt;ID&gt;</code>, <code>story &lt;ID&gt;</code>.</li>
-            <li><strong>Multiple IDs:</strong> Comma-separate question &amp; story IDs (e.g., <code>question#q1,q2 by this player, from story 1,2</code>).</li>
-            <li><strong>Example:</strong> <code>{get decisions of question#123e4567-e89b-12d3-a456-426614174000 by this player, from story 1}</code></li>
-            </ul>
-            </li>
-            </ul>
-            
-            <p><strong>Single Answer Query:</strong></p>
-            <ul>
-            <li><code>{get answer of question#X from this player}</code><ul>
-            <li><strong>Format:</strong> <code>question#&lt;ID&gt;</code></li>
-            <li><strong>Description:</strong> Returns only the player's answer for a specific question, without any formatting or context.</li>
-            <li><strong>Works in plain blocks:</strong> This query can be used in both dynamic and plain blocks. In plain blocks, it's processed on the client-side without requiring a server call.</li>
-            <li><strong>Example:</strong> <code>{get answer of question#123 from this player}</code></li>
-            </ul>
-            </li>
-            
-            <li><code>{get codename}</code><ul>
-            <li><strong>Description:</strong> Returns the player's codename that was assigned at the end of Station 1.</li>
-            <li><strong>Works in plain blocks:</strong> This query can be used in plain blocks and is processed on the client-side.</li>
-            <li><strong>Example:</strong> <code>{get codename}</code></li>
-            </ul>
-            </li>
-            </ul>
-          </div>
-
-        </div>
-        <!-- Prompt Section (simplified to just a textarea) -->
-        <div style="margin-top: 5px; margin-bottom: 5px">
           Prompt:
           <br />
           <textarea
             v-model="block.prompt"
             class="scrollable-textarea"
             rows="14"
-            placeholder="Enter your prompt here with full autonomy. Use {} for dynamic queries (see cheatsheet)."
+            placeholder="Enter your prompt here with full autonomy. Use {} for dynamic queries (see Cheatsheet button in toolbar)."
             style="overflow-y: auto; resize: vertical; height: 220px;"
           ></textarea>
         </div>
@@ -135,6 +95,56 @@
             Save Project
             <span class="tooltip">Save the project to the server</span>
           </button>
+          <button @click="toggleGlobalCheatsheet" class="cheatsheet-button">
+            Cheatsheet
+            <span class="tooltip">Show a reference guide for dynamic queries</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Global Cheatsheet Popup -->
+      <div v-if="showGlobalCheatsheet" class="global-cheatsheet-overlay" @click="toggleGlobalCheatsheet">
+        <div class="global-cheatsheet-content" @click.stop>
+          <div class="global-cheatsheet-header">
+            <h2>Query Cheatsheet</h2>
+            <button @click="toggleGlobalCheatsheet" class="close-button">×</button>
+          </div>
+          <div class="global-cheatsheet-body">
+            <ul>
+              <li><code>{get story so far for this player}</code></li>
+              <p>compile the story so far till this point in a human-format paragraph, including the selections and dynamically generated content</p>
+            </ul>
+            <p><strong>Decisions Query:</strong></p>
+            <ul>
+              <li><code>{get decisions of question#X by this player, from story Y}</code>
+                <ul>
+                  <li><strong>Format:</strong> <code>question#&lt;ID&gt;</code>, <code>story &lt;ID&gt;</code>.</li>
+                  <li><strong>Multiple IDs:</strong> Comma-separate question &amp; story IDs (e.g., <code>question#q1,q2 by this player, from story 1,2</code>).</li>
+                  <li><strong>Example:</strong> <code>{get decisions of question#123e4567-e89b-12d3-a456-426614174000 by this player, from story 1}</code></li>
+                </ul>
+              </li>
+            </ul>
+            
+            <p><strong>Single Answer Query:</strong></p>
+            <ul>
+              <li><code>{get answer of question#X from this player}</code>
+                <ul>
+                  <li><strong>Format:</strong> <code>question#&lt;ID&gt;</code></li>
+                  <li><strong>Description:</strong> Returns only the player's answer for a specific question, without any formatting or context.</li>
+                  <li><strong>Works in plain blocks:</strong> This query can be used in both dynamic and plain blocks. In plain blocks, it's processed on the client-side without requiring a server call.</li>
+                  <li><strong>Example:</strong> <code>{get answer of question#123 from this player}</code></li>
+                </ul>
+              </li>
+              
+              <li><code>{get codename}</code>
+                <ul>
+                  <li><strong>Description:</strong> Returns the player's codename that was assigned at the end of Station 1.</li>
+                  <li><strong>Works in plain blocks:</strong> This query can be used in plain blocks and is processed on the client-side.</li>
+                  <li><strong>Example:</strong> <code>{get codename}</code></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -275,6 +285,7 @@
             autosaveTime: "",
             blocks: [],
             activeAddMenuIndex: null, // Track which block's add menu is open
+            showGlobalCheatsheet: false, // Control the global cheatsheet visibility
           };
         },
         computed: {
@@ -456,6 +467,11 @@
             } else {
               this.activeAddMenuIndex = index;
             }
+          },
+          
+          // Toggle the global cheatsheet visibility
+          toggleGlobalCheatsheet() {
+            this.showGlobalCheatsheet = !this.showGlobalCheatsheet;
           },
           // Add a new block after the specified index
           addBlockAfter(index, blockType) {
@@ -890,20 +906,12 @@
       app.component("dynamic-block", {
         template: "#dynamic-block-template",
         props: ["block"],
-        data() {
-          return {
-            showCheatsheet: false, // Cheatsheet is collapsed by default
-          };
-        },
         computed: {
           parentContextBlocks() {
             return this.$parent.contextBlocks;
           },
         },
         methods: {
-          toggleCheatsheet() {
-            this.showCheatsheet = !this.showCheatsheet;
-          },
           getIndex(blockItem) {
             return this.$parent.blocks.indexOf(blockItem);
           },

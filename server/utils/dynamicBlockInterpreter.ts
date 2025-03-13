@@ -10,7 +10,7 @@ import {
 /**
  * Placeholder query types
  */
-type QueryType = 'compiledStory' | 'decisions' | 'unknown';
+type QueryType = 'compiledStory' | 'decisions' | 'answer' | 'unknown';
 
 /**
  * Interface for a parsed placeholder query
@@ -19,6 +19,7 @@ interface PlaceholderQuery {
   type: QueryType;
   target?: 'thisPlayer' | 'all' | 'nobody';
   questionIds?: string[];
+  questionId?: string;  // Single question ID for the answer query
   storyIds?: string[];
   isAll?: boolean;
   originalText?: string;
@@ -97,6 +98,30 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
     };
   }
 
+  // Check for single answer query
+  // Format: answer of question#X from this player
+  const answerRegex = /^answer of question#([a-zA-Z0-9\-]+) from this player$/i;
+  const answerMatch = queryText.match(answerRegex);
+
+  if (answerMatch) {
+    console.log('Answer match found:', answerMatch);
+    const questionId = answerMatch[1].trim();
+    
+    console.log('Parsed into:', {
+      type: 'answer',
+      questionId,
+      target: 'thisPlayer'
+    });
+
+    return {
+      type: 'answer',
+      questionId,
+      target: 'thisPlayer'
+    };
+  } else {
+    console.log('No match for answer pattern');
+  }
+
   // Check for decisions query
   // Format: decisions of question#X by [this player|all], from story Y
   // Updated to support both 3-digit IDs and legacy UUIDs
@@ -133,7 +158,7 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
   }
 
   // If no recognized pattern matches
-  const errorMessage = `Unrecognized placeholder format. Got: "${queryText}". Expected formats: "story so far for this player", "story so far for nobody", or "decisions of question#[ID] by [this player|all], from story [ID]"`;
+  const errorMessage = `Unrecognized placeholder format. Got: "${queryText}". Expected formats: "story so far for this player", "story so far for nobody", "answer of question#[ID] from this player", or "decisions of question#[ID] by [this player|all], from story [ID]"`;
   console.error(errorMessage);
 
   return {
@@ -261,6 +286,30 @@ async function getCompiledStory(playerId: string, blockId: string | null, target
  * @param playerId - The current player's ID (if target is 'thisPlayer')
  * @returns Formatted decision information
  */
+/**
+ * Get a player's answer for a specific question
+ * @param questionId - The question ID to retrieve the answer for
+ * @param playerId - The player's ID
+ * @returns Promise<string> - The player's answer as a string
+ */
+async function getAnswer(questionId: string, playerId: string): Promise<string> {
+  console.log(`Getting answer for question: ${questionId}, player: ${playerId}`);
+
+  try {
+    const blockData = await getBlockData(questionId, playerId);
+
+    if (blockData && blockData.playerChoice && blockData.playerChoice.chosenText) {
+      // Return just the chosen text without any formatting
+      return blockData.playerChoice.chosenText;
+    } else {
+      return '';  // Return empty string if no answer is found
+    }
+  } catch (error: any) {
+    console.error('Error getting answer:', error);
+    return `[Error retrieving answer: ${error.message}]`;
+  }
+}
+
 async function getDecisions(
   questionIds: string[],
   target: 'thisPlayer' | 'all',
@@ -394,6 +443,14 @@ async function interpretDynamicBlock(text: string, context: DynamicBlockContext 
           console.log('Compiled story length:', replacement.length);
         }
       }
+      else if (query.type === 'answer' && query.questionId && query.target === 'thisPlayer') {
+        console.log('Getting answer for specific question...');
+        replacement = await getAnswer(
+          query.questionId,
+          playerIdStr
+        );
+        console.log('Answer result:', replacement);
+      }
       else if (query.type === 'decisions' && query.questionIds && query.storyIds && query.target) {
         console.log('Getting decisions...');
         replacement = await getDecisions(
@@ -450,6 +507,7 @@ export {
   interpretDynamicBlock,
   findPlaceholders,
   parsePlaceholder,
+  getAnswer
 };
 
 export default {

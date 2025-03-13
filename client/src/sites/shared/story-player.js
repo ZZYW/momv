@@ -68,6 +68,7 @@ document.addEventListener("alpine:init", () => {
 
     // ===== INITIALIZATION =====
     init() {
+      console.log("Initializing story player...");
       this.loadStory();
     },
 
@@ -109,6 +110,9 @@ document.addEventListener("alpine:init", () => {
               firstPassage.classList.add("active");
               this.loadDynamicContentForPassage(firstPassage).then(() => {
                 this.setupContinueButton(firstPassage);
+                
+                // After everything is loaded, process any placeholders in plain blocks
+                this.processAllPlainBlockPlaceholders();
               });
             }
           } else {
@@ -127,6 +131,55 @@ document.addEventListener("alpine:init", () => {
         .finally(() => {
           this.state.isLoading = false;
         });
+    },
+    
+    // Process all plain blocks in the current passage to replace placeholders
+    processAllPlainBlockPlaceholders() {
+      console.log("Processing all plain blocks for placeholders...");
+      const plainBlocks = document.querySelectorAll('.plain');
+      
+      plainBlocks.forEach((block, index) => {
+        console.log(`Processing plain block ${index}`);
+        const originalContent = block.innerHTML;
+        
+        // Check for answer placeholders
+        if (originalContent.includes('{get answer of question#')) {
+          console.log(`Block ${index} contains answer placeholders, processing...`);
+          
+          // Use regex to find all question IDs in the content
+          const regex = /\{get\s+answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player\}/gi;
+          let match;
+          let processedContent = originalContent;
+          
+          // Reset regex lastIndex
+          regex.lastIndex = 0;
+          
+          // Process each placeholder
+          while ((match = regex.exec(originalContent)) !== null) {
+            const fullMatch = match[0];
+            const questionId = match[1];
+            
+            console.log(`Found placeholder for question ${questionId}`);
+            
+            // Get the answer
+            const answer = this.getPlayerAnswerForQuestion(questionId);
+            
+            if (answer) {
+              console.log(`Retrieved answer: "${answer}", replacing placeholder`);
+              // Replace this specific instance
+              processedContent = processedContent.replace(fullMatch, answer);
+            } else {
+              console.log(`No answer found for question ${questionId}`);
+            }
+          }
+          
+          // Update the block content if changes were made
+          if (processedContent !== originalContent) {
+            console.log(`Updating block ${index} with processed content`);
+            block.innerHTML = processedContent;
+          }
+        }
+      });
     },
 
     groupBlocksIntoPassages() {
@@ -202,7 +255,11 @@ document.addEventListener("alpine:init", () => {
     renderBlockContent(block) {
       // Block renderers by type
       const renderers = {
-        plain: (b) => `<div class="plain">${b.text || ""}</div>`,
+        plain: (b) => {
+          // Check if text contains any placeholders that need processing
+          const text = this.processPlainBlockPlaceholders(b.text || "");
+          return `<div class="plain">${text}</div>`;
+        },
 
         static: (b) => {
           if (!Array.isArray(b.options))
@@ -880,6 +937,27 @@ document.addEventListener("alpine:init", () => {
         (ctx) => ctx.value
       );
 
+      // Store the selection in localStorage for synchronous access in plain blocks
+      try {
+        const selections = JSON.parse(localStorage.getItem(`selections_${this.config.playerId}`) || '{}');
+        selections[blockID] = {
+          chosenIndex,
+          chosenText,
+          availableOptions
+        };
+        localStorage.setItem(`selections_${this.config.playerId}`, JSON.stringify(selections));
+        
+        // Also store in memory on the block itself
+        if (blockData) {
+          blockData._selectedOption = {
+            index: chosenIndex,
+            text: chosenText
+          };
+        }
+      } catch (err) {
+        console.error('Error saving selection to localStorage:', err);
+      }
+
       // Log the player ID being used in the request
       console.log("Recording choice with player ID:", this.config.playerId);
       
@@ -898,6 +976,37 @@ document.addEventListener("alpine:init", () => {
         }),
       }).catch((err) => {
         this.log("Error recording choice:", err);
+      });
+      
+      // Update any plain blocks that might be using this answer
+      this.updatePlainBlocksWithAnswer(blockID, chosenText);
+    },
+    
+    // Update any plain blocks that might be using the answer
+    updatePlainBlocksWithAnswer(questionId, answer) {
+      console.log(`Updating plain blocks with answer for question ${questionId}: "${answer}"`);
+      
+      // Find all plain blocks currently displayed
+      const plainBlocks = document.querySelectorAll('.plain');
+      console.log(`Found ${plainBlocks.length} plain blocks to check`);
+      
+      // Check each plain block for placeholders using this question ID
+      plainBlocks.forEach((block, index) => {
+        console.log(`Checking plain block ${index} content:`, block.innerHTML);
+        
+        // Use a more flexible pattern to match placeholders
+        const pattern = new RegExp(`\\{get\\s+answer\\s+of\\s+question#${questionId}\\s+from\\s+this\\s+player\\}`, 'gi');
+        
+        // If the block contains a placeholder for this question
+        if (pattern.test(block.innerHTML)) {
+          console.log(`Found placeholder in block ${index}, replacing with "${answer}"`);
+          
+          // Replace the placeholder with the answer
+          block.innerHTML = block.innerHTML.replace(pattern, answer);
+          console.log(`Block updated. New content:`, block.innerHTML);
+        } else {
+          console.log(`No placeholder found in block ${index}`);
+        }
       });
     },
 
@@ -1016,6 +1125,131 @@ document.addEventListener("alpine:init", () => {
           }, 3000); // Match the CSS animation duration (3s)
         }, 1000); // Wait for fade-out to complete (adjust if needed)
       });
+    },
+    
+    // Process placeholders in plain blocks without sending to server
+    processPlainBlockPlaceholders(text) {
+      if (!text || typeof text !== 'string') {
+        return text; // Return original text if not a string
+      }
+      
+      console.log("Processing plain block text:", text);
+      
+      // Check if the text contains any placeholders
+      if (!text.includes('{get answer')) {
+        console.log("No placeholders found");
+        return text;
+      }
+      
+      // Look for {get answer of question#xxx from this player} pattern
+      // Made regex more flexible to handle different spacing and casing
+      const placeholder_regex = /\{get\s+answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player\}/gi;
+      
+      console.log("Looking for placeholders with regex:", placeholder_regex.toString());
+      
+      // Replace each placeholder with the actual answer
+      const result = text.replace(placeholder_regex, (match, questionId) => {
+        console.log(`Found placeholder: ${match}, extracting question ID: ${questionId}`);
+        // Try to get the answer from localStorage or other client-side storage
+        const answer = this.getPlayerAnswerForQuestion(questionId);
+        console.log(`Answer for ${questionId}: "${answer}"`);
+        return answer || match; // Return answer if found, otherwise keep original placeholder
+      });
+      
+      console.log("Processed text:", result);
+      return result;
+    },
+    
+    // Get player's answer for a specific question from client-side storage
+    getPlayerAnswerForQuestion(questionId) {
+      console.log(`Trying to get answer for question ID: ${questionId}`);
+      
+      // First check localStorage
+      try {
+        const selections = localStorage.getItem(`selections_${this.config.playerId}`) || '{}';
+        const parsedSelections = JSON.parse(selections);
+        if (parsedSelections[questionId]) {
+          console.log(`Found answer in localStorage: ${parsedSelections[questionId].chosenText}`);
+          return parsedSelections[questionId].chosenText || '';
+        }
+      } catch (err) {
+        console.error('Error parsing selections from localStorage:', err);
+      }
+      
+      // Next, check if the block exists and check for playerChoice in block data
+      const blockData = this.state.projectBlocks.find(b => b.id === questionId);
+      if (blockData) {
+        console.log(`Found block with ID ${questionId}`, blockData);
+        
+        // Check if it has playerChoice from server data
+        if (blockData.playerChoice && blockData.playerChoice.chosenText) {
+          console.log(`Found playerChoice in block data: ${blockData.playerChoice.chosenText}`);
+          return blockData.playerChoice.chosenText;
+        }
+        
+        // Check for _selectedOption from client-side selection
+        if (blockData._selectedOption && blockData._selectedOption.text) {
+          console.log(`Found _selectedOption in block data: ${blockData._selectedOption.text}`);
+          return blockData._selectedOption.text;
+        }
+      }
+      
+      // Get directly from server
+      console.log(`Fetching answer for question ${questionId} from server`);
+      this.fetchPlayerAnswerFromServer(questionId);
+      
+      // Return empty for now, will be updated on the next render
+      return '';
+    },
+    
+    // Fetch player's answer from server if not available client-side
+    fetchPlayerAnswerFromServer(questionId) {
+      const url = `${this.config.serverUrl}/get-player-answer?playerId=${this.config.playerId}&questionId=${questionId}`;
+      console.log(`Fetching player answer from: ${url}`);
+      
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            console.error(`Server returned error: ${response.status}`);
+            throw new Error('Failed to fetch answer');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log(`Server response for question ${questionId}:`, data);
+          
+          if (data && data.answer) {
+            // Save the answer to localStorage for future use
+            try {
+              const selections = JSON.parse(localStorage.getItem(`selections_${this.config.playerId}`) || '{}');
+              selections[questionId] = { chosenText: data.answer };
+              localStorage.setItem(`selections_${this.config.playerId}`, JSON.stringify(selections));
+              console.log(`Saved answer to localStorage: ${data.answer}`);
+              
+              // Update UI for all matching plain blocks
+              const plainBlocks = document.querySelectorAll('.plain');
+              console.log(`Found ${plainBlocks.length} plain blocks to check for updates`);
+              
+              plainBlocks.forEach((block, index) => {
+                console.log(`Checking plain block ${index} content:`, block.innerHTML);
+                
+                // Use a more flexible pattern for replacement to match the original pattern 
+                // that might have different spacing and casing
+                const pattern = new RegExp(`\\{get\\s+answer\\s+of\\s+question#${questionId}\\s+from\\s+this\\s+player\\}`, 'gi');
+                
+                if (pattern.test(block.innerHTML)) {
+                  console.log(`Block ${index} contains placeholder for question ${questionId}, replacing with "${data.answer}"`);
+                  block.innerHTML = block.innerHTML.replace(pattern, data.answer);
+                }
+              });
+            } catch (err) {
+              console.error('Error updating localStorage with fetched answer:', err);
+            }
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching player answer:', err);
+        });
     }
   }));
 });

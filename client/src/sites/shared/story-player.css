@@ -148,6 +148,13 @@ body {
 
 .scene-title {}
 
+.scene-header-divider {
+    font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+}
+
 /* ================ */
 /* = TEXT CONTENT = */
 /* ================ */

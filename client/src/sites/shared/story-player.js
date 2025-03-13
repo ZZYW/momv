@@ -71,12 +71,15 @@ document.addEventListener("alpine:init", () => {
       console.log("Initializing story player...");
       this.loadStory();
       
-      // Add window resize listener to adjust vertical borders when the window is resized
+      // Add window resize listener to adjust borders when the window is resized
       window.addEventListener('resize', () => {
         const currentPassage = document.getElementById(`passage-${this.state.currentPassageIndex}`);
         if (currentPassage && currentPassage.classList.contains('active')) {
           // Use setTimeout to ensure the passage has been rendered and has its final dimensions
-          setTimeout(() => this.adjustVerticalBordersHeight(currentPassage), 100);
+          setTimeout(() => {
+            // This will also call adjustHorizontalDivider
+            this.adjustVerticalBordersHeight(currentPassage);
+          }, 100);
         }
       });
     },
@@ -360,7 +363,7 @@ document.addEventListener("alpine:init", () => {
             <div class="scene-header">
               ${bannerArtHTML}
               <div class="scene-title">${b.titleName || "Scene"}</div>
-              <div>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - </div>
+              <div class="scene-header-divider">----------</div>
             </div>
           `;
         },
@@ -714,6 +717,42 @@ document.addEventListener("alpine:init", () => {
       return passageElement._dynamicContentLoadingPromise;
     },
     
+    // Adjust the width of horizontal divider under scene header
+    adjustHorizontalDivider(passageElement) {
+      console.log(`[BORDERS] Adjusting horizontal divider for passage ${passageElement.id}`);
+      
+      // Find the scene header divider in this passage
+      const divider = passageElement.querySelector('.scene-header-divider');
+      if (!divider) {
+        console.warn('[BORDERS] Could not find scene header divider');
+        return;
+      }
+      
+      // Calculate available width
+      const containerWidth = divider.offsetWidth;
+      console.log(`[BORDERS] Container width: ${containerWidth}px`);
+      
+      // Create divider content based on available width
+      // Each dash-space unit takes approximately 2ch of width
+      // We'll create a pattern of "- " repeated to fill the width
+      const charWidth = 7; // Approximate width of monospace character in pixels
+      const dashSpacePairWidth = charWidth; // Width of "- " in pixels
+      const pairs = Math.floor(containerWidth / dashSpacePairWidth);
+      
+      console.log(`[BORDERS] Creating divider with ${pairs} dash-space pairs`);
+      
+      // Create the divider content
+      let dividerContent = '';
+      for (let i = 0; i < pairs; i++) {
+        dividerContent += '-';
+      }
+      
+      // Set the content for the divider
+      divider.textContent = dividerContent;
+      
+      console.log('[BORDERS] Horizontal divider width adjusted');
+    },
+    
     // Adjust the height of vertical borders based on passage content height
     adjustVerticalBordersHeight(passageElement) {
       console.log(`[BORDERS] Adjusting vertical borders height for passage ${passageElement.id}`);
@@ -750,6 +789,9 @@ document.addEventListener("alpine:init", () => {
       // Set the content for both borders
       leftBorder.innerHTML = borderContent;
       rightBorder.innerHTML = borderContent;
+      
+      // Also adjust the horizontal divider
+      this.adjustHorizontalDivider(passageElement);
       
       console.log('[BORDERS] Vertical borders height adjusted');
     },

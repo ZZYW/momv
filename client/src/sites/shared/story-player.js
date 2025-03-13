@@ -141,6 +141,8 @@ document.addEventListener("alpine:init", () => {
       plainBlocks.forEach((block, index) => {
         console.log(`Processing plain block ${index}`);
         const originalContent = block.innerHTML;
+        let processedContent = originalContent;
+        let contentChanged = false;
         
         // Check for answer placeholders
         if (originalContent.includes('{get answer of question#')) {
@@ -149,7 +151,6 @@ document.addEventListener("alpine:init", () => {
           // Use regex to find all question IDs in the content
           const regex = /\{get\s+answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player\}/gi;
           let match;
-          let processedContent = originalContent;
           
           // Reset regex lastIndex
           regex.lastIndex = 0;
@@ -168,16 +169,40 @@ document.addEventListener("alpine:init", () => {
               console.log(`Retrieved answer: "${answer}", replacing placeholder`);
               // Replace this specific instance
               processedContent = processedContent.replace(fullMatch, answer);
+              contentChanged = true;
             } else {
               console.log(`No answer found for question ${questionId}`);
             }
           }
+        }
+        
+        // Check for codename placeholders
+        if (originalContent.includes('{get codename}')) {
+          console.log(`Block ${index} contains codename placeholder, processing...`);
           
-          // Update the block content if changes were made
-          if (processedContent !== originalContent) {
-            console.log(`Updating block ${index} with processed content`);
-            block.innerHTML = processedContent;
+          // Use regex to find all codename placeholders
+          const regex = /\{get\s+codename\}/gi;
+          
+          // Reset regex lastIndex
+          regex.lastIndex = 0;
+          
+          // Get the codename
+          const codename = this.getPlayerCodename();
+          
+          if (codename) {
+            console.log(`Retrieved codename: "${codename}", replacing placeholder`);
+            // Replace all instances
+            processedContent = processedContent.replace(regex, codename);
+            contentChanged = true;
+          } else {
+            console.log(`No codename found for player ${this.config.playerId}`);
           }
+        }
+        
+        // Update the block content if changes were made
+        if (contentChanged) {
+          console.log(`Updating block ${index} with processed content`);
+          block.innerHTML = processedContent;
         }
       });
     },
@@ -1136,28 +1161,43 @@ document.addEventListener("alpine:init", () => {
       console.log("Processing plain block text:", text);
       
       // Check if the text contains any placeholders
-      if (!text.includes('{get answer')) {
+      if (!text.includes('{get')) {
         console.log("No placeholders found");
         return text;
       }
       
-      // Look for {get answer of question#xxx from this player} pattern
-      // Made regex more flexible to handle different spacing and casing
-      const placeholder_regex = /\{get\s+answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player\}/gi;
+      let processedText = text;
       
-      console.log("Looking for placeholders with regex:", placeholder_regex.toString());
+      // 1. Look for {get answer of question#xxx from this player} pattern
+      const answer_regex = /\{get\s+answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player\}/gi;
       
-      // Replace each placeholder with the actual answer
-      const result = text.replace(placeholder_regex, (match, questionId) => {
-        console.log(`Found placeholder: ${match}, extracting question ID: ${questionId}`);
+      console.log("Looking for answer placeholders with regex:", answer_regex.toString());
+      
+      // Replace each answer placeholder with the actual answer
+      processedText = processedText.replace(answer_regex, (match, questionId) => {
+        console.log(`Found answer placeholder: ${match}, extracting question ID: ${questionId}`);
         // Try to get the answer from localStorage or other client-side storage
         const answer = this.getPlayerAnswerForQuestion(questionId);
         console.log(`Answer for ${questionId}: "${answer}"`);
         return answer || match; // Return answer if found, otherwise keep original placeholder
       });
       
-      console.log("Processed text:", result);
-      return result;
+      // 2. Look for {get codename} pattern
+      const codename_regex = /\{get\s+codename\}/gi;
+      
+      console.log("Looking for codename placeholders with regex:", codename_regex.toString());
+      
+      // Replace each codename placeholder with the player's codename
+      processedText = processedText.replace(codename_regex, (match) => {
+        console.log(`Found codename placeholder: ${match}`);
+        // Try to get the codename from localStorage or other client-side storage
+        const codename = this.getPlayerCodename();
+        console.log(`Codename: "${codename}"`);
+        return codename || match; // Return codename if found, otherwise keep original placeholder
+      });
+      
+      console.log("Processed text:", processedText);
+      return processedText;
     },
     
     // Get player's answer for a specific question from client-side storage
@@ -1249,6 +1289,75 @@ document.addEventListener("alpine:init", () => {
         })
         .catch(err => {
           console.error('Error fetching player answer:', err);
+        });
+    },
+    
+    // Get player's codename from client-side storage or server
+    getPlayerCodename() {
+      console.log(`Trying to get codename for player: ${this.config.playerId}`);
+      
+      // First check localStorage
+      try {
+        const codenameData = localStorage.getItem(`codename_${this.config.playerId}`);
+        if (codenameData) {
+          console.log(`Found codename in localStorage: ${codenameData}`);
+          return codenameData;
+        }
+      } catch (err) {
+        console.error('Error retrieving codename from localStorage:', err);
+      }
+      
+      // Fetch from server if not in localStorage
+      this.fetchPlayerCodenameFromServer();
+      
+      // Return empty for now, will be updated on the next render
+      return '';
+    },
+    
+    // Fetch player's codename from server
+    fetchPlayerCodenameFromServer() {
+      const url = `${this.config.serverUrl}/get-player-codename?playerId=${this.config.playerId}`;
+      console.log(`Fetching player codename from: ${url}`);
+      
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            console.error(`Server returned error: ${response.status}`);
+            throw new Error('Failed to fetch codename');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log(`Server response for codename:`, data);
+          
+          if (data && data.codename) {
+            // Save the codename to localStorage for future use
+            try {
+              localStorage.setItem(`codename_${this.config.playerId}`, data.codename);
+              console.log(`Saved codename to localStorage: ${data.codename}`);
+              
+              // Update UI for all matching plain blocks
+              const plainBlocks = document.querySelectorAll('.plain');
+              console.log(`Found ${plainBlocks.length} plain blocks to check for updates`);
+              
+              plainBlocks.forEach((block, index) => {
+                console.log(`Checking plain block ${index} content:`, block.innerHTML);
+                
+                // Use a flexible pattern for codename placeholder
+                const pattern = /\{get\s+codename\}/gi;
+                
+                if (pattern.test(block.innerHTML)) {
+                  console.log(`Block ${index} contains codename placeholder, replacing with "${data.codename}"`);
+                  block.innerHTML = block.innerHTML.replace(pattern, data.codename);
+                }
+              });
+            } catch (err) {
+              console.error('Error updating localStorage with fetched codename:', err);
+            }
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching player codename:', err);
         });
     }
   }));

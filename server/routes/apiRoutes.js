@@ -106,4 +106,27 @@ router.get("/get-player-selections", async (req, res) => {
     }
 });
 
+// Get a player's codename
+router.get("/get-player-codename", async (req, res) => {
+    const { playerId } = req.query;
+    
+    if (!playerId) {
+        return res.status(400).json({ error: "Missing required parameter: playerId" });
+    }
+    
+    try {
+        await db.read();
+        
+        if (!db.data || !db.data.players || !db.data.players[playerId]) {
+            return res.json({ codename: "" });
+        }
+        
+        const codename = db.data.players[playerId].codename || "";
+        return res.json({ codename });
+    } catch (error) {
+        console.error("Error retrieving player codename:", error);
+        return res.status(500).json({ error: "Failed to retrieve player codename" });
+    }
+});
+
 export default router;

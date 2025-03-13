@@ -3,76 +3,77 @@
     {
       "id": "3d4",
       "type": "plain",
-      "text": "若水住持：原来如此。看来施主也是听到了那个声音，并随着它的指引而来。每个到达山顶的访客都曾提起这座山好像一直在跟他们说话，让心平静，从而清除噪声，提供了一种超越当下思维的直接感知。",
-      "sceneId": 1
+      "sceneId": 1,
+      "text": "若水住持：原来如此。看来施主也是听到了那个声音，并随着它的指引而来。每个到达山顶的访客都曾提起这座山好像一直在跟他们说话，让心平静，从而清除噪声，提供了一种超越当下思维的直接感知。{get answer of question#ba6 from this player}"
     },
     {
       "id": "9fa",
       "type": "plain",
-      "text": "玩家：是的。通过这个声音，我也感知到了曾来过这里的其他人内心的声音。\n",
-      "sceneId": 1
+      "sceneId": 1,
+      "text": "玩家：是的。通过这个声音，我也感知到了曾来过这里的其他人内心的声音。\n"
     },
     {
       "id": "94d",
       "type": "plain",
-      "text": "若水住持：\n它来自所有现象的根基——现实的相互连通性，提供超越自我局限的洞见。这能让人直接洞察现实的本质，特别是万物无常和自我的虚幻性。\n",
-      "sceneId": 1
+      "sceneId": 1,
+      "text": "若水住持：\n它来自所有现象的根基——现实的相互连通性，提供超越自我局限的洞见。这能让人直接洞察现实的本质，特别是万物无常和自我的虚幻性。\n"
     },
     {
       "id": "3b9",
       "type": "plain",
-      "text": "玩家：\n一种",
-      "sceneId": 1
+      "sceneId": 1,
+      "text": "玩家：\n一种"
     },
     {
       "id": "0e0",
       "type": "dynamic",
+      "sceneId": 1,
       "blockName": "xxx",
-      "generateOptions": true,
       "prompt": "请基于玩家在第一站作出的选择，生成三个有关\"声音感知方式\"的选项。\n\n以下是玩家在第一站（站点1）的选择：\n{get decisions of question#all by this player, from story 1}\n\n这些选项应该体现出玩家的人格特点和心理倾向，并且与声音感知的主题相关。每个选项应该是一个表达方式，如\"直觉的\"、\"冥想的\"、\"共鸣的\"等。",
-      "sceneId": 1
+      "generateOptions": true
     },
     {
       "id": "de4",
       "type": "plain",
-      "text": "的方式？",
-      "sceneId": 1
+      "sceneId": 1,
+      "text": "的方式？{get codename}"
     },
     {
       "id": "c93",
       "type": "plain",
-      "text": "若水住持：\n是的，\"聚光\"、\"入力场\"、\"身相脱\"和\"境中得中\"。这些阶段能让心灵达到外在接纳和内在宁静的状态，使人能清晰地洞察任何情况下潜在的模式和能量。这不是操纵运气或控制事件，而是一种",
-      "sceneId": 1
+      "sceneId": 1,
+      "text": "若水住持：\n是的，\"聚光\"、\"入力场\"、\"身相脱\"和\"境中得中\"。这些阶段能让心灵达到外在接纳和内在宁静的状态，使人能清晰地洞察任何情况下潜在的模式和能量。这不是操纵运气或控制事件，而是一种"
     },
     {
       "id": "7fe",
       "type": "static",
+      "sceneId": 1,
       "options": [
         "接纳万物",
         "清澈内心"
-      ],
-      "sceneId": 1
+      ]
     },
     {
       "id": "f0c",
       "type": "plain",
-      "text": "的状态，从而让自己被本源的自然流动所引导。\n",
-      "sceneId": 1
+      "sceneId": 1,
+      "text": "的状态，从而让自己被本源的自然流动所引导。\n"
     },
     {
       "id": "f2d",
       "type": "dynamic",
+      "sceneId": 1,
       "blockName": "",
       "prompt": "根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n\n玩家在第一站的选择：\n{get decisions of question#all by this player, from story 1}\n\n玩家在本站的选择：\n{get decisions of question#0e0 by this player, from story 2}\n{get decisions of question#7fe by this player, from story 2}\n\n综合考虑玩家的选择历史，回到原文中，用白描的方式，陈述出玩家应如何清晰地洞察目前情况下潜在的模式和能量。\n",
-      "sceneId": 1
+      "generateOptions": false
     },
     {
       "id": "592",
       "type": "dynamic",
+      "sceneId": 1,
       "blockName": "xxx",
-      "generateOptions": true,
       "prompt": "基于玩家的所有选择和我们对玩家的分析，生成4个关于小吴可能的\"欲望\"或\"追求\"的选项。\n\n完整的选择历史：\n{get story so far for this player}\n\n这些选项应当非常个性化，反映玩家之前所作的所有选择所暗示的价值观和心理特征。每个选项应该是深刻而有哲理的，反映出人生中可能的追求方向。",
-      "sceneId": 1
+      "generateOptions": true
     }
   ]
 }

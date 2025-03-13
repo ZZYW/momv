@@ -1214,6 +1214,100 @@ document.addEventListener("alpine:init", () => {
       this.transitionToNextPassage(currentEl, nextEl, nextIndex);
     },
 
+    // Create and show the loading animation
+    showLoadingAnimation() {
+      // Create loading container if it doesn't exist
+      let loadingContainer = document.getElementById('llm-loading-container');
+      if (!loadingContainer) {
+        loadingContainer = document.createElement('div');
+        loadingContainer.id = 'llm-loading-container';
+        loadingContainer.className = 'llm-loading-container';
+        
+        // Create a simple loading bar
+        const loadingBar = document.createElement('div');
+        loadingBar.className = 'llm-loading-bar';
+        loadingBar.innerHTML = `<div class="llm-loading-animation">[.............?]</div>`;
+        
+        // Add to container
+        loadingContainer.appendChild(loadingBar);
+        
+        // Add to body
+        document.getElementById("passage-container").appendChild(loadingContainer);
+      }
+      
+      // Display the loading animation
+      loadingContainer.style.display = 'flex';
+      
+      // Start the animation
+      this.startLoadingAnimation();
+      
+      return loadingContainer;
+    },
+    
+    // Hide the loading animation
+    hideLoadingAnimation() {
+      const loadingContainer = document.getElementById('llm-loading-container');
+      if (loadingContainer) {
+        // Stop the animation
+        this.stopLoadingAnimation();
+        
+        // Hide with fade out
+        loadingContainer.classList.add('fade-out');
+        
+        // Remove after animation completes
+        setTimeout(() => {
+          loadingContainer.style.display = 'none';
+          loadingContainer.classList.remove('fade-out');
+        }, 1000);
+      }
+    },
+    
+    // Animate the ASCII loading bar
+    startLoadingAnimation() {
+      if (this._loadingAnimationInterval) {
+        clearInterval(this._loadingAnimationInterval);
+      }
+      
+      const animationElement = document.querySelector('.llm-loading-animation');
+      if (!animationElement) return;
+      
+      // Define the loading frames
+      const frames = [
+        "[.............?]",
+        "[............?..]",
+        "[...........?...]",
+        "[..........?....]",
+        "[.........?.....]",
+        "[........?......]",
+        "[.......?.......]",
+        "[......?........]",
+        "[.....?.........]",
+        "[....?...........]",
+        "[...?............]",
+        "[..?.............]",
+        "[.?..............] ",
+        "[?...............]"
+      ];
+      
+      let frameIndex = 0;
+      
+      this._loadingAnimationInterval = setInterval(() => {
+        // Update with the next frame
+        animationElement.textContent = frames[frameIndex];
+        
+        // Move to the next frame
+        frameIndex = (frameIndex + 1) % frames.length;
+      }, 150);
+    },
+    
+    // Stop the loading animation
+    stopLoadingAnimation() {
+      if (this._loadingAnimationInterval) {
+        clearInterval(this._loadingAnimationInterval);
+        this._loadingAnimationInterval = null;
+      }
+    },
+    
     transitionToNextPassage(currentEl, nextEl, nextIndex) {
       // Start fade-out animation on current passage and ASCII borders
       if (currentEl) {
@@ -1225,26 +1319,32 @@ document.addEventListener("alpine:init", () => {
         });
       }
 
-      // Load dynamic content and handle transition
-      this.loadDynamicContentForPassage(nextEl).then(() => {
-        // Scroll to top immediately
-        window.scrollTo(0, 0);
-
-        // Simple approach: After fade-out completes, hide current and show next
-        setTimeout(() => {
-          if (currentEl) {
-            // Hide current passage
-            currentEl.classList.remove("active");
-            currentEl.style.display = "none";
-            currentEl.classList.remove("fade-out");
-          }
+      // After fade-out completes, hide current passage and show loading
+      setTimeout(() => {
+        if (currentEl) {
+          // Hide current passage
+          currentEl.classList.remove("active");
+          currentEl.style.display = "none";
+          currentEl.classList.remove("fade-out");
+        }
+        
+        // Remove fade-out from borders
+        document.querySelector('.ascii-border.top').classList.remove("fade-out");
+        document.querySelectorAll('.static-vertical-border').forEach(border => {
+          border.classList.remove("fade-out");
+        });
+        
+        // Show loading animation while waiting for content
+        this.showLoadingAnimation();
+        
+        // Load dynamic content - this is the API call to the LLM
+        this.loadDynamicContentForPassage(nextEl).then(() => {
+          // Hide loading animation
+          this.hideLoadingAnimation();
           
-          // Remove fade-out from borders
-          document.querySelector('.ascii-border.top').classList.remove("fade-out");
-          document.querySelectorAll('.static-vertical-border').forEach(border => {
-            border.classList.remove("fade-out");
-          });
-
+          // Scroll to top before showing new content
+          window.scrollTo(0, 0);
+          
           // Show next passage with fade-in
           nextEl.style.display = "block";
           nextEl.classList.add("active", "fade-in");
@@ -1272,8 +1372,8 @@ document.addEventListener("alpine:init", () => {
               border.classList.remove("fade-in");
             });
           }, 3000); // Match the CSS animation duration (3s)
-        }, 1000); // Wait for fade-out to complete (adjust if needed)
-      });
+        });
+      }, 1000); // Wait for fade-out to complete
     },
     
     // Process placeholders in plain blocks without sending to server

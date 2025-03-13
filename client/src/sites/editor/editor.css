@@ -256,6 +256,7 @@ button:hover .tooltip {
 .block-controls {
     display: flex;
     gap: 5px;
+    position: relative;
 }
 
 .block-controls button {
@@ -267,6 +268,47 @@ button:hover .tooltip {
 
 .block-controls button:hover {
     background: var(--color-bg-button-hover);
+}
+
+/* Add Block Button and Menu */
+.add-block-btn {
+    position: relative;
+}
+
+.block-type-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    width: 180px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.block-type-menu .menu-title {
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: #555;
+    text-align: center;
+}
+
+.block-type-menu button {
+    margin: 2px 0;
+    padding: 6px 10px;
+    text-align: left;
+    border: none;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.block-type-menu button:hover {
+    background: #eaeaea;
 }
 
 .block-body {

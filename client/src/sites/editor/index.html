@@ -148,6 +148,14 @@
                 <button @click="moveBlockUp(index)">↑</button>
                 <button @click="moveBlockDown(index)">↓</button>
                 <button @click="removeBlock(index)">x</button>
+                <button @click="toggleAddBlockMenu(index)" class="add-block-btn">+</button>
+                <div class="block-type-menu" v-if="activeAddMenuIndex === index" @click.stop>
+                  <div class="menu-title">Add after this block:</div>
+                  <button @click.stop="addBlockAfter(index, 'plain')">Plain Block</button>
+                  <button @click.stop="addBlockAfter(index, 'static')">Static Option</button>
+                  <button @click.stop="addBlockAfter(index, 'dynamic')">Dynamic Block</button>
+                  <button @click.stop="addBlockAfter(index, 'scene-header')">Scene Header Block</button>
+                </div>
               </div>
             </div>
             <div class="block-body">
@@ -259,6 +267,7 @@
           return {
             autosaveTime: "",
             blocks: [],
+            activeAddMenuIndex: null, // Track which block's add menu is open
           };
         },
         computed: {
@@ -432,6 +441,54 @@
           },
           removeStaticOption(block, index) {
             block.options.splice(index, 1);
+          },
+          // Toggle the add block menu for a specific block
+          toggleAddBlockMenu(index) {
+            if (this.activeAddMenuIndex === index) {
+              this.activeAddMenuIndex = null;
+            } else {
+              this.activeAddMenuIndex = index;
+            }
+          },
+          // Add a new block after the specified index
+          addBlockAfter(index, blockType) {
+            const id = this.generateUUID();
+            let newBlock;
+            
+            // Create block based on type
+            switch(blockType) {
+              case 'plain':
+                newBlock = { id, type: "plain", text: "" };
+                break;
+              case 'static':
+                newBlock = { id, type: "static", options: [] };
+                break;
+              case 'dynamic':
+                newBlock = {
+                  id,
+                  type: "dynamic",
+                  blockName: "",
+                  prompt: "",
+                  generateOptions: false,
+                };
+                break;
+              case 'scene-header':
+                newBlock = {
+                  id,
+                  type: "scene-header",
+                  titleName: "",
+                  sceneId: null,
+                  useBannerArt: false,
+                  bannerArt: "",
+                };
+                break;
+            }
+            
+            // Insert the new block after the current block
+            this.blocks.splice(index + 1, 0, newBlock);
+            
+            // Close the menu
+            this.activeAddMenuIndex = null;
           },
           // Updated playStory() to use the parameterized endpoint based on the computed station.
           playStory() {
@@ -811,6 +868,15 @@
             console.log(`No saved project found for ${this.station}`);
           }
           this.updateAutosaveTime();
+          
+          // Add document click listener to close the add block menu when clicking outside
+          document.addEventListener('click', (event) => {
+            // Check if click is outside of any add-block-btn
+            const clickedAddButton = event.target.closest('.add-block-btn');
+            if (!clickedAddButton && this.activeAddMenuIndex !== null) {
+              this.activeAddMenuIndex = null;
+            }
+          });
         },
       });
 

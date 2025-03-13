@@ -1117,9 +1117,14 @@ document.addEventListener("alpine:init", () => {
     },
 
     transitionToNextPassage(currentEl, nextEl, nextIndex) {
-      // Start fade-out animation on current passage
+      // Start fade-out animation on current passage and ASCII borders
       if (currentEl) {
         currentEl.classList.add("fade-out");
+        // Also add fade-out to the ASCII borders
+        document.querySelector('.ascii-border.top').classList.add("fade-out");
+        document.querySelectorAll('.static-vertical-border').forEach(border => {
+          border.classList.add("fade-out");
+        });
       }
 
       // Load dynamic content and handle transition
@@ -1135,10 +1140,23 @@ document.addEventListener("alpine:init", () => {
             currentEl.style.display = "none";
             currentEl.classList.remove("fade-out");
           }
+          
+          // Remove fade-out from borders
+          document.querySelector('.ascii-border.top').classList.remove("fade-out");
+          document.querySelectorAll('.static-vertical-border').forEach(border => {
+            border.classList.remove("fade-out");
+          });
 
           // Show next passage with fade-in
           nextEl.style.display = "block";
           nextEl.classList.add("active", "fade-in");
+          
+          // Also add fade-in to the ASCII borders
+          document.querySelector('.ascii-border.top').classList.add("fade-in");
+          document.querySelectorAll('.static-vertical-border').forEach(border => {
+            border.classList.add("fade-in");
+          });
+          
           this.state.currentPassageIndex = nextIndex;
 
           // Set up the continue button
@@ -1147,6 +1165,11 @@ document.addEventListener("alpine:init", () => {
           // Clean up animation classes after fade-in completes
           setTimeout(() => {
             nextEl.classList.remove("fade-in");
+            // Remove fade-in from borders too
+            document.querySelector('.ascii-border.top').classList.remove("fade-in");
+            document.querySelectorAll('.static-vertical-border').forEach(border => {
+              border.classList.remove("fade-in");
+            });
           }, 3000); // Match the CSS animation duration (3s)
         }, 1000); // Wait for fade-out to complete (adjust if needed)
       });

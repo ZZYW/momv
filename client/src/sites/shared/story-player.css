@@ -336,6 +336,7 @@ h2 {
 /* ============== */
 .fade-out {
     opacity: 0;
+    transition: opacity 1s ease;
 }
 
 .fade-in {
@@ -343,6 +344,12 @@ h2 {
     /* previously var(--fade-in-duration) */
     position: relative;
     z-index: 2;
+}
+
+/* Ensure ASCII borders transition properly */
+.ascii-border,
+.static-vertical-border {
+    transition: opacity 1s ease;
 }
 
 @keyframes fadeIn {

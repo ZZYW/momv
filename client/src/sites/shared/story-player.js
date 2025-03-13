@@ -70,6 +70,15 @@ document.addEventListener("alpine:init", () => {
     init() {
       console.log("Initializing story player...");
       this.loadStory();
+      
+      // Add window resize listener to adjust vertical borders when the window is resized
+      window.addEventListener('resize', () => {
+        const currentPassage = document.getElementById(`passage-${this.state.currentPassageIndex}`);
+        if (currentPassage && currentPassage.classList.contains('active')) {
+          // Use setTimeout to ensure the passage has been rendered and has its final dimensions
+          setTimeout(() => this.adjustVerticalBordersHeight(currentPassage), 100);
+        }
+      });
     },
 
     // ===== LOGGING =====
@@ -113,6 +122,9 @@ document.addEventListener("alpine:init", () => {
                 
                 // After everything is loaded, process any placeholders in plain blocks
                 this.processAllPlainBlockPlaceholders();
+                
+                // Make sure to adjust border heights when initial passage is loaded
+                this.adjustVerticalBordersHeight(firstPassage);
               });
             }
           } else {
@@ -660,6 +672,8 @@ document.addEventListener("alpine:init", () => {
       
       if (dynamicContainers.length === 0) {
         console.log(`[LOAD-DYNAMIC] No dynamic content to load for passage ${passageElement.id}`);
+        // Even if there's no dynamic content, we should adjust vertical borders
+        this.adjustVerticalBordersHeight(passageElement);
         return Promise.resolve();
       }
 
@@ -688,6 +702,8 @@ document.addEventListener("alpine:init", () => {
       passageElement._dynamicContentLoadingPromise = Promise.all(promises)
         .then(results => {
           console.log(`[LOAD-DYNAMIC] All dynamic content loaded for passage ${passageElement.id}`);
+          // After all dynamic content is loaded, adjust vertical borders height
+          this.adjustVerticalBordersHeight(passageElement);
           return results;
         })
         .catch(err => {
@@ -696,6 +712,46 @@ document.addEventListener("alpine:init", () => {
         });
       
       return passageElement._dynamicContentLoadingPromise;
+    },
+    
+    // Adjust the height of vertical borders based on passage content height
+    adjustVerticalBordersHeight(passageElement) {
+      console.log(`[BORDERS] Adjusting vertical borders height for passage ${passageElement.id}`);
+      
+      // Get the passage height
+      const passageHeight = passageElement.offsetHeight;
+      console.log(`[BORDERS] Passage height: ${passageHeight}px`);
+      
+      // Get the vertical borders
+      const leftBorder = document.querySelector('.static-vertical-border.left-border');
+      const rightBorder = document.querySelector('.static-vertical-border.right-border');
+      
+      if (!leftBorder || !rightBorder) {
+        console.warn('[BORDERS] Could not find vertical borders');
+        return;
+      }
+      
+      // Create border content based on passage height
+      // Calculate how many line breaks we need - assuming 1.5 line height
+      // and each character is roughly 18px in height (12px font * 1.5 line-height)
+      const lineHeight = 18; // This is an approximation
+      const linesNeeded = Math.ceil(passageHeight / lineHeight);
+      
+      console.log(`[BORDERS] Creating border with ${linesNeeded} lines`);
+      
+      // Create the border content
+      let borderContent = '|<br>|<br>|<br>'; // Start with 3 solid lines
+      
+      // Add dotted lines for the remaining height
+      for (let i = 0; i < linesNeeded - 3; i++) {
+        borderContent += '.<br>';
+      }
+      
+      // Set the content for both borders
+      leftBorder.innerHTML = borderContent;
+      rightBorder.innerHTML = borderContent;
+      
+      console.log('[BORDERS] Vertical borders height adjusted');
     },
 
     getDynamicContainerType(container) {
@@ -1150,6 +1206,9 @@ document.addEventListener("alpine:init", () => {
           // Show next passage with fade-in
           nextEl.style.display = "block";
           nextEl.classList.add("active", "fade-in");
+          
+          // Adjust vertical borders height for this passage after it's visible
+          this.adjustVerticalBordersHeight(nextEl);
           
           // Also add fade-in to the ASCII borders
           document.querySelector('.ascii-border.top').classList.add("fade-in");

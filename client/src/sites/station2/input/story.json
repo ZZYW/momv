@@ -1,79 +1,177 @@
 {
   "blocks": [
     {
+      "id": "155",
+      "type": "scene-header",
+      "titleName": "七：庙里",
+      "sceneId": 1,
+      "useBannerArt": false,
+      "bannerArt": ""
+    },
+    {
       "id": "3d4",
       "type": "plain",
       "sceneId": 1,
-      "text": "若水住持：原来如此。看来施主也是听到了那个声音，并随着它的指引而来。每个到达山顶的访客都曾提起这座山好像一直在跟他们说话，让心平静，从而清除噪声，提供了一种超越当下思维的直接感知。{get answer of question#ba6 from this player}"
+      "text": "{get codename}顺着阶梯走进庙里，什么都没有。抬头望去，屋顶横竖排列的榉木横垣开始一根根的向四周弯曲蔓延，将四周紧紧包裹起来。 不知哪里来的一群"
     },
     {
-      "id": "9fa",
-      "type": "plain",
-      "sceneId": 1,
-      "text": "玩家：是的。通过这个声音，我也感知到了曾来过这里的其他人内心的声音。\n"
+      "id": "268",
+      "type": "static",
+      "options": [
+        "麻雀",
+        "乌鸦",
+        "鸽子"
+      ],
+      "sceneId": 1
     },
     {
-      "id": "94d",
+      "id": "322",
       "type": "plain",
-      "sceneId": 1,
-      "text": "若水住持：\n它来自所有现象的根基——现实的相互连通性，提供超越自我局限的洞见。这能让人直接洞察现实的本质，特别是万物无常和自我的虚幻性。\n"
-    },
-    {
-      "id": "3b9",
-      "type": "plain",
-      "sceneId": 1,
-      "text": "玩家：\n一种"
+      "text": "钻进零星的空隙，开始在小吴头顶盘旋，形成乌黑的龙卷风。 ",
+      "sceneId": 1
     },
     {
       "id": "0e0",
       "type": "dynamic",
       "sceneId": 1,
       "blockName": "xxx",
-      "prompt": "请基于玩家在第一站作出的选择，生成三个有关\"声音感知方式\"的选项。\n\n以下是玩家在第一站（站点1）的选择：\n{get decisions of question#all by this player, from story 1}\n\n这些选项应该体现出玩家的人格特点和心理倾向，并且与声音感知的主题相关。每个选项应该是一个表达方式，如\"直觉的\"、\"冥想的\"、\"共鸣的\"等。",
-      "generateOptions": true
+      "prompt": "{get story so far for nobody} \n\n{get decisions of question#d65 by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“形成乌黑的龙卷风”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。"
     },
     {
-      "id": "de4",
+      "id": "94d",
       "type": "plain",
       "sceneId": 1,
-      "text": "的方式？{get codename}"
-    },
-    {
-      "id": "c93",
-      "type": "plain",
-      "sceneId": 1,
-      "text": "若水住持：\n是的，\"聚光\"、\"入力场\"、\"身相脱\"和\"境中得中\"。这些阶段能让心灵达到外在接纳和内在宁静的状态，使人能清晰地洞察任何情况下潜在的模式和能量。这不是操纵运气或控制事件，而是一种"
-    },
-    {
-      "id": "7fe",
-      "type": "static",
-      "sceneId": 1,
-      "options": [
-        "接纳万物",
-        "清澈内心"
-      ]
-    },
-    {
-      "id": "f0c",
-      "type": "plain",
-      "sceneId": 1,
-      "text": "的状态，从而让自己被本源的自然流动所引导。\n"
+      "text": "风把{get codename}的头发卷入空中。她伸出手去整理头发，而触碰到的是散落空中的绒毛。手臂，头发，绒毛缠绕在一起，编织成一个巨大的网。\n"
     },
     {
       "id": "f2d",
       "type": "dynamic",
       "sceneId": 1,
       "blockName": "",
-      "prompt": "根据玩家的选择，用荣格的心理分析法对玩家选择做出人格分析。\n根据玩家的选择，用埃里克·埃里克森的心理社会发展论做出分析。\n根据玩家的选择，用易经推测玩家可能会做出的回应。\n\n玩家在第一站的选择：\n{get decisions of question#all by this player, from story 1}\n\n玩家在本站的选择：\n{get decisions of question#0e0 by this player, from story 2}\n{get decisions of question#7fe by this player, from story 2}\n\n综合考虑玩家的选择历史，回到原文中，用白描的方式，陈述出玩家应如何清晰地洞察目前情况下潜在的模式和能量。\n",
-      "generateOptions": false
+      "prompt": "{get story so far for nobody} \n\n{get decisions of question#cc7 by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“编织成一个巨大的网”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。"
     },
     {
-      "id": "592",
+      "id": "183",
+      "type": "plain",
+      "text": "土黄色的大泥点子落下，黏附她的",
+      "sceneId": 1
+    },
+    {
+      "id": "752",
+      "type": "static",
+      "options": [
+        "面颊",
+        "衣襟",
+        "腿脚"
+      ],
+      "sceneId": 1
+    },
+    {
+      "id": "533",
+      "type": "plain",
+      "text": "双腿逐渐下沉，与青砖地面融为一体。他感到骨节舒展，仿佛化作古松扎根庙中。树皮渗出水珠，枝桠间阴影攒动。",
+      "sceneId": 1
+    },
+    {
+      "id": "096",
+      "type": "scene-header",
+      "titleName": "八：妈妈",
+      "sceneId": 2,
+      "useBannerArt": false,
+      "bannerArt": ""
+    },
+    {
+      "id": "939",
+      "type": "plain",
+      "text": "庙下的泥土深处长满了密布的白色菌丝。菌丝顺着{get codename}的毛孔进入他的体内，和红色的血管缠绕在一起，发出细碎响动。起初是溪流淙淙，渐渐混入血液奔涌声。菌丝输送养分的窸窣与白血球游走的动静此起彼伏，重复而又无聊。渐渐的，{get codename}开始听到更多的声音：一只巨大的{get answer of question#268 from this player}在风中飞翔。",
+      "sceneId": 2
+    },
+    {
+      "id": "270",
+      "type": "plain",
+      "text": "{get answer of question#268 from this player}说，我是你的妈妈。",
+      "sceneId": 2
+    },
+    {
+      "id": "565",
       "type": "dynamic",
-      "sceneId": 1,
-      "blockName": "xxx",
-      "prompt": "基于玩家的所有选择和我们对玩家的分析，生成4个关于小吴可能的\"欲望\"或\"追求\"的选项。\n\n完整的选择历史：\n{get story so far for this player}\n\n这些选项应当非常个性化，反映玩家之前所作的所有选择所暗示的价值观和心理特征。每个选项应该是深刻而有哲理的，反映出人生中可能的追求方向。",
-      "generateOptions": true
+      "blockName": "",
+      "prompt": "{get story so far for nobody} \n\n{get decisions of question#470 by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“我是你的妈妈”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。",
+      "sceneId": 2
+    },
+    {
+      "id": "145",
+      "type": "plain",
+      "text": "两只手从{get answer of question#268 from this player}妈妈的身体里伸出来。{get codename}",
+      "sceneId": 2
+    },
+    {
+      "id": "997",
+      "type": "static",
+      "options": [
+        "把头埋进她的怀里。",
+        "蜷缩着身体卧倒。",
+        "站在原地不动。"
+      ],
+      "sceneId": 2
+    },
+    {
+      "id": "082",
+      "type": "plain",
+      "text": "{get answer of question#268 from this player}妈妈呜咽着，啄着{get codename}。 她的皮肤流血了，可她并不疼。",
+      "sceneId": 2
+    },
+    {
+      "id": "595",
+      "type": "dynamic",
+      "blockName": "",
+      "prompt": "{get story so far for nobody} \n\n{get decisions of question#23e by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“可她并不疼”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。",
+      "generateOptions": true,
+      "sceneId": 2
+    },
+    {
+      "id": "547",
+      "type": "scene-header",
+      "titleName": "九：路",
+      "sceneId": 3,
+      "useBannerArt": false,
+      "bannerArt": ""
+    },
+    {
+      "id": "155",
+      "type": "plain",
+      "text": "鸟妈妈不见了。小吴伸出手，指尖触碰到了羽毛的余温。他深深吸一口气，潮湿空气里存留着鸟妈妈的气息。脚下没有路。{get codename}开始朝着一个随机的方向走去。走过的地方出现了路。\n",
+      "sceneId": 3
+    },
+    {
+      "id": "962",
+      "type": "static",
+      "options": [
+        "裹挟四周的藤蔓壁障开始溶解。",
+        "地面如退潮般下沉。",
+        "天空被无形的手向上推开。"
+      ],
+      "sceneId": 3
+    },
+    {
+      "id": "858",
+      "type": "plain",
+      "text": "最后一线阳光在树冠裂隙间湮灭。黑暗涌出的速度比雾霭更快，裹着水气的白烟从腐殖层升腾，树皮渗出细密的黏腻水珠，枝桠间阴影攒动。",
+      "sceneId": 3
+    },
+    {
+      "id": "156",
+      "type": "dynamic",
+      "blockName": "",
+      "prompt": "{get story so far for nobody} \n\n{get decisions of question#a4f by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“枝桠间阴影攒动”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。",
+      "generateOptions": false,
+      "sceneId": 3
+    },
+    {
+      "id": "130",
+      "type": "plain",
+      "text": "{get codename}上了双眼。这一次，他清晰的听到有人在叫她。闭目时，掌心落下一枚符咒。",
+      "sceneId": 3
     }
   ]
 }

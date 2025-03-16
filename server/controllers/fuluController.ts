@@ -11,11 +11,15 @@ interface ASCII_ART {
     keywords: string,
 }
 
-interface Template extends ASCII_ART {
-    extendableLineNumbers: number[]
+export interface Template extends ASCII_ART {
+    extendableLineNumbers: number[],
+    bellyStartRow: number,
+    bellyEndRow: number,
+    bellyStartCol: number,
+    bellyEndCol: number,
 }
 
-interface Symbol extends ASCII_ART {
+export interface Symbol extends ASCII_ART {
     // Symbol has same structure as ASCII_ART base interface
 }
 
@@ -155,16 +159,114 @@ function getElongatedTemplate(tem: Template, additionalLines: number = 5): Templ
     }
 }
 
+
 /**
- * Assembles a template with symbols to create a complete ASCII art
+ * Inserts multiple ASCII symbol blocks into the "belly" region of a template.
+ * Stacks them vertically starting at bellyStartRow, bellyStartCol.
+ * If the total symbol height exceeds the belly region, it elongates
+ * the template using getElongatedTemplate, then re-calculates the belly region.
+ *
+ * @param template A Template object (includes body, belly coords, and extendableLineNumbers).
+ * @param symbols  An array of Symbol objects to be inserted in order.
+ * @returns A string containing the final ASCII art with the symbols swapped in.
  */
-function assemble(tem: Template, syms: Symbol[]): string {
-    if (syms.length > 3 || syms.length < 2) {
-        console.warn('Invalid number of symbols. Must be 2 or 3 symbols.')
-        return null
+function assemble(template: Template, symbols: Symbol[]): string {
+    // 1) Convert the template’s body to an array of lines
+    let templateLines = template.body.split("\n");
+
+    // 2) Determine how many lines the belly region currently has
+    //    (from bellyStartRow to bellyEndRow, inclusive).
+    const currentBellyHeight = template.bellyEndRow - template.bellyStartRow + 1;
+
+    // 3) Calculate total lines (height) needed for all symbols stacked vertically
+    const totalSymbolHeight = symbols.reduce((sum, sym) => {
+        const lines = sym.body.split("\n");
+        return sum + lines.length;
+    }, 0);
+
+    // 4) If the total symbol height exceeds the current belly height,
+    //    we need to elongate the template. This will also add lines
+    //    below (or at) the extendableLineNumbers to create more space.
+    if (totalSymbolHeight > currentBellyHeight) {
+        // Example: shortfall is how many extra lines we need
+        const shortfall = totalSymbolHeight - currentBellyHeight;
+
+        // Use your existing function to extend the template
+        const elongatedTemplate = getElongatedTemplate(template, shortfall);
+
+        // The elongation presumably keeps bellyStartRow, bellyStartCol the same,
+        // but we need to re-calculate bellyEndRow because the template is now taller.
+        // A simple approach is to shift bellyEndRow downward by 'shortfall':
+        const newBellyEndRow = elongatedTemplate.bellyEndRow + shortfall;
+        elongatedTemplate.bellyEndRow = newBellyEndRow;
+
+        // Update local references
+        template = elongatedTemplate;
+        templateLines = elongatedTemplate.body.split("\n");
     }
 
+    // 5) Now we have a tall-enough template. Convert its lines to a 2D array of characters
+    const charMatrix = templateLines.map(line => line.split(""));
+
+    // 6) A helper function to insert a symbol’s lines (vertically) into the belly region
+    function insertSymbolBlock(
+        matrix: string[][],
+        sym: Symbol,
+        startRow: number,
+        startCol: number,
+        maxRow: number,
+        maxCol: number
+    ): number {
+        // Convert symbol into lines
+        const lines = sym.body.split("\n");
+        for (let r = 0; r < lines.length; r++) {
+            const symbolRow = startRow + r;
+            if (symbolRow > maxRow || symbolRow < 0 || symbolRow >= matrix.length) {
+                // If outside the “belly” or matrix, skip
+                continue;
+            }
+            // Overwrite characters from bellyStartCol..bellyEndCol
+            const rowChars = lines[r].split("");
+            for (let c = 0; c < rowChars.length; c++) {
+                const symbolCol = startCol + c;
+                if (symbolCol > maxCol || symbolCol < 0 || symbolCol >= matrix[symbolRow].length) {
+                    // If outside the “belly” or line boundary, skip
+                    continue;
+                }
+                matrix[symbolRow][symbolCol] = rowChars[c];
+            }
+        }
+        // Return how many lines we used
+        return lines.length;
+    }
+
+    // 7) Place each symbol in the belly region, starting at bellyStartRow, bellyStartCol,
+    //    stacking them one under another
+    let currentRow = template.bellyStartRow;
+    for (const sym of symbols) {
+        const usedHeight = insertSymbolBlock(
+            charMatrix,
+            sym,
+            currentRow,
+            template.bellyStartCol,
+            template.bellyEndRow,
+            template.bellyEndCol
+        );
+        // Advance currentRow by that many lines
+        currentRow += usedHeight;
+        // If we exceed the belly, it's possible the elongation was insufficient,
+        // but we accounted for that earlier. If you want to do further checks here,
+        // you could do so.
+    }
+
+    // 8) Convert the matrix back to an array of lines, then join with newline
+    const updatedLines = charMatrix.map(rowArr => rowArr.join(""));
+    return updatedLines.join("\n");
 }
+
+
+
+
 
 // Initialize by reading ASCII arts when the module is imported
 readAsciiArts().catch(err => console.error('Failed to initialize fuluController:', err))

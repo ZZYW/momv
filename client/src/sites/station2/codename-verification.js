@@ -210,7 +210,6 @@ function initializeStoryPlayer() {
               
               <!-- Passages will be rendered here -->
             </div>
-            <div id="status-bar" x-text="'Story Player ID: ' + config.playerId"></div>
           </div>
         `;
         

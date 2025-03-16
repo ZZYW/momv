@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASCII Box Demo - Mountain of Many Voices</title>
+  <link rel="stylesheet" href="/sites/shared/ascii-box.css">
+  <style>
+    body {
+      font-family: monospace;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      text-align: center;
+    }
+    .demo-section {
+      margin: 30px 0;
+    }
+    code {
+      background-color: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>ASCII Box Demo</h1>
+  
+  <p>This page demonstrates how to use the ASCII Box utilities in the Mountain of Many Voices project.</p>
+  
+  <div class="demo-section">
+    <h2>Interactive Demo</h2>
+    <div id="ascii-box-demo"></div>
+  </div>
+  
+  <div class="demo-section">
+    <h2>Usage Instructions</h2>
+    
+    <h3>1. Import the utility</h3>
+    <pre><code>import { createAsciiBox, applyAsciiBoxesToClass, createAsciiBoxButton } from '/sites/shared/ascii-box-utils.js';</code></pre>
+    
+    <h3>2. Use in your code</h3>
+    <pre><code>// Create an ASCII box as a string
+const boxedText = await createAsciiBox('Hello World', {
+  border: 'double',
+  padding: 1
+});
+
+// Apply to a button element
+const button = document.querySelector('#my-button');
+await createAsciiBoxButton(button, {
+  border: 'single',
+  color: 'blue'
+});
+
+// Apply to all elements with a specific class
+await applyAsciiBoxesToClass('ascii-box-element', {
+  border: 'round',
+  color: 'green',
+  padding: 1
+});</code></pre>
+    
+    <h3>3. Available options</h3>
+    <ul>
+      <li><strong>border</strong>: 'single', 'double', 'code', 'round', 'dotted', 'retro', 'single-double', 'double-single'</li>
+      <li><strong>color</strong>: 'green', 'red', 'blue', 'cyan', 'magenta', 'gray', 'black', 'white'</li>
+      <li><strong>padding</strong>: Number of spaces inside the box</li>
+      <li><strong>minWidth</strong>: Minimum width of the box</li>
+      <li><strong>maxWidth</strong>: Maximum width of the box</li>
+    </ul>
+  </div>
+
+  <script type="module">
+    import { initAsciiBoxDemo } from '/sites/shared/ascii-box-example.js';
+    
+    // Initialize the demo
+    document.addEventListener('DOMContentLoaded', () => {
+      initAsciiBoxDemo();
+    });
+  </script>
+</body>
+</html>

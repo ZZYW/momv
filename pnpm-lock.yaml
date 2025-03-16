@@ -17,6 +17,9 @@ importers:
       '@types/escpos':
         specifier: ^2.5.5
         version: 2.5.5
+      ascii-box:
+        specifier: ^1.1.2
+        version: 1.1.2
       axios:
         specifier: ^1.7.9
         version: 1.8.1
@@ -322,6 +325,10 @@ packages:
   array-flatten@1.1.1:
     resolution: {integrity: sha512-PCVAQswWemu6UdxsDFFX/+gVeYqKAod3D3UVm91jHwynguOwAvYPhx8nNlM++NqRcK6CxxpUafjmhIdKiHibqg==}
 
+  ascii-box@1.1.2:
+    resolution: {integrity: sha512-eqP6Pr+kP7rZ3cAn3EVsF5fKUC+7O3FoKE7LB92HDJ2Flv3PkK19PvWXmXlT0b/2oJaEFaDaBE+xsXeiMJb1gw==}
+    engines: {node: '>= 6.9.0', npm: '>= 3.10.8'}
+
   asn1@0.2.6:
     resolution: {integrity: sha512-ix/FxPn0MDjeyJ7i/yoHGFt/EX6LyNbxSEhPPXODPL+KB0VPk86UYfL0lMdy+KCnv+fmvIzySwaK5COwqVbWTQ==}
 
@@ -392,6 +399,10 @@ packages:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
 
+  cli-boxes@1.0.0:
+    resolution: {integrity: sha512-3Fo5wu8Ytle8q9iCzS4D2MWVL2X7JVWRiS1BnXbTFDhS9c/REkM9vd1AmabsoZoY5/dGi5TT9iKL8Kb6DeBRQg==}
+    engines: {node: '>=0.10.0'}
+
   cliui@7.0.4:
     resolution: {integrity: sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ==}
 
@@ -401,6 +412,10 @@ packages:
 
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
+
+  colors@1.2.1:
+    resolution: {integrity: sha512-s8+wktIuDSLffCywiwSxQOMqtPxML11a/dtHE17tMn4B1MSWw/C22EKf7M2KGUBcDaVFEGT+S8N02geDXeuNKg==}
+    engines: {node: '>=0.1.90'}
 
   combined-stream@1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
@@ -1412,6 +1427,11 @@ snapshots:
 
   array-flatten@1.1.1: {}
 
+  ascii-box@1.1.2:
+    dependencies:
+      cli-boxes: 1.0.0
+      colors: 1.2.1
+
   asn1@0.2.6:
     dependencies:
       safer-buffer: 2.1.2
@@ -1500,6 +1520,8 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
+  cli-boxes@1.0.0: {}
+
   cliui@7.0.4:
     dependencies:
       string-width: 4.2.3
@@ -1511,6 +1533,8 @@ snapshots:
       color-name: 1.1.4
 
   color-name@1.1.4: {}
+
+  colors@1.2.1: {}
 
   combined-stream@1.0.8:
     dependencies:

@@ -5,6 +5,7 @@ import { askLLM, previewAIPrompt } from "../controllers/aiController.js";
 import { assignCodename, validateCodename, saveCodename } from "../controllers/codenameController.js";
 import { printText } from "../controllers/printerController.js";
 import { getBlockData } from "../controllers/storyRetriever.ts";
+import { generateBox } from "../controllers/asciiBoxController.js";
 import db from "../db.js";
 
 const router = express.Router();
@@ -128,5 +129,8 @@ router.get("/get-player-codename", async (req, res) => {
         return res.status(500).json({ error: "Failed to retrieve player codename" });
     }
 });
+
+// ASCII Box endpoint
+router.post("/ascii-box", generateBox);
 
 export default router;

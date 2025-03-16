@@ -1,0 +1,43 @@
+/* ASCII Box Styles */
+
+.ascii-box {
+  font-family: monospace;
+  white-space: pre;
+  display: inline-block;
+  margin: 5px;
+}
+
+.ascii-box-button {
+  font-family: monospace;
+  white-space: pre;
+  cursor: pointer;
+  display: inline-block;
+  margin: 5px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: inherit;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+.ascii-box-button:hover {
+  opacity: 0.8;
+}
+
+.ascii-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Color classes */
+.ascii-green { color: green; }
+.ascii-red { color: red; }
+.ascii-blue { color: blue; }
+.ascii-cyan { color: cyan; }
+.ascii-magenta { color: magenta; }
+.ascii-gray { color: gray; }
+.ascii-black { color: black; }
+.ascii-white { color: white; }

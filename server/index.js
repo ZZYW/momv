@@ -74,7 +74,7 @@ if (central_backend_url) {
 }
 
 // Start the server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     const baseUrl = `http://localhost:${PORT}`;
 
     // ASCII art header for the server
@@ -123,3 +123,21 @@ app.listen(PORT, () => {
     +--------------------------------------------------------------------------+
     `);
 });
+
+// Handle graceful shutdown
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
+
+function gracefulShutdown() {
+    console.log('\nShutting down server gracefully...');
+    server.close(() => {
+        console.log('Server closed successfully');
+        process.exit(0);
+    });
+    
+    // Force close after 5 seconds if server hasn't closed
+    setTimeout(() => {
+        console.error('Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 5000);
+}

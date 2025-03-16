@@ -1,9 +1,54 @@
 // Station 2 codename verification script
 let validatedPlayerId = null;
+let serverConfig = {
+  apiServerUrl: window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin,
+  hasCentralBackend: false
+};
 
 // Initialize codename verification system
 function initializeCodenameVerification() {
-  const serverUrl = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
+  // First, fetch server configuration to ensure proper API routing
+  fetchServerConfig()
+    .then(() => {
+      setupVerificationUI();
+    })
+    .catch(() => {
+      // If there was an error, continue with default server URL
+      console.warn("Failed to fetch server configuration, using default URL:", serverConfig.apiServerUrl);
+      setupVerificationUI();
+    });
+}
+
+// Fetch server configuration from the server
+function fetchServerConfig() {
+  console.log("Fetching server configuration...");
+  
+  // Use the current origin to fetch the initial config
+  const initialUrl = window.location.origin + "/server-config";
+  
+  return fetch(initialUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch server config: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(config => {
+      console.log("Server configuration received:", config);
+      
+      // Update the server URL if a central backend is specified
+      if (config.apiServerUrl) {
+        serverConfig.apiServerUrl = config.apiServerUrl;
+        console.log(`Using API server URL: ${serverConfig.apiServerUrl}`);
+      }
+      
+      serverConfig.hasCentralBackend = config.hasCentralBackend;
+    });
+}
+
+// Set up the verification UI after server config is loaded
+function setupVerificationUI() {
+  const serverUrl = serverConfig.apiServerUrl;
   const verifyButton = document.getElementById("verify-button");
   const errorMessage = document.getElementById("error-message");
   const verificationOverlay = document.getElementById("codename-verification");
@@ -109,6 +154,7 @@ function initializeCodenameVerification() {
     const codename = selectedComponents.first + selectedComponents.second + selectedComponents.third;
     
     console.log("Verifying codename:", codename);
+    console.log("Using server URL:", serverUrl);
     
     // Verify codename with server
     fetch(`${serverUrl}/validate-codename`, {
@@ -135,6 +181,9 @@ function initializeCodenameVerification() {
         
         // Store the validated player ID
         validatedPlayerId = data.playerId;
+        
+        // Also store the server configuration for the story player to use
+        window.SERVER_CONFIG = serverConfig;
         
         // Hide verification overlay
         verificationOverlay.style.display = "none";
@@ -166,7 +215,11 @@ function initializeStoryPlayer() {
   // Store validated player ID
   window.VALIDATED_PLAYER_ID = validatedPlayerId;
   
+  // Also pass server configuration from verification process
+  window.SERVER_CONFIG = serverConfig;
+  
   console.log(`[INIT] Starting story player initialization with player ID: ${validatedPlayerId}`);
+  console.log(`[INIT] Using server URL: ${serverConfig.apiServerUrl}`);
   console.log(`[INIT] Loading Alpine.js and story-player.js...`);
   
   // First, dynamically load the story-player.js script

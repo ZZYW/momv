@@ -40,8 +40,9 @@ document.addEventListener("alpine:init", () => {
   Alpine.data("storyPlayer", () => ({
     // ===== CONFIGURATION =====
     config: {
-      // Dynamically determine server URL based on current hostname
-      serverUrl: window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin,
+      // Use SERVER_CONFIG if already available from codename verification
+      serverUrl: window.SERVER_CONFIG?.apiServerUrl || 
+        (window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin),
       // For station2, use the validated player ID if available
       playerId: window.VALIDATED_PLAYER_ID || 
         ("player_" +
@@ -53,7 +54,11 @@ document.addEventListener("alpine:init", () => {
       // Determine which station this is - used for localStorage namespacing and storyId
       stationId: window.location.pathname.includes("station2") ? "station2" : "station1",
       // Numeric station ID for API calls
-      stationNumber: window.location.pathname.includes("station2") ? "2" : "1"
+      stationNumber: window.location.pathname.includes("station2") ? "2" : "1",
+      // Server configuration status - already loaded if window.SERVER_CONFIG exists
+      serverConfigLoaded: !!window.SERVER_CONFIG,
+      // Central backend flag if already available
+      hasCentralBackend: window.SERVER_CONFIG?.hasCentralBackend || false
     },
 
     // ===== STATE =====
@@ -69,7 +74,23 @@ document.addEventListener("alpine:init", () => {
     // ===== INITIALIZATION =====
     init() {
       console.log("Initializing story player...");
-      this.loadStory();
+      
+      // Check if server config is already loaded from codename verification
+      if (this.config.serverConfigLoaded) {
+        console.log("[INIT] Using pre-loaded server configuration");
+        console.log("[INIT] API Server URL:", this.config.serverUrl);
+        console.log("[INIT] Has Central Backend:", this.config.hasCentralBackend);
+        
+        // Proceed directly with story loading
+        this.loadStory();
+      } else {
+        // Otherwise, fetch server configuration first
+        console.log("[INIT] No pre-loaded server configuration, fetching from server...");
+        this.fetchServerConfig().then(() => {
+          // After server config is loaded, proceed with story loading
+          this.loadStory();
+        });
+      }
       
       // Add window resize listener to adjust borders when the window is resized
       window.addEventListener('resize', () => {
@@ -82,6 +103,43 @@ document.addEventListener("alpine:init", () => {
           }, 100);
         }
       });
+    },
+    
+    // Fetch server configuration to determine API endpoints
+    fetchServerConfig() {
+      console.log("[CONFIG] Fetching server configuration...");
+      
+      // Use the current origin to fetch the initial config
+      const initialUrl = window.location.origin + "/server-config";
+      
+      return fetch(initialUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch server config: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(config => {
+          console.log("[CONFIG] Server configuration received:", config);
+          
+          // Update the server URL if a central backend is specified
+          if (config.apiServerUrl) {
+            this.config.serverUrl = config.apiServerUrl;
+            console.log(`[CONFIG] Using API server URL: ${this.config.serverUrl}`);
+          }
+          
+          this.config.hasCentralBackend = config.hasCentralBackend;
+          this.config.serverConfigLoaded = true;
+          
+          return config;
+        })
+        .catch(error => {
+          console.error("[CONFIG] Error fetching server configuration:", error);
+          console.log("[CONFIG] Falling back to default server URL:", this.config.serverUrl);
+          
+          // Still mark as loaded even if it failed, so we continue with defaults
+          this.config.serverConfigLoaded = true;
+        });
     },
 
     // ===== LOGGING =====

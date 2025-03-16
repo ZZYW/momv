@@ -133,4 +133,16 @@ router.get("/get-player-codename", async (req, res) => {
 // ASCII Box endpoint
 router.post("/ascii-box", generateBox);
 
+// Configuration endpoint for client-side routing
+router.get("/server-config", (req, res) => {
+    // Check if CENTRAL_BACKEND_URL is defined in environment
+    const central_backend_url = process.env.CENTRAL_BACKEND_URL;
+    
+    // Return a configuration object for the client
+    res.json({
+        apiServerUrl: central_backend_url || req.protocol + '://' + req.get('host'),
+        hasCentralBackend: !!central_backend_url
+    });
+});
+
 export default router;

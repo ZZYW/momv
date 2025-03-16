@@ -41,6 +41,14 @@ if (!isProd) {
     console.log("Production mode: Editor and Control Panel are not being served.");
 }
 
+// Always mount the configuration endpoint for frontend routing
+app.get('/server-config', (req, res) => {
+    res.json({
+        apiServerUrl: central_backend_url || req.protocol + '://' + req.get('host'),
+        hasCentralBackend: !!central_backend_url
+    });
+});
+
 // Routing management:
 // In production, if a central backend URL is defined, proxy all API requests
 // (excluding editor and control panel routes) to the central backend.
@@ -48,8 +56,9 @@ if (central_backend_url) {
     console.log(`Proxying non-editor API routes to central backend at ${central_backend_url}`);
     app.use((req, res, next) => {
         // Check if the route is for the editor app or control panel
-        if (req.path.startsWith("/editor") || req.path.startsWith("/cp")) {
-            // Do not proxy editor-related routes
+        if (req.path.startsWith("/editor") || req.path.startsWith("/cp") || 
+            req.path === "/server-config") {
+            // Do not proxy editor-related routes or server config
             return next();
         }
         // Otherwise, proxy the request to the central backend

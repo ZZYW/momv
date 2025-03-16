@@ -8,6 +8,13 @@ import {
 
 const router = express.Router();
 
+
+/**
+ * !!!!! NOTE:
+ * every route here will be mounted under /story router.
+ */
+
+
 // Story API endpoints
 router.get("/blocks", async (req, res) => {
   try {

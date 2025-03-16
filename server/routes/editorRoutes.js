@@ -18,7 +18,7 @@ router.use("/editor/station2", express.static(path.join(clientDir, "src/sites", 
 
 // Editor API routes (parameterized by station)
 // The compile-playable route is used exclusively by the editor.
-router.post("/compile-playable/:station", (req, res) => {
+router.post("/editor/compile-playable/:station", (req, res) => {
     const { station } = req.params;
     if (!["station1", "station2"].includes(station)) {
         return res.status(400).send("Invalid station specified");
@@ -28,7 +28,7 @@ router.post("/compile-playable/:station", (req, res) => {
 });
 
 // Save story JSON locally in the corresponding station's input folder.
-router.post("/save-story-json/:station", (req, res) => {
+router.post("/editor/save-story-json/:station", (req, res) => {
     const { station } = req.params;
     if (!["station1", "station2"].includes(station)) {
         return res.status(400).send("Invalid station specified");

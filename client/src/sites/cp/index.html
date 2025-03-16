@@ -210,10 +210,10 @@
           Test POST /generate-dynamic
         </button>
         <button onclick="testCompilePlayable()">
-          Test POST /compile-playable
+          Test POST /editor/compile-playable
         </button>
         <button onclick="testSaveStoryJson()">
-          Test POST /save-story-json
+          Test POST /editor/save-story-json
         </button>
         <button onclick="testPrinter()">Test Printer</button>
       </div>
@@ -461,7 +461,7 @@
 
     function testCompilePlayable() {
       // Use station1 as the default station
-      fetch("/compile-playable/station1", {
+      fetch("/editor/compile-playable/station1", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -475,7 +475,7 @@
 
     function testSaveStoryJson() {
       // Use station1 as the default station
-      fetch("/save-story-json/station1", {
+      fetch("/editor/save-story-json/station1", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

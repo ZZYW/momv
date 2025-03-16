@@ -41,20 +41,26 @@ if (!isProd) {
     console.log("Production mode: Editor and Control Panel are not being served.");
 }
 
-// Handle API routes
+// Routing management:
+// In production, if a central backend URL is defined, proxy all API requests
+// (excluding editor and control panel routes) to the central backend.
 if (central_backend_url) {
-    console.log(`Proxying station API routes to central backend at ${central_backend_url}`);
-    app.use("/data", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
-    app.use("/record-choice", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
-    app.use("/generate-dynamic", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
-    app.use("/assign-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
-    app.use("/save-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
-    app.use("/validate-codename", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
-    app.use("/print", createProxyMiddleware({ target: central_backend_url, changeOrigin: true }));
+    console.log(`Proxying non-editor API routes to central backend at ${central_backend_url}`);
+    app.use((req, res, next) => {
+        // Check if the route is for the editor app or control panel
+        if (req.path.startsWith("/editor") || req.path.startsWith("/cp")) {
+            // Do not proxy editor-related routes
+            return next();
+        }
+        // Otherwise, proxy the request to the central backend
+        return createProxyMiddleware({
+            target: central_backend_url,
+            changeOrigin: true,
+        })(req, res, next);
+    });
 } else {
-    // Use local API routes
+    // When no central backend is defined, use local API and story routes
     app.use(apiRoutes);
-    // Mount story routes under /story prefix
     app.use("/story", storyRoutes);
 }
 

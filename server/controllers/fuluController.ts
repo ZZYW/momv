@@ -341,7 +341,7 @@ function insertSymbolBlock(
  * @param symbols Array of symbols to insert.
  * @returns The final assembled ASCII art as a string.
  */
-function assemble(template: Template, symbols: Symbol[]): string {
+function assemble(template: Template, symbols: Symbol[], customText = null): string {
     let templateLines = template.body.split("\n")
     const currentBellyHeight = template.bellyEndRow - template.bellyStartRow + 1
     const totalSymbolHeight = symbols.reduce((sum, sym) => sum + sym.body.split('\n').length, 0)
@@ -378,7 +378,8 @@ function assemble(template: Template, symbols: Symbol[]): string {
         currentRow += usedHeight
     })
 
-    return charMatrix.map(rowArr => rowArr.join("")).join("\n")
+    return `\n\n\n${charMatrix.map(rowArr => rowArr.join("")).join("\n")}\n\n\n${customText ? customText : ''}\n\n\n`
+
 }
 
 
@@ -389,40 +390,8 @@ readAsciiArts().catch(err => console.error('Failed to initialize fuluController:
 
 
 
-
-
-// Test the assemble function with random template and symbols
-function testAssemble() {
-    // Get random template
-    const template = templates[Math.floor(Math.random() * templates.length)]
-
-    // Get 2 or 3 random symbols
-    const numSymbols = 3;
-    const selectedSymbols: Symbol[] = []
-    for (let i = 0; i < numSymbols; i++) {
-        const symbol = symbols[Math.floor(Math.random() * symbols.length)]
-        selectedSymbols.push(symbol)
-    }
-
-    console.log('Selected template:', template.keywords)
-    console.log('Selected symbols:', selectedSymbols.map(s => s.keywords))
-
-    const result = assemble(template, selectedSymbols)
-    console.log('\nAssembled result:')
-    console.log(result)
-}
-
-// Run the test
-setTimeout(testAssemble, 1000) // Wait for readAsciiArts to complete
-
-
-
 export {
-    readAsciiArts,
     getAllTemplates,
     getAllSymbols,
-    getSymbolHeight,
-    getTemplateContainerHeight,
-    getElongatedTemplate,
     assemble
 }

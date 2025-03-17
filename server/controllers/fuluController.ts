@@ -131,6 +131,18 @@ async function processTemplateFile(file: string, fuluTemplateDir: string): Promi
     const filePath = path.join(fuluTemplateDir, file)
     let content = await fs.readFile(filePath, 'utf8')
 
+    // we replace the thick blocks with lines
+    const charToReplace = ["█", "■", "█", "▓"]
+    const replaceBy = ["*", "|", "$", "#", "!", "+", "-", "*"]
+
+
+    for (const char of charToReplace) {
+        if (content.includes(char)) {
+            const replacement = replaceBy[Math.floor(Math.random() * replaceBy.length)]
+            content = content.replaceAll(char, replacement)
+        }
+    }
+
     // Extract keyword from filename (e.g., template_dragon_...)
     const parts = file.split('_')
     if (parts[0] !== 'template') {
@@ -172,7 +184,7 @@ async function processTemplateFile(file: string, fuluTemplateDir: string): Promi
 }
 
 
-const SYMBOL_SCALE_FACTOR = 2.4; // adjust this value as needed
+const SYMBOL_SCALE_FACTOR = 2; // adjust this value as needed
 /**
  * Processes a single symbol file.
  *
@@ -385,7 +397,7 @@ function testAssemble() {
     const template = templates[Math.floor(Math.random() * templates.length)]
 
     // Get 2 or 3 random symbols
-    const numSymbols = Math.random() < 0.5 ? 2 : 3
+    const numSymbols = 3;
     const selectedSymbols: Symbol[] = []
     for (let i = 0; i < numSymbols; i++) {
         const symbol = symbols[Math.floor(Math.random() * symbols.length)]

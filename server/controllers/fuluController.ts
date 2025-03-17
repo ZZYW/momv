@@ -26,6 +26,71 @@ export interface Symbol extends ASCII_ART {
 const templates: Template[] = []
 const symbols: Symbol[] = []
 
+
+
+/**
+ * Finds all 'y' characters in the body, computes the bounding rectangle 
+ * of those points, and removes them from the ASCII. Returns the rectangle
+ * plus the updated body.
+ *
+ * @param body The full ASCII text
+ * @returns The bounding rectangle + newBody, or null if no 'y' found
+ */
+function findBellyByMarkers(body: string): {
+    bellyStartRow: number
+    bellyEndRow: number
+    bellyStartCol: number
+    bellyEndCol: number
+    newBody: string
+} | null {
+    const lines = body.split('\n')
+
+    const yPoints: Array<[number, number]> = []
+    // Collect all coordinates where we have 'y'
+    for (let row = 0; row < lines.length; row++) {
+        const line = lines[row]
+        for (let col = 0; col < line.length; col++) {
+            if (line[col] === 'y') {
+                yPoints.push([row, col])
+            }
+        }
+    }
+
+    if (yPoints.length === 0) {
+        // No 'y' found at all
+        return null
+    }
+
+    // Compute the bounding rectangle of all 'y' coordinates
+    let minRow = Infinity
+    let maxRow = -Infinity
+    let minCol = Infinity
+    let maxCol = -Infinity
+
+    for (const [r, c] of yPoints) {
+        if (r < minRow) minRow = r
+        if (r > maxRow) maxRow = r
+        if (c < minCol) minCol = c
+        if (c > maxCol) maxCol = c
+    }
+
+    // Remove the 'y' markers from the ASCII
+    for (const [r, c] of yPoints) {
+        const lineArr = lines[r].split('')
+        lineArr[c] = ' ' // or any empty character
+        lines[r] = lineArr.join('')
+    }
+
+    return {
+        bellyStartRow: minRow,
+        bellyEndRow: maxRow,
+        bellyStartCol: minCol,
+        bellyEndCol: maxCol,
+        newBody: lines.join('\n')
+    }
+}
+
+
 /**
  * Reads ASCII art templates and symbols from the filesystem
  * and loads them into memory
@@ -40,22 +105,59 @@ async function readAsciiArts() {
         const templateFiles = (await fs.readdir(fuluTemplateDir))
             .filter(file => file.startsWith('template_') && file.endsWith('.txt'))
 
-        // Process each template file
         for (const file of templateFiles) {
             const filePath = path.join(fuluTemplateDir, file)
-            const content = await fs.readFile(filePath, 'utf8')
+            let content = await fs.readFile(filePath, 'utf8')
 
+            // Extract keyword from filename (e.g., template_dragon_...)
             const parts = file.split('_')
             if (parts[0] !== 'template') {
                 throw new Error('template naming wrong')
-            } else if (parts.length < 3) {
-                throw new Error("template naming should be <template>_keyword_extendingLineheight")
+            }
+
+            // The second part is presumably your main keyword
+            const keyword = parts[1] || 'unknown'
+
+            // --- 1) Find extendableLineNumbers by scanning for ⭕ in the ASCII content
+            let lines = content.split('\n')
+            const extendableLineNumbers: number[] = []
+            lines.forEach((line, index) => {
+                if (line.includes('⭕')) {
+                    extendableLineNumbers.push(index)
+                    // Remove the marker & trim
+                    lines[index] = line.replace('⭕', '').trimEnd();
+                }
+            })
+            // Rebuild content after removing ⭕
+            content = lines.join('\n')
+
+            // --- 2) Attempt to find belly region via BFS from a known coordinate, e.g. (21, 16)
+            // Adjust if needed for your ASCII shape
+            const possibleBelly = findBellyByMarkers(content)
+            let bellyStartRow = 0
+            let bellyEndRow = 0
+            let bellyStartCol = 0
+            let bellyEndCol = 0
+
+            if (possibleBelly) {
+                bellyStartRow = possibleBelly.bellyStartRow
+                bellyEndRow = possibleBelly.bellyEndRow
+                bellyStartCol = possibleBelly.bellyStartCol
+                bellyEndCol = possibleBelly.bellyEndCol
+                // Update the content with 'y' removed
+                content = possibleBelly.newBody
+            } else {
+                console.warn(`No belly region found for ${file} at (21,16). Using zeroed coords.`)
             }
 
             templates.push({
                 body: content,
-                keywords: parts[1],
-                extendableLineNumbers: parts.splice(2).map(num => parseInt(num))
+                keywords: keyword,
+                extendableLineNumbers,
+                bellyStartRow,
+                bellyEndRow,
+                bellyStartCol,
+                bellyEndCol
             })
         }
 
@@ -63,12 +165,11 @@ async function readAsciiArts() {
         const symbolFiles = (await fs.readdir(fuluTemplateDir))
             .filter(file => file.startsWith('symbol_') && file.endsWith('.txt'))
 
-        // Process each symbol file
         for (const file of symbolFiles) {
             const filePath = path.join(fuluTemplateDir, file)
             const content = await fs.readFile(filePath, 'utf8')
 
-            // Extract keywords from filename (e.g., symbol_sun.txt -> ['sun'])
+            // Extract keywords from filename (e.g., symbol_sun.txt -> 'sun')
             const keywords = file.replace('symbol_', '').replace('.txt', '')
 
             symbols.push({
@@ -77,8 +178,8 @@ async function readAsciiArts() {
             })
         }
 
-        console.log(JSON.stringify(templates, null, 4))
-        console.log(JSON.stringify(symbols, null, 4))
+        // console.log("Templates:", JSON.stringify(templates, null, 4))
+        // console.log("Symbols:", JSON.stringify(symbols, null, 4))
 
     } catch (error) {
         console.error('Error reading ASCII arts:', error)
@@ -124,26 +225,20 @@ function getElongatedTemplate(tem: Template, additionalLines: number = 5): Templ
     const lines = tem.body.split('\n')
     let newLines = [...lines]
 
-    // Calculate how many lines to add at each extendable point
     // Distribute additional lines evenly among extendable points
     const linesPerPoint = Math.floor(additionalLines / tem.extendableLineNumbers.length)
     const extraLines = additionalLines % tem.extendableLineNumbers.length
 
     // Sort extendable line numbers in descending order so we can insert from bottom to top
-    // without affecting the indices of lines above
     const sortedExtendableLines = [...tem.extendableLineNumbers].sort((a, b) => b - a)
 
     // Insert lines at each extendable point
     for (let i = 0; i < sortedExtendableLines.length; i++) {
         const lineNumber = sortedExtendableLines[i]
-
-        // Calculate how many lines to add at this point
         const linesToAdd = linesPerPoint + (i < extraLines ? 1 : 0)
 
         if (linesToAdd > 0 && lineNumber < newLines.length) {
             const extendableLine = newLines[lineNumber]
-
-            // Insert duplicate lines at the extendable point
             newLines = [
                 ...newLines.slice(0, lineNumber + 1),
                 ...Array(linesToAdd).fill(extendableLine),
@@ -159,56 +254,42 @@ function getElongatedTemplate(tem: Template, additionalLines: number = 5): Templ
     }
 }
 
-
 /**
  * Inserts multiple ASCII symbol blocks into the "belly" region of a template.
  * Stacks them vertically starting at bellyStartRow, bellyStartCol.
  * If the total symbol height exceeds the belly region, it elongates
  * the template using getElongatedTemplate, then re-calculates the belly region.
- *
- * @param template A Template object (includes body, belly coords, and extendableLineNumbers).
- * @param symbols  An array of Symbol objects to be inserted in order.
- * @returns A string containing the final ASCII art with the symbols swapped in.
  */
 function assemble(template: Template, symbols: Symbol[]): string {
-    // 1) Convert the template’s body to an array of lines
-    let templateLines = template.body.split("\n");
+    let templateLines = template.body.split("\n")
 
-    // 2) Determine how many lines the belly region currently has
-    //    (from bellyStartRow to bellyEndRow, inclusive).
-    const currentBellyHeight = template.bellyEndRow - template.bellyStartRow + 1;
+    // Determine how many lines the belly region currently has
+    const currentBellyHeight = template.bellyEndRow - template.bellyStartRow + 1
 
-    // 3) Calculate total lines (height) needed for all symbols stacked vertically
+    // Calculate total lines needed for all symbols
     const totalSymbolHeight = symbols.reduce((sum, sym) => {
-        const lines = sym.body.split("\n");
-        return sum + lines.length;
-    }, 0);
+        const lines = sym.body.split("\n")
+        return sum + lines.length
+    }, 0)
 
-    // 4) If the total symbol height exceeds the current belly height,
-    //    we need to elongate the template. This will also add lines
-    //    below (or at) the extendableLineNumbers to create more space.
+    // If the total symbol height exceeds the belly region, elongate
     if (totalSymbolHeight > currentBellyHeight) {
-        // Example: shortfall is how many extra lines we need
-        const shortfall = totalSymbolHeight - currentBellyHeight;
+        console.log("the total symbol height exceeds the height of the belly region so we are making the fulu longer!");
+        const shortfall = totalSymbolHeight - currentBellyHeight
+        const elongatedTemplate = getElongatedTemplate(template, shortfall)
 
-        // Use your existing function to extend the template
-        const elongatedTemplate = getElongatedTemplate(template, shortfall);
+        // Move bellyEndRow downward by the shortfall
+        elongatedTemplate.bellyEndRow += shortfall
 
-        // The elongation presumably keeps bellyStartRow, bellyStartCol the same,
-        // but we need to re-calculate bellyEndRow because the template is now taller.
-        // A simple approach is to shift bellyEndRow downward by 'shortfall':
-        const newBellyEndRow = elongatedTemplate.bellyEndRow + shortfall;
-        elongatedTemplate.bellyEndRow = newBellyEndRow;
-
-        // Update local references
-        template = elongatedTemplate;
-        templateLines = elongatedTemplate.body.split("\n");
+        // Update references
+        template = elongatedTemplate
+        templateLines = elongatedTemplate.body.split("\n")
     }
 
-    // 5) Now we have a tall-enough template. Convert its lines to a 2D array of characters
-    const charMatrix = templateLines.map(line => line.split(""));
+    // Convert lines to a 2D char matrix
+    const charMatrix = templateLines.map(line => line.split(""))
 
-    // 6) A helper function to insert a symbol’s lines (vertically) into the belly region
+    // Helper for inserting a single symbol block
     function insertSymbolBlock(
         matrix: string[][],
         sym: Symbol,
@@ -217,32 +298,23 @@ function assemble(template: Template, symbols: Symbol[]): string {
         maxRow: number,
         maxCol: number
     ): number {
-        // Convert symbol into lines
-        const lines = sym.body.split("\n");
+        const lines = sym.body.split("\n")
         for (let r = 0; r < lines.length; r++) {
-            const symbolRow = startRow + r;
-            if (symbolRow > maxRow || symbolRow < 0 || symbolRow >= matrix.length) {
-                // If outside the “belly” or matrix, skip
-                continue;
-            }
-            // Overwrite characters from bellyStartCol..bellyEndCol
-            const rowChars = lines[r].split("");
+            const symbolRow = startRow + r
+            if (symbolRow < 0 || symbolRow >= matrix.length || symbolRow > maxRow) continue
+
+            const rowChars = lines[r].split("")
             for (let c = 0; c < rowChars.length; c++) {
-                const symbolCol = startCol + c;
-                if (symbolCol > maxCol || symbolCol < 0 || symbolCol >= matrix[symbolRow].length) {
-                    // If outside the “belly” or line boundary, skip
-                    continue;
-                }
-                matrix[symbolRow][symbolCol] = rowChars[c];
+                const symbolCol = startCol + c
+                if (symbolCol < 0 || symbolCol >= matrix[symbolRow].length || symbolCol > maxCol) continue
+                matrix[symbolRow][symbolCol] = rowChars[c]
             }
         }
-        // Return how many lines we used
-        return lines.length;
+        return lines.length
     }
 
-    // 7) Place each symbol in the belly region, starting at bellyStartRow, bellyStartCol,
-    //    stacking them one under another
-    let currentRow = template.bellyStartRow;
+    // Place each symbol in the belly, stacking vertically
+    let currentRow = template.bellyStartRow
     for (const sym of symbols) {
         const usedHeight = insertSymbolBlock(
             charMatrix,
@@ -251,25 +323,42 @@ function assemble(template: Template, symbols: Symbol[]): string {
             template.bellyStartCol,
             template.bellyEndRow,
             template.bellyEndCol
-        );
-        // Advance currentRow by that many lines
-        currentRow += usedHeight;
-        // If we exceed the belly, it's possible the elongation was insufficient,
-        // but we accounted for that earlier. If you want to do further checks here,
-        // you could do so.
+        )
+        currentRow += usedHeight
     }
 
-    // 8) Convert the matrix back to an array of lines, then join with newline
-    const updatedLines = charMatrix.map(rowArr => rowArr.join(""));
-    return updatedLines.join("\n");
+    // Convert char matrix back to lines
+    return charMatrix.map(rowArr => rowArr.join("")).join("\n")
 }
-
-
-
-
 
 // Initialize by reading ASCII arts when the module is imported
 readAsciiArts().catch(err => console.error('Failed to initialize fuluController:', err))
+
+// Test the assemble function with random template and symbols
+function testAssemble() {
+    // Get random template
+    const template = templates[Math.floor(Math.random() * templates.length)]
+
+    // Get 2 or 3 random symbols
+    const numSymbols = Math.random() < 0.5 ? 2 : 3
+    const selectedSymbols: Symbol[] = []
+    for (let i = 0; i < numSymbols; i++) {
+        const symbol = symbols[Math.floor(Math.random() * symbols.length)]
+        selectedSymbols.push(symbol)
+    }
+
+    console.log('Selected template:', template.keywords)
+    console.log('Selected symbols:', selectedSymbols.map(s => s.keywords))
+
+    const result = assemble(template, selectedSymbols)
+    console.log('\nAssembled result:')
+    console.log(result)
+}
+
+// Run the test
+setTimeout(testAssemble, 1000) // Wait for readAsciiArts to complete
+
+
 
 export {
     readAsciiArts,

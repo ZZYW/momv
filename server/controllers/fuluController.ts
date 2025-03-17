@@ -308,12 +308,20 @@ function assemble(template: Template, symbols: Symbol[]): string {
     const charMatrix = templateLines.map(line => line.split(""))
 
     let currentRow = template.bellyStartRow
+    const bellyWidth = template.bellyEndCol - template.bellyStartCol + 1
+
     symbols.forEach(sym => {
+        const symLines = sym.body.split('\n')
+        // Determine the maximum width of the symbol
+        const symbolWidth = symLines.reduce((max, line) => Math.max(max, line.length), 0)
+        // Compute horizontal offset for centering within the belly region
+        const centeredStartCol = template.bellyStartCol + Math.floor((bellyWidth - symbolWidth) / 2)
+
         const usedHeight = insertSymbolBlock(
             charMatrix,
             sym,
             currentRow,
-            template.bellyStartCol,
+            centeredStartCol, // use computed column to center the symbol
             template.bellyEndRow,
             template.bellyEndCol
         )
@@ -322,6 +330,7 @@ function assemble(template: Template, symbols: Symbol[]): string {
 
     return charMatrix.map(rowArr => rowArr.join("")).join("\n")
 }
+
 
 // -------------------------
 // Initialization

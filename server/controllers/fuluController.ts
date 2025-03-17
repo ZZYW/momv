@@ -1,4 +1,4 @@
-import fs from 'fs/promises'
+import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -125,16 +125,15 @@ function findBellyByMarkers(body: string): {
  *
  * @param file The template filename.
  * @param fuluTemplateDir Directory path containing the file.
- * @returns A Promise resolving to a Template.
+ * @returns A Template.
  */
-async function processTemplateFile(file: string, fuluTemplateDir: string): Promise<Template> {
+function processTemplateFile(file: string, fuluTemplateDir: string): Template {
     const filePath = path.join(fuluTemplateDir, file)
-    let content = await fs.readFile(filePath, 'utf8')
+    let content = fs.readFileSync(filePath, 'utf8')
 
-    // we replace the thick blocks with lines
+    // Replace the thick blocks with lines
     const charToReplace = ["█", "■", "█", "▓"]
     const replaceBy = ["*", "|", "$", "#", "!", "+", "-", "*"]
-
 
     for (const char of charToReplace) {
         if (content.includes(char)) {
@@ -183,18 +182,18 @@ async function processTemplateFile(file: string, fuluTemplateDir: string): Promi
     }
 }
 
+const SYMBOL_SCALE_FACTOR = 2 // adjust this value as needed
 
-const SYMBOL_SCALE_FACTOR = 2; // adjust this value as needed
 /**
  * Processes a single symbol file.
  *
  * @param file The symbol filename.
  * @param fuluTemplateDir Directory path containing the file.
- * @returns A Promise resolving to a Symbol.
+ * @returns A Symbol.
  */
-async function processSymbolFile(file: string, fuluTemplateDir: string): Promise<Symbol> {
+function processSymbolFile(file: string, fuluTemplateDir: string): Symbol {
     const filePath = path.join(fuluTemplateDir, file)
-    let content = await fs.readFile(filePath, 'utf8')
+    let content = fs.readFileSync(filePath, 'utf8')
 
     // Apply scaling if the factor is greater than 1.
     if (SYMBOL_SCALE_FACTOR > 1) {
@@ -211,27 +210,27 @@ async function processSymbolFile(file: string, fuluTemplateDir: string): Promise
 /**
  * Reads all ASCII art templates and symbols from the filesystem.
  */
-async function readAsciiArts() {
+function readAsciiArts() {
     try {
         const serverDir = path.dirname(__dirname)
         const fuluTemplateDir = path.join(serverDir, 'assets', 'fulu')
-        const allFiles = await fs.readdir(fuluTemplateDir)
+        const allFiles = fs.readdirSync(fuluTemplateDir)
 
         const templateFiles = allFiles.filter(file => file.startsWith('template_') && file.endsWith('.txt'))
         const symbolFiles = allFiles.filter(file => file.startsWith('symbol_') && file.endsWith('.txt'))
 
-        // Process template files concurrently
-        const templatePromises = templateFiles.map(file => processTemplateFile(file, fuluTemplateDir))
-        const loadedTemplates = await Promise.all(templatePromises)
-        loadedTemplates.forEach(t => templates.push(t))
+        // Process template files sequentially
+        templateFiles.forEach(file => {
+            const templ = processTemplateFile(file, fuluTemplateDir)
+            templates.push(templ)
+        })
 
-        // Process symbol files concurrently
-        const symbolPromises = symbolFiles.map(file => processSymbolFile(file, fuluTemplateDir))
-        const loadedSymbols = await Promise.all(symbolPromises)
-        loadedSymbols.forEach(s => symbols.push(s))
+        // Process symbol files sequentially
+        symbolFiles.forEach(file => {
+            const sym = processSymbolFile(file, fuluTemplateDir)
+            symbols.push(sym)
+        })
 
-        // console.log("Templates:", JSON.stringify(templates, null, 4))
-        // console.log("Symbols:", JSON.stringify(symbols, null, 4))
     } catch (error) {
         console.error('Error reading ASCII arts:', error)
     }
@@ -339,9 +338,10 @@ function insertSymbolBlock(
  *
  * @param template The template to modify.
  * @param symbols Array of symbols to insert.
+ * @param customText Optional custom text to append.
  * @returns The final assembled ASCII art as a string.
  */
-function assemble(template: Template, symbols: Symbol[], customText = null): string {
+function assemble(template: Template, symbols: Symbol[], customText: string | null = null): string {
     let templateLines = template.body.split("\n")
     const currentBellyHeight = template.bellyEndRow - template.bellyStartRow + 1
     const totalSymbolHeight = symbols.reduce((sum, sym) => sum + sym.body.split('\n').length, 0)
@@ -371,7 +371,7 @@ function assemble(template: Template, symbols: Symbol[], customText = null): str
             charMatrix,
             sym,
             currentRow,
-            centeredStartCol, // use computed column to center the symbol
+            centeredStartCol,
             template.bellyEndRow,
             template.bellyEndCol
         )
@@ -379,16 +379,16 @@ function assemble(template: Template, symbols: Symbol[], customText = null): str
     })
 
     return `\n\n\n${charMatrix.map(rowArr => rowArr.join("")).join("\n")}\n\n\n${customText ? customText : ''}\n\n\n`
-
 }
-
 
 // -------------------------
 // Initialization
 // -------------------------
-readAsciiArts().catch(err => console.error('Failed to initialize fuluController:', err))
-
-
+try {
+    readAsciiArts()
+} catch (err) {
+    console.error('Failed to initialize fuluController:', err)
+}
 
 export {
     getAllTemplates,

@@ -44,6 +44,6 @@ export function testRandomAssemble(numSymbols = 3, shouldPrint = false) {
 
 
 // Wait for imports to be properly loaded before executing
-setTimeout(() => {
-  testRandomAssemble(3, true);
-}, 1000);
+
+testRandomAssemble(3, true);
+

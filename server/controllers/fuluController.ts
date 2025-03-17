@@ -36,6 +36,35 @@ const symbols: Symbol[] = []
 // Utility Functions
 // -------------------------
 
+
+/**
+ * Scales an ASCII art string by a given factor while keeping the aspect ratio.
+ * Each character is repeated 'factor' times horizontally, and each line is repeated 'factor' times vertically.
+ *
+ * @param body The original ASCII art string.
+ * @param factor The scaling factor.
+ * @returns The scaled ASCII art string.
+ */
+function scaleAsciiArt(body: string, factor: number): string {
+    const lines = body.split('\n')
+    const scaledLines: string[] = []
+
+    lines.forEach(line => {
+        let newLine = ''
+        // Repeat each character 'factor' times horizontally.
+        for (const char of line) {
+            newLine += char.repeat(factor)
+        }
+        // Repeat the entire line 'factor' times vertically.
+        for (let i = 0; i < factor; i++) {
+            scaledLines.push(newLine)
+        }
+    })
+
+    return scaledLines.join('\n')
+}
+
+
 /**
  * Finds all 'y' characters in the body, computes the bounding rectangle 
  * of those points, and removes them from the ASCII. Returns the rectangle
@@ -142,6 +171,8 @@ async function processTemplateFile(file: string, fuluTemplateDir: string): Promi
     }
 }
 
+
+const SYMBOL_SCALE_FACTOR = 2.4; // adjust this value as needed
 /**
  * Processes a single symbol file.
  *
@@ -151,7 +182,13 @@ async function processTemplateFile(file: string, fuluTemplateDir: string): Promi
  */
 async function processSymbolFile(file: string, fuluTemplateDir: string): Promise<Symbol> {
     const filePath = path.join(fuluTemplateDir, file)
-    const content = await fs.readFile(filePath, 'utf8')
+    let content = await fs.readFile(filePath, 'utf8')
+
+    // Apply scaling if the factor is greater than 1.
+    if (SYMBOL_SCALE_FACTOR > 1) {
+        content = scaleAsciiArt(content, SYMBOL_SCALE_FACTOR)
+    }
+
     const keywords = file.replace('symbol_', '').replace('.txt', '')
     return {
         body: content,
@@ -280,6 +317,7 @@ function insertSymbolBlock(
             matrix[symbolRow][symbolCol] = char
         })
     })
+    lines.push("  ")
     return lines.length
 }
 

@@ -131,17 +131,6 @@ function processTemplateFile(file: string, fuluTemplateDir: string): Template {
     const filePath = path.join(fuluTemplateDir, file)
     let content = fs.readFileSync(filePath, 'utf8')
 
-    // Replace the thick blocks with lines
-    const charToReplace = ["█", "■", "█", "▓"]
-    const replaceBy = ["*", "|", "$", "#", "!", "+", "-", "*"]
-
-    for (const char of charToReplace) {
-        if (content.includes(char)) {
-            const replacement = replaceBy[Math.floor(Math.random() * replaceBy.length)]
-            content = content.replaceAll(char, replacement)
-        }
-    }
-
     // Extract keyword from filename (e.g., template_dragon_...)
     const parts = file.split('_')
     if (parts[0] !== 'template') {

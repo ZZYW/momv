@@ -567,7 +567,7 @@ document.addEventListener("alpine:init", () => {
         // Add a prompt message
         const promptMessage = document.createElement("div");
         promptMessage.className = "codename-prompt";
-        promptMessage.innerHTML = "并赐予他法号：";
+        promptMessage.innerHTML = "并赐予他一化名：";
         
         // Create static-option-container for codename options
         const optionsContainer = document.createElement("div");
@@ -624,7 +624,7 @@ document.addEventListener("alpine:init", () => {
               // Create a small reminder message
               const reminderMessage = document.createElement("div");
               reminderMessage.className = "codename-reminder";
-              reminderMessage.innerHTML = `<p>请务必牢记您的法号……</p>`;
+              reminderMessage.innerHTML = `<p>请务必牢记您的化名……</p>`;
  
               
               // Create countdown container

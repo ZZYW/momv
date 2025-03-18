@@ -132,7 +132,7 @@ function processTemplateFile(file: string, fuluTemplateDir: string): Template {
     let content = fs.readFileSync(filePath, 'utf8')
 
     // Extract keyword from filename (e.g., template_dragon_...)
-    const parts = file.split('_')
+    const parts = file.replace(path.extname(file), '').split("_")
     if (parts[0] !== 'template') {
         throw new Error('template naming wrong')
     }
@@ -234,6 +234,55 @@ function getAllTemplates(): Template[] {
 
 function getAllSymbols(): Symbol[] {
     return symbols
+}
+
+
+/**
+ * Finds a template by keyword with fuzzy matching
+ * @param {string} keywords - The keyword to search for
+ * @returns {Template|null} The matching template or null if not found
+ */
+function getTemplateObjectByKeywords(keywords: string): Template | null {
+    const normalizedKeyword = keywords.toLowerCase().trim();
+    const allTemplates = getAllTemplates();
+
+    // First try exact match
+    let template = allTemplates.find(t => t.keywords.toLowerCase() === normalizedKeyword);
+
+    // If not found, try partial match
+    if (!template) {
+        template = allTemplates.find(t =>
+            t.keywords.toLowerCase().includes(normalizedKeyword) ||
+            normalizedKeyword.includes(t.keywords.toLowerCase())
+        );
+    }
+
+    // If still not found, return a random template as fallback
+    return template || (allTemplates.length > 0 ? allTemplates[Math.floor(Math.random() * allTemplates.length)] : null);
+}
+
+/**
+ * Finds a symbol by keyword with fuzzy matching
+ * @param {string} keywords - The keyword to search for
+ * @returns {Symbol|null} The matching symbol or null if not found
+ */
+function getSymbolObjectByKeywords(keywords: string): Symbol | null {
+    const normalizedKeyword = keywords.toLowerCase().trim();
+    const allSymbols = getAllSymbols();
+
+    // First try exact match
+    let symbol = allSymbols.find(s => s.keywords.toLowerCase() === normalizedKeyword);
+
+    // If not found, try partial match
+    if (!symbol) {
+        symbol = allSymbols.find(s =>
+            s.keywords.toLowerCase().includes(normalizedKeyword) ||
+            normalizedKeyword.includes(s.keywords.toLowerCase())
+        );
+    }
+
+    // If still not found, return a random symbol as fallback
+    return symbol || (allSymbols.length > 0 ? allSymbols[Math.floor(Math.random() * allSymbols.length)] : null);
 }
 
 // -------------------------
@@ -380,6 +429,8 @@ try {
 }
 
 export {
+    getSymbolObjectByKeywords,
+    getTemplateObjectByKeywords,
     getAllTemplates,
     getAllSymbols,
     assemble

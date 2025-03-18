@@ -1,5 +1,8 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+
+
 # Station2 startup script (connects to Station1)
 # 服务器2启动脚本（连接到服务器1）
 echo "=========================================================="

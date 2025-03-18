@@ -1,5 +1,8 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+
+
 # Station1 startup script (main server with printer)
 # 服务器1启动脚本（主服务器，带打印机）
 echo "=========================================================="

@@ -491,6 +491,30 @@ async function getStoryBlocks(storyId: string | number): Promise<StoryBlock[]> {
   }
 }
 
+/**
+ * Retrieves a player's basic metadata
+ * 
+ * @param {string} playerId - The player's unique identifier
+ * @returns {Promise<{exists: boolean, codename: string|null}>} Player metadata
+ */
+async function getPlayerMetadata(playerId: string): Promise<{exists: boolean, codename: string|null}> {
+  try {
+    await db.read();
+    
+    if (!db.data || !db.data.players || !db.data.players[playerId]) {
+      return { exists: false, codename: null };
+    }
+    
+    return { 
+      exists: true, 
+      codename: db.data.players[playerId].codename || null 
+    };
+  } catch (error) {
+    console.error('Error retrieving player metadata:', error);
+    return { exists: false, codename: null };
+  }
+}
+
 export {
   getStoryBeforeBlockByPlayer,
   getBlockData,
@@ -498,5 +522,6 @@ export {
   compileChoiceSummaryForBlock,
   getStoryBlocks,
   compileStoryText,
-  filterBlocks
+  filterBlocks,
+  getPlayerMetadata
 };

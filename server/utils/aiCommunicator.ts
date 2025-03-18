@@ -19,7 +19,7 @@ export type BlockType = 'dynamic';
  * Options for dynamic blocks
  */
 export interface DynamicBlockOptions {
-  generateOptions?: boolean;
+    generateOptions?: boolean;
 }
 
 /**
@@ -31,9 +31,10 @@ export interface DynamicBlockOptions {
  * @throws {Error} - If there's an error communicating with the API
  */
 export const sendPromptToLLM = async (
-  prompt: string, 
-  blockType: BlockType,
-  options: DynamicBlockOptions = {}
+    prompt: string,
+    blockType: BlockType,
+    options: DynamicBlockOptions = {},
+    returnParsed = true
 ): Promise<string | string[]> => {
     if (!process.env.DASHSCOPE_API_KEY) {
         throw new Error("API key not found. Please make sure DASHSCOPE_API_KEY is set in your .env file.");
@@ -61,8 +62,12 @@ export const sendPromptToLLM = async (
     }
 
     console.log(`Returned result: ----\n${reply}\n----\n\n`);
+    if (returnParsed) {
+        return parseResponse(reply, options);
+    } else {
+        return reply;
+    }
 
-    return parseResponse(reply, options);
 };
 
 /**
@@ -141,7 +146,7 @@ function parseResponse(reply: string, options: DynamicBlockOptions): string | st
                 console.log(`Extracted ${optionsList.length} options via regex parser`);
                 return optionsList;
             }
-        } 
+        }
         // For standard text generation
         else {
             // Look for "deliverable": "..."
@@ -278,7 +283,7 @@ function extractFallbackContent(reply: string, options: DynamicBlockOptions): st
 
         return cleaned || "无法生成有效内容。";
     }
-    
+
     // Generic fallback for unknown scenarios
     return options.generateOptions
         ? ["选项 1", "选项 2", "选项 3", "选项 4"]

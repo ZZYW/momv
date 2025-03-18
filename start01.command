@@ -2,7 +2,6 @@
 
 cd "$(dirname "$0")"
 
-
 # Station1 startup script (main server with printer)
 # 服务器1启动脚本（主服务器，带打印机）
 echo "=========================================================="
@@ -44,22 +43,17 @@ echo "其他服务器应在CENTRAL_BACKEND_URL中使用此IP地址"
 npm run prod &
 SERVER_PID=$!
 
-
-
-# Open the station interface in the default browser after a short delay
-# 短暂延迟后在默认浏览器中打开服务器界面
+# Open the station interface in Chrome kiosk mode after a short delay
 sleep 3
-open http://localhost:3001/station1
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk "http://localhost:3001/station1" &
 
 echo "=========================================================="
 echo "Station 1 is now running. To stop, close this terminal window."
 echo "服务器1已启动。要停止服务，请关闭此终端窗口。或者使用组合键：Control + C"
 echo "=========================================================="
 
-
 # Ensure cleanup happens even if script is terminated
 trap "echo 'Stopping server1...'; kill -TERM $SERVER_PID; wait $SERVER_PID" EXIT SIGINT SIGTERM
 
 # Keep script alive while server runs
 wait $SERVER_PID
-

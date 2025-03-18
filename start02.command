@@ -40,8 +40,9 @@ npm run prod &
 SERVER_PID=$!
 # Open the station interface in the default browser after a short delay
 # 短暂延迟后在默认浏览器中打开服务器界面
+
 sleep 3
-open http://localhost:3001/station2
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk "http://localhost:3001/station1" &
 
 echo "=========================================================="
 echo "Station 2 is now running. To stop, close this terminal window."

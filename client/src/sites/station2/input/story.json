@@ -12,7 +12,7 @@
       "id": "3d4",
       "type": "plain",
       "sceneId": 1,
-      "text": "{get codename}顺着阶梯走进庙里，什么都没有。抬头望去，屋顶横竖排列的榉木横垣开始一根根的向四周弯曲蔓延，将四周紧紧包裹起来。 不知哪里来的一群"
+      "text": "{get codename}顺着阶梯走进庙里，什么都没有。抬头望去，屋顶横竖排列的榉木横垣开始一根根的向四周弯曲蔓延，将寺庙内紧紧包裹起来。 不知哪里来的一群"
     },
     {
       "id": "268",
@@ -27,7 +27,7 @@
     {
       "id": "322",
       "type": "plain",
-      "text": "钻进零星的空隙，开始在小吴头顶盘旋，形成乌黑的龙卷风。 ",
+      "text": "钻进零星的空隙，开始在她头顶盘旋，形成乌黑的龙卷风。 ",
       "sceneId": 1
     },
     {
@@ -35,7 +35,7 @@
       "type": "dynamic",
       "sceneId": 1,
       "blockName": "xxx",
-      "prompt": "{get story so far for nobody} \n\n{get decisions of question#d65 by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“形成乌黑的龙卷风”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。"
+      "prompt": "{get story so far for nobody} \n\n{get decisions of question#189 by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“形成乌黑的龙卷风”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论描述出龙卷风的变化。避免描写内心思想和情感，注重行为动作。\n\n书写3-5个句子。用白描的方式。不要直接使用原文中出现过的词语。"
     },
     {
       "id": "94d",
@@ -44,16 +44,37 @@
       "text": "风把{get codename}的头发卷入空中。她伸出手去整理头发，而触碰到的是散落空中的绒毛。手臂，头发，绒毛缠绕在一起，编织成一个巨大的网。\n"
     },
     {
-      "id": "f2d",
+      "id": "664",
+      "type": "plain",
+      "text": "网是无数只",
+      "sceneId": 1
+    },
+    {
+      "id": "355",
       "type": "dynamic",
-      "sceneId": 1,
       "blockName": "",
-      "prompt": "{get story so far for nobody} \n\n{get decisions of question#cc7 by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“编织成一个巨大的网”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。"
+      "prompt": "这是迄今为止的故事：\n\n{get story so far for this player}\n\n\n以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n\n\n{get decisions of question#189 by this player, from story 1}\n\n请深入解析这个选择的象征含义，但不要在你的创作中直接引用这些原始选择！！根据玩家的选择，用荣格的心理分析法对玩家的潜意识做出分析，然后生成一个单个的形容词：\n\n____的",
+      "generateOptions": false,
+      "sceneId": 1
+    },
+    {
+      "id": "540",
+      "type": "plain",
+      "text": "{get answer of question#26f from this player}的家. 它们沿着网的脉络，迈着整齐的步伐，从{get codename}身边走过，嘴里齐声念着：",
+      "sceneId": 1
+    },
+    {
+      "id": "234",
+      "type": "dynamic",
+      "blockName": "",
+      "prompt": "这是迄今为止的故事：\n\n{get story so far for this player}\n\n\n以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n\n\n{get decisions of question#1fb, 4fc,190 by this player, from story 1}\n\n请深入解析这个选择的象征含义，但不要在你的创作中直接引用这些原始选择！！根据玩家的选择，用荣格的心理分析法对玩家的潜意识做出分析，然后生成一句口号：\n\n",
+      "generateOptions": false,
+      "sceneId": 1
     },
     {
       "id": "183",
       "type": "plain",
-      "text": "土黄色的大泥点子落下，黏附她的",
+      "text": "土黄色的大泥点子落下，黏附在{get codename}的",
       "sceneId": 1
     },
     {
@@ -69,7 +90,7 @@
     {
       "id": "533",
       "type": "plain",
-      "text": "双腿逐渐下沉，与青砖地面融为一体。他感到骨节舒展，仿佛化作古松扎根庙中。树皮渗出水珠，枝桠间阴影攒动。",
+      "text": "双腿逐渐下沉，与青砖地面融为一体。他感到骨节舒展，仿佛化作古松扎根庙中。树皮渗出细密的黏腻水珠，枝桠间阴影攒动。",
       "sceneId": 1
     },
     {
@@ -83,7 +104,27 @@
     {
       "id": "939",
       "type": "plain",
-      "text": "庙下的泥土深处长满了密布的白色菌丝。菌丝顺着{get codename}的毛孔进入他的体内，和红色的血管缠绕在一起，发出细碎响动。起初是溪流淙淙，渐渐混入血液奔涌声。菌丝输送养分的窸窣与白血球游走的动静此起彼伏，重复而又无聊。渐渐的，{get codename}开始听到更多的声音：一只巨大的{get answer of question#268 from this player}在风中飞翔。",
+      "text": "庙下的泥土深处长满了密布的白色菌丝。菌丝顺着{get codename}的毛孔进入他的体内，和红色的血管缠绕在一起，发出细碎响动。",
+      "sceneId": 2
+    },
+    {
+      "id": "133",
+      "type": "plain",
+      "text": "菌丝输送养分的窸窣与白血球游走的动静此起彼伏，重复而又",
+      "sceneId": 2
+    },
+    {
+      "id": "851",
+      "type": "dynamic",
+      "blockName": "",
+      "prompt": "这是迄今为止的故事：\n\n{get story so far for this player}\n\n\n以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n\n\n{get decisions of question#470 by this player, from story 1}\n\n请深入解析这个选择的象征含义，但不要在你的创作中直接引用这些原始选择！！根据玩家的选择，用荣格的心理分析法对玩家的潜意识做出分析，然后生成一个单个的形容词：\n\n",
+      "generateOptions": false,
+      "sceneId": 2
+    },
+    {
+      "id": "334",
+      "type": "plain",
+      "text": "渐渐的，{get codename}开始听到更多的声音：一只巨大的{get answer of question#268 from this player}在风中飞翔。",
       "sceneId": 2
     },
     {
@@ -93,16 +134,9 @@
       "sceneId": 2
     },
     {
-      "id": "565",
-      "type": "dynamic",
-      "blockName": "",
-      "prompt": "{get story so far for nobody} \n\n{get decisions of question#470 by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“我是你的妈妈”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。",
-      "sceneId": 2
-    },
-    {
       "id": "145",
       "type": "plain",
-      "text": "两只手从{get answer of question#268 from this player}妈妈的身体里伸出来。{get codename}",
+      "text": "两只手从{get answer of question#268 from this player}妈妈的身体里伸出来，轻抚着{get codename}的{get answer of question#752 from this player}. {get codename}",
       "sceneId": 2
     },
     {
@@ -125,7 +159,7 @@
       "id": "595",
       "type": "dynamic",
       "blockName": "",
-      "prompt": "{get story so far for nobody} \n\n{get decisions of question#23e by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“可她并不疼”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。",
+      "prompt": "{get story so far for nobody} \n\n{get decisions of question#23e by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“可她并不疼”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出下文。避免描写内心思想和情感，注重行为动作。\n\n书写3个句子。用白描的方式。不要直接使用原文中出现过的词语。",
       "generateOptions": true,
       "sceneId": 2
     },
@@ -140,7 +174,47 @@
     {
       "id": "155",
       "type": "plain",
-      "text": "鸟妈妈不见了。小吴伸出手，指尖触碰到了羽毛的余温。他深深吸一口气，潮湿空气里存留着鸟妈妈的气息。脚下没有路。{get codename}开始朝着一个随机的方向走去。走过的地方出现了路。\n",
+      "text": "{get answer of question#268 from this player}妈妈不见了。{get codename}伸出手，指尖触碰到了羽毛的余温。他深深吸一口气，潮湿空气里存留着{get answer of question#268 from this player}妈妈的气息。\n",
+      "sceneId": 3
+    },
+    {
+      "id": "738",
+      "type": "plain",
+      "text": "脚下没有路。{get codename}开始朝着一个随机的方向走去。走过的地方出现了路。路两旁弥漫着",
+      "sceneId": 3
+    },
+    {
+      "id": "340",
+      "type": "dynamic",
+      "blockName": "",
+      "prompt": "这是迄今为止的故事：\n\n{get story so far for this player}\n\n\n以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n\n\n{get decisions of question#ba6 by this player, from story 1}\n\n请深入解析这个选择的象征含义，但不要在你的创作中直接引用这些原始选择！！根据玩家的选择，用荣格的心理分析法对玩家的潜意识做出分析，然后生成一个不存在的地摊小吃的名词：\n",
+      "generateOptions": false,
+      "sceneId": 3
+    },
+    {
+      "id": "826",
+      "type": "plain",
+      "text": "的香气。小吃摊边的一群",
+      "sceneId": 3
+    },
+    {
+      "id": "253",
+      "type": "dynamic",
+      "blockName": "",
+      "prompt": "这是迄今为止的故事：\n\n{get story so far for this player}\n\n\n以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n\n\n{get decisions of question#470 by this player, from story 1}\n\n请深入解析这个选择的象征含义，但不要在你的创作中直接引用这些原始选择！！根据玩家的选择，用荣格的心理分析法对玩家的潜意识做出分析，然后生成形容某一种假象的职业人群的名词：\n",
+      "generateOptions": false,
+      "sceneId": 3
+    },
+    {
+      "id": "288",
+      "type": "plain",
+      "text": "在她路过时朝她微微点头。",
+      "sceneId": 3
+    },
+    {
+      "id": "336",
+      "type": "plain",
+      "text": "渐渐的，",
       "sceneId": 3
     },
     {
@@ -156,22 +230,48 @@
     {
       "id": "858",
       "type": "plain",
-      "text": "最后一线阳光在树冠裂隙间湮灭。黑暗涌出的速度比雾霭更快，裹着水气的白烟从腐殖层升腾，树皮渗出细密的黏腻水珠，枝桠间阴影攒动。",
+      "text": "最后一线阴影在树冠裂隙间湮灭。光亮涌出的速度比黑暗更快，裹着水气的雾霭从腐殖层升腾。 ",
       "sceneId": 3
     },
     {
       "id": "156",
       "type": "dynamic",
       "blockName": "",
-      "prompt": "{get story so far for nobody} \n\n{get decisions of question#a4f by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n回到原文“枝桠间阴影攒动”处。\n\n请结合对全部玩家的分析，用易经，荣格的心理分析法，埃里克·埃里克森的心理社会发展论给出暗示。\n\n书写3-5个句子。才用白描的方式。不要直接使用原文中出现过的词语。",
+      "prompt": "{get story so far for this player}\n\n{get decisions of question#ebf by all, from story 1}\n\n以上是全部玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。请深入解析这些选择的象征含义，但不要在你的创作中直接引用这些原始选择。\n\n请深入解析这个选择的象征含义，但不要在你的创作中直接引用这些原始选择！！根据玩家的选择，生成1个句子。不要直接使用原文中出现过的词语。",
       "generateOptions": false,
       "sceneId": 3
     },
     {
+      "id": "031",
+      "type": "scene-header",
+      "titleName": "名字",
+      "sceneId": 4,
+      "useBannerArt": false,
+      "bannerArt": ""
+    },
+    {
       "id": "130",
       "type": "plain",
-      "text": "{get codename}上了双眼。这一次，他清晰的听到有人在叫她。闭目时，掌心落下一枚符咒。",
-      "sceneId": 3
+      "text": "{get codename}闭上了双眼。这一次，他清晰的听到有人在叫她的名字。",
+      "sceneId": 4
+    },
+    {
+      "id": "556",
+      "type": "plain",
+      "text": "你是小吴吗？",
+      "sceneId": 4
+    },
+    {
+      "id": "121",
+      "type": "plain",
+      "text": "你就是{get codename}吧。",
+      "sceneId": 4
+    },
+    {
+      "id": "418",
+      "type": "plain",
+      "text": "不远处的某个地方，随着机器开启的吱呀声，一枚符咒缓缓显现出来。",
+      "sceneId": 4
     }
   ]
 }

@@ -177,16 +177,48 @@ document.addEventListener("alpine:init", () => {
             // Activate first passage
             const firstPassage = document.getElementById("passage-0");
             if (firstPassage) {
-              firstPassage.classList.add("active");
-              this.loadDynamicContentForPassage(firstPassage).then(() => {
-                this.setupContinueButton(firstPassage);
+              // For Station 2, show loading animation while first passage loads
+              if (this.config.stationId === "station2") {
+                // Hide the passage initially
+                firstPassage.style.display = "none";
+                
+                // Show loading animation
+                this.showLoadingAnimation();
+                
+                // Then load the dynamic content
+                this.loadDynamicContentForPassage(firstPassage).then(() => {
+                  // Hide loading animation
+                  this.hideLoadingAnimation();
+                  
+                  // Process placeholders and adjust borders
+                  this.processAllPlainBlockPlaceholders();
+                  this.adjustVerticalBordersHeight(firstPassage);
+                  
+                  // Now show the passage with fade-in effect
+                  firstPassage.classList.add("active", "fade-in");
+                  firstPassage.style.display = "block";
+                  
+                  // Set up continue button
+                  this.setupContinueButton(firstPassage);
+                  
+                  // Remove animation class after completion
+                  setTimeout(() => {
+                    firstPassage.classList.remove("fade-in");
+                  }, 3000);
+                });
+              } else {
+                // Original behavior for Station 1 and other stations
+                firstPassage.classList.add("active");
+                this.loadDynamicContentForPassage(firstPassage).then(() => {
+                  this.setupContinueButton(firstPassage);
 
-                // After everything is loaded, process any placeholders in plain blocks
-                this.processAllPlainBlockPlaceholders();
+                  // After everything is loaded, process any placeholders in plain blocks
+                  this.processAllPlainBlockPlaceholders();
 
-                // Make sure to adjust border heights when initial passage is loaded
-                this.adjustVerticalBordersHeight(firstPassage);
-              });
+                  // Make sure to adjust border heights when initial passage is loaded
+                  this.adjustVerticalBordersHeight(firstPassage);
+                });
+              }
             }
           } else {
             throw new Error(

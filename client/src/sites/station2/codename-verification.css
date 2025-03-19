@@ -42,7 +42,7 @@
 
 .codename-button {
   padding: 8px;
-  margin: 4px 0;
+  margin: 1px 0;
   background-color: #232530;
   color: #eaeaea;
   border: 1px solid #666;
@@ -76,7 +76,6 @@
   cursor: pointer;
   font-family: "CP437Courier", "FusionPixelFont", sans-serif;
   font-size: 14px;
-  margin-top: 10px;
 }
 
 .codename-form .error-message {

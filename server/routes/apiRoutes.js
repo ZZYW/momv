@@ -6,6 +6,7 @@ import { assignCodename, validateCodename, saveCodename } from "../controllers/c
 import { printText } from "../controllers/printerController.js";
 import { getBlockData } from "../controllers/storyRetriever.ts";
 import { generateBox } from "../controllers/asciiBoxController.js";
+import { drawFulu } from "../controllers/taoist.ts";
 import db from "../db.js";
 
 const router = express.Router();
@@ -132,6 +133,24 @@ router.get("/get-player-codename", async (req, res) => {
 
 // ASCII Box endpoint
 router.post("/ascii-box", generateBox);
+
+// Fulu endpoint
+router.post("/draw-fulu", async (req, res) => {
+    console.log("Received draw-fulu request:", req.body);
+    const { playerId } = req.body;
+    
+    if (!playerId) {
+        return res.status(400).json({ error: "Missing required parameter: playerId" });
+    }
+    
+    try {
+        const fuluText = await drawFulu(playerId);
+        return res.json({ success: true, fuluText });
+    } catch (error) {
+        console.error("Error generating Fulu:", error);
+        return res.status(500).json({ error: "Failed to generate Fulu", message: error.message });
+    }
+});
 
 // Configuration endpoint for client-side routing
 router.get("/server-config", (req, res) => {

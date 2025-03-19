@@ -467,6 +467,125 @@ document.addEventListener("alpine:init", () => {
         // Only generate and display codename for Station 1
         if (this.config.stationId === "station1") {
           this.generateAndDisplayCodename(passageEl);
+        } else if (this.config.stationId === "station2") {
+          // For Station 2, call drawFulu API and show button when complete
+          const addNewJourneyButton = (isFuluGenerated = false) => {
+            // Create a container for the new journey button
+            const buttonContainer = document.createElement("div");
+            buttonContainer.className = "codename-container";
+            buttonContainer.style.marginTop = "30px";
+            buttonContainer.style.textAlign = "center";
+            
+            // Add "start a new journey" button
+            const newJourneyButton = document.createElement("button");
+            newJourneyButton.className = "new-journey-button";
+            newJourneyButton.innerText = "开始新的旅程";
+            
+            // Initially disable the button if Fulu is not yet generated
+            if (!isFuluGenerated) {
+              newJourneyButton.disabled = true;
+              newJourneyButton.style.opacity = "0.5";
+              newJourneyButton.style.cursor = "not-allowed";
+            }
+            
+            newJourneyButton.addEventListener("click", () => {
+              window.location.reload();
+            });
+            
+            buttonContainer.appendChild(newJourneyButton);
+            
+            // Add message about talisman if Fulu is generated
+            if (isFuluGenerated) {
+              const fuluMessage = document.createElement("div");
+              fuluMessage.className = "fulu-message";
+              fuluMessage.style.marginTop = "10px";
+              fuluMessage.style.fontSize = "0.9em";
+              fuluMessage.innerText = "请前往取回您的护身符";
+              buttonContainer.appendChild(fuluMessage);
+            }
+            
+            passageEl.appendChild(buttonContainer);
+            
+            return { buttonContainer, newJourneyButton };
+          };
+          
+          // Function to generate Fulu
+          const generateFulu = () => {
+            console.log("Generating Fulu for player:", this.config.playerId);
+            
+            // Add loading message
+            const loadingContainer = document.createElement("div");
+            loadingContainer.className = "fulu-loading";
+            loadingContainer.style.marginTop = "20px";
+            loadingContainer.style.textAlign = "center";
+            loadingContainer.innerHTML = "正在生成护身符... <span class='loading'></span>";
+            passageEl.appendChild(loadingContainer);
+            
+            // Call the API to generate Fulu
+            fetch(`${this.config.serverUrl}/draw-fulu`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ playerId: this.config.playerId })
+            })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then(data => {
+              console.log("Fulu generated successfully:", data);
+              
+              // Remove loading message
+              loadingContainer.remove();
+              
+              // Only now add the button (fully enabled) after Fulu is generated
+              const { buttonContainer } = addNewJourneyButton(true);
+            })
+            .catch(error => {
+              console.error("Error generating Fulu:", error);
+              
+              // Remove loading message
+              loadingContainer.remove();
+              
+              // Add button container for error message
+              const buttonContainer = document.createElement("div");
+              buttonContainer.className = "codename-container";
+              buttonContainer.style.marginTop = "30px";
+              buttonContainer.style.textAlign = "center";
+              
+              // Show error message
+              const errorMessage = document.createElement("div");
+              errorMessage.className = "error-message";
+              errorMessage.style.color = "red";
+              errorMessage.style.marginTop = "10px";
+              errorMessage.innerText = "护身符生成失败，请重试";
+              buttonContainer.appendChild(errorMessage);
+              
+              // Add button so user can continue anyway
+              const newJourneyButton = document.createElement("button");
+              newJourneyButton.className = "new-journey-button";
+              newJourneyButton.innerText = "开始新的旅程";
+              newJourneyButton.addEventListener("click", () => {
+                window.location.reload();
+              });
+              buttonContainer.appendChild(newJourneyButton);
+              
+              passageEl.appendChild(buttonContainer);
+            });
+          };
+          
+          // Check if there are unselected options before generating Fulu
+          if (this.passageHasUnselectedOptions(passageEl)) {
+            const checkInterval = setInterval(() => {
+              if (!this.passageHasUnselectedOptions(passageEl)) {
+                clearInterval(checkInterval);
+                generateFulu();
+              }
+            }, 500);
+          } else {
+            generateFulu();
+          }
         } else {
           // For other stations, just add "start a new journey" button
           const addNewJourneyButton = () => {

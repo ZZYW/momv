@@ -148,6 +148,59 @@ document.addEventListener("alpine:init", () => {
         console.log(...args);
       }
     },
+    
+    // Add auto-refresh countdown to a container
+    addAutoRefreshCountdown(containerElement) {
+      // Create countdown container
+      const countdownContainer = document.createElement("div");
+      countdownContainer.className = "countdown-container";
+      countdownContainer.style.marginTop = "15px";
+      countdownContainer.style.textAlign = "center";
+      
+      // Set countdown duration
+      const totalSeconds = 20;
+      
+      // Add countdown text
+      const countdownText = document.createElement("div");
+      countdownText.className = "countdown-text";
+      countdownText.textContent = `下一位旅人的故事将在 ${totalSeconds} 秒内开始`;
+      
+      // Add ASCII progress bar
+      const progressBar = document.createElement("div");
+      progressBar.className = "countdown-bar";
+      progressBar.style.fontFamily = "monospace";
+      progressBar.style.letterSpacing = "2px";
+      progressBar.textContent = "────────────────────────";
+      
+      // Add elements to container
+      countdownContainer.appendChild(countdownText);
+      countdownContainer.appendChild(progressBar);
+      containerElement.appendChild(countdownContainer);
+      
+      // Start the countdown
+      let secondsLeft = totalSeconds;
+      const fullBar = progressBar.textContent;
+      const barLength = fullBar.length;
+      
+      const countdownInterval = setInterval(() => {
+        secondsLeft -= 0.5;
+        
+        // Update text with properly parameterized value
+        countdownText.textContent = `下一位旅人的故事将在 ${Math.ceil(secondsLeft)} 秒内开始`;
+        
+        // Update progress bar
+        const remainingChars = Math.floor((secondsLeft / totalSeconds) * barLength);
+        progressBar.textContent = fullBar.substring(0, remainingChars);
+        
+        // When countdown ends, refresh page
+        if (secondsLeft <= 0) {
+          clearInterval(countdownInterval);
+          window.location.reload();
+        }
+      }, 500); // Update every half second
+      
+      return countdownContainer;
+    },
 
     // ===== STORY LOADING & PARSING =====
     loadStory() {
@@ -537,6 +590,13 @@ document.addEventListener("alpine:init", () => {
             }
 
             passageEl.appendChild(buttonContainer);
+            
+            // Start auto-refresh countdown after button is shown
+            if (isFuluGenerated) {
+              setTimeout(() => {
+                this.addAutoRefreshCountdown(buttonContainer);
+              }, 1000); // Short delay before showing countdown
+            }
 
             return { buttonContainer, newJourneyButton };
           };
@@ -604,6 +664,11 @@ document.addEventListener("alpine:init", () => {
                 buttonContainer.appendChild(newJourneyButton);
 
                 passageEl.appendChild(buttonContainer);
+                
+                // Start auto-refresh countdown after error button is shown
+                setTimeout(() => {
+                  this.addAutoRefreshCountdown(buttonContainer);
+                }, 1000); // Short delay before showing countdown
               });
           };
 

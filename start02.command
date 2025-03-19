@@ -41,8 +41,22 @@ SERVER_PID=$!
 # Open the station interface in the default browser after a short delay
 # 短暂延迟后在默认浏览器中打开服务器界面
 
-sleep 3
+sleep 2
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk "http://localhost:3001/station2" &
+
+# Allow Chrome time to launch
+sleep 1
+
+# Embed AppleScript via osascript to activate Chrome and send the full screen shortcut
+osascript <<EOF
+tell application "Google Chrome"
+    activate
+end tell
+delay 0.5
+tell application "System Events"
+    keystroke "f" using {control down, command down}
+end tell
+EOF
 
 echo "=========================================================="
 echo "Station 2 is now running. To stop, close this terminal window."

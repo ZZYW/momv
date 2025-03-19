@@ -483,7 +483,7 @@ document.addEventListener("alpine:init", () => {
         const continueLink = document.createElement("a");
         continueLink.href = "#";
         continueLink.className = "next-link";
-        continueLink.innerText = "继续";
+        continueLink.innerText = "|   继续   |";
         continueLink.style.display = "none"; // Initially hidden
 
         continueLink.addEventListener("click", (e) => {

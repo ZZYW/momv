@@ -9,20 +9,20 @@ document.addEventListener("DOMContentLoaded", function (event) {
     const buttonObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                const nextLinks = document.querySelectorAll('.next-link');
-                nextLinks.forEach(link => {
-                    if (getComputedStyle(link).display !== 'none' && !link.dataset.asciiStyled) {
-                        styleAsciiContinueButton(link);
-                    }
-                });
+                // const nextLinks = document.querySelectorAll('.next-link');
+                // nextLinks.forEach(link => {
+                //     if (getComputedStyle(link).display !== 'none' && !link.dataset.asciiStyled) {
+                //         styleAsciiContinueButton(link);
+                //     }
+                // });
             }
             
             if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === 1 && node.classList && node.classList.contains('next-link')) {
-                        styleAsciiContinueButton(node);
-                    }
-                });
+                // mutation.addedNodes.forEach(node => {
+                //     if (node.nodeType === 1 && node.classList && node.classList.contains('next-link')) {
+                //         styleAsciiContinueButton(node);
+                //     }
+                // });
             }
         });
     });
@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     
     // Functions for ASCII Continue Button
     function setupAsciiContinueButton() {
+        return;
         const nextLinks = document.querySelectorAll('.next-link');
         nextLinks.forEach(link => {
             if (getComputedStyle(link).display !== 'none' && !link.dataset.asciiStyled) {

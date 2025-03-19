@@ -100,7 +100,8 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
 
   // Check for single answer query
   // Format: answer of question#X from this player
-  const answerRegex = /^answer of question#([a-zA-Z0-9\-]+) from this player$/i;
+  // Using \s+ to make the pattern more flexible with whitespace variations
+  const answerRegex = /^answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player$/i;
   const answerMatch = queryText.match(answerRegex);
 
   if (answerMatch) {

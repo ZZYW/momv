@@ -1,17 +1,18 @@
-import * as fuluController from './fuluController.js'
+import * as fuluController from './fuluController.js';
 import { printText } from './printerController.js';
 import { sendPromptToLLM } from '../utils/aiCommunicator.js';
 import {
-  compileStoryForPlayer,
-  compileChoiceSummaryForBlock,
-  getStoryBlocks,
-  getStoryBeforeBlockByPlayer,
-  getPlayerMetadata
+	compileStoryForPlayer,
+	compileChoiceSummaryForBlock,
+	getStoryBlocks,
+	getStoryBeforeBlockByPlayer,
+	getPlayerMetadata
 } from './storyRetriever.js';
 import { interpretDynamicBlock } from '../utils/dynamicBlockInterpreter.js';
+import pinyin from 'chinese-to-pinyin'
 
-//will be treated as the same as a 
-let command = `
+
+const command = `
 here are the journey player {get codename} has experienced so far:
 ---
 {get story so far for this player}
@@ -30,7 +31,7 @@ Knowing these data, we now want to draw a Fulu for {get codename}...the logic is
 knowing their pain, their love, their past, their history, and their positioning among the all, let our choices of the Fulu grant the power for healing.
 we have a fixed amount of symbols, and templates. 
 you, as the master Taoist, needs to pick one template, and three symbols.
-`
+`;
 
 const returnObjectSchema = `
 please return a JSON object strictly following this schema. Make sure the JSON object is the only thing in your reply. Do not wrap the JSON in anything. Starting with the JSON object.
@@ -64,150 +65,163 @@ please return a JSON object strictly following this schema. Make sure the JSON o
     "template",
     "symbols"
   ]
-}`
+}`;
 
 /**
- * Draws a Fulu (talismanic script) for a player
- * @param {string} playerId - The player's unique ID
- * @returns {Promise<string>} - The assembled Fulu text
+ * Returns a formatted header for the Fulu talisman.
+ * @param {string} codename - The player's codename.
+ * @returns {string} The header string.
  */
-export async function drawFulu(playerId: string): Promise<string> {
-  try {
-    // Get player metadata using the new function
-    const playerMeta = await getPlayerMetadata(playerId);
-
-    // Verify the player exists
-    if (!playerMeta.exists) {
-      throw new Error(`Player with ID ${playerId} not found`);
-    }
-
-    // Get player's codename
-    const codename = playerMeta.codename || 'Unknown Traveler';
-
-    // Get player's story so far
-    const storyText = await compileStoryForPlayer(playerId, [1, 2]);
-
-    // Get player's choices using storyRetriever
-    // First, get all story blocks enhanced with player data
-    const enhancedBlocks = await getStoryBeforeBlockByPlayer(playerId, null, [1, 2]);
-
-    // Filter to only choice blocks that have player choices
-    const choiceBlocks = enhancedBlocks.filter(block =>
-      (block.type === 'static' || (block.type === 'dynamic' && block.generateOptions)) &&
-      block.playerChoice
-    );
-
-    // Compile player choices summary
-    let playerChoicesSummary = '';
-    for (const block of choiceBlocks) {
-      if (block.playerChoice) {
-        playerChoicesSummary += `Block ${block.id}: Player chose "${block.playerChoice.chosenText}"\n`;
-      }
-    }
-
-    // Compile all players' choices summary
-    let allChoicesSummary = '';
-    for (const block of choiceBlocks) {
-      const blockSummary = await compileChoiceSummaryForBlock(block.id);
-      allChoicesSummary += blockSummary + '\n';
-    }
-
-    // Get all templates and symbols from fuluController
-    const templates = fuluController.getAllTemplates();
-    const symbols = fuluController.getAllSymbols();
-
-    // Format the list of templates and symbols for LLM
-    const allTemplateNames: string = templates.map(i => i.keywords).join(", ");
-    const allSymbolNames: string = symbols.map(i => i.keywords).join(", ");
-
-    // Use the dynamicBlockInterpreter to hydrate the prompt
-    let hydratedPrompt = await interpretDynamicBlock(command, {
-      playerId: playerId,
-      blockId: null,
-      storyId: [1, 2]
-    });
-
-    // For placeholders that aren't handled by the interpreter, do manual replacement
-    hydratedPrompt = hydratedPrompt
-      .replace(/\{get codename\}/g, codename);
-
-    // Prepare the final prompt for LLM
-    const finalPrompt = `${hydratedPrompt}\nThis is all the templates:\n${allTemplateNames}\nThis is all the symbols:\n${allSymbolNames}\n\n${returnObjectSchema}`;
-
-    // Send the prompt to LLM and get response
-    const llmResponse = await sendPromptToLLM(finalPrompt, 'dynamic', {}, false)
-
-    // Parse the LLM response as JSON
-    let responseJson;
-    let selectedTemplate;
-    let selectedSymbols;
-    let reasoning;
-    
-    try {
-      if (typeof llmResponse === 'string') {
-        try {
-          responseJson = JSON.parse(llmResponse);
-          
-          // Extract template and symbols from LLM response
-          selectedTemplate = responseJson.template;
-          selectedSymbols = responseJson.symbols;
-          reasoning = responseJson.reasoning;
-          
-          // Check if we have all required fields
-          if (!selectedTemplate || !selectedSymbols || !Array.isArray(selectedSymbols) || selectedSymbols.length !== 3) {
-            throw new Error('Invalid or incomplete LLM response structure');
-          }
-        } catch (error) {
-          console.error('Failed to parse LLM response as JSON:', error);
-          throw new Error('Failed to parse Fulu generation response');
-        }
-      } else {
-        // Handle array response case (should not happen with our schema)
-        throw new Error('Unexpected array response from LLM');
-      }
-    } catch (error) {
-      console.error('Error with LLM response, using fallback random selection:', error);
-      
-      // Fallback: randomly select a template and three symbols
-      const allTemplates = templates;
-      const allSymbols = symbols;
-      
-      // Pick a random template
-      selectedTemplate = allTemplates[Math.floor(Math.random() * allTemplates.length)].keywords;
-      
-      // Shuffle symbols array and pick first three
-      const shuffledSymbols = [...allSymbols].sort(() => 0.5 - Math.random());
-      selectedSymbols = shuffledSymbols.slice(0, 3).map(s => s.keywords);
-      
-      reasoning = `Auto-generated Fulu created for ${codename} with randomly selected elements due to processing issues.`;
-      
-      console.log('Using fallback random selections:', { selectedTemplate, selectedSymbols });
-    }
-
-    // Get template and symbol objects using fuluController methods
-    const templateObj = fuluController.getTemplateObjectByKeywords(selectedTemplate);
-    if (!templateObj) {
-      throw new Error(`Template "${selectedTemplate}" not found`);
-    }
-
-    const symbolObjs = selectedSymbols.map(symbolName => {
-      const symObj = fuluController.getSymbolObjectByKeywords(symbolName);
-      if (!symObj) {
-        throw new Error(`Symbol "${symbolName}" not found`);
-      }
-      return symObj;
-    });
-
-    // Assemble the Fulu with template and symbols
-    const talismanText = fuluController.assemble(templateObj, symbolObjs, reasoning);
-
-    // Send the Fulu to the printer
-    printText(talismanText);
-
-    return talismanText;
-  } catch (error) {
-    console.error('Error in drawFulu:', error);
-    return `Error generating Fulu: ${error.message}`;
-  }
+function getTalismanFooter(codename: string): string {
+	return `\n\n\n-------------------------\n\nTo: ${codename}\nfrom: Temple of Many Voices\ndate: ${getFormattedDate()}`;
 }
 
+/**
+ * Returns the current date formatted as YYYY / MM / DD.
+ * @returns {string} The formatted date.
+ */
+function getFormattedDate(): string {
+	const now = new Date();
+	const year = now.getFullYear();
+	const month = String(now.getMonth() + 1).padStart(2, '0');
+	const day = String(now.getDate()).padStart(2, '0');
+	return `${year} / ${month} / ${day}`;
+}
+
+
+export async function drawFulu(playerId: string): Promise<string> {
+	let talismanText: string = '';
+	let codename = 'Traveler';
+	let symbolObjs: fuluController.Symbol[] = [];
+	try {
+		// Retrieve player metadata and verify existence
+		const playerMeta = await getPlayerMetadata(playerId);
+		if (!playerMeta.exists) {
+			throw new Error(`Player with ID ${playerId} not found`);
+		}
+
+		if (!playerMeta.codename) playerMeta.codename = 'Traveler';
+		codename = pinyin(playerMeta.codename, { removeTone: true }).toUpperCase() || 'Traveler';
+
+		// Retrieve story and choice data
+		await compileStoryForPlayer(playerId, [1, 2]);
+		const enhancedBlocks = await getStoryBeforeBlockByPlayer(playerId, null, [1, 2]);
+
+		// Filter to choice blocks that include a player choice
+		const choiceBlocks = enhancedBlocks.filter(block =>
+			(block.type === 'static' || (block.type === 'dynamic' && block.generateOptions)) &&
+			block.playerChoice
+		);
+
+		// Compile summaries (for potential use in LLM prompt)
+		let playerChoicesSummary = '';
+		for (const block of choiceBlocks) {
+			if (block.playerChoice) {
+				playerChoicesSummary += `Block ${block.id}: Player chose "${block.playerChoice.chosenText}"\n`;
+			}
+		}
+		let allChoicesSummary = '';
+		for (const block of choiceBlocks) {
+			const blockSummary = await compileChoiceSummaryForBlock(block.id);
+			allChoicesSummary += blockSummary + '\n';
+		}
+
+		// Get available templates and symbols
+		const templates = fuluController.getAllTemplates();
+		const symbols = fuluController.getAllSymbols();
+
+		// Format the lists for the prompt
+		const allTemplateNames = templates.map(t => t.keywords).join(', ');
+		const allSymbolNames = symbols.map(s => s.keywords).join(', ');
+
+		// Hydrate the prompt dynamically
+		let hydratedPrompt = await interpretDynamicBlock(command, {
+			playerId,
+			blockId: null,
+			storyId: "1,2" // Using a string instead of an array to match the expected type
+		});
+		// Replace any remaining placeholders
+		hydratedPrompt = hydratedPrompt.replace(/\{get codename\}/g, codename);
+
+		// Construct the final prompt
+		const finalPrompt = [
+			hydratedPrompt,
+			'This is all the templates:',
+			allTemplateNames,
+			'This is all the symbols:',
+			allSymbolNames,
+			'',
+			returnObjectSchema
+		].join('\n');
+
+		// Send prompt to the LLM and process its response
+		const llmResponse = await sendPromptToLLM(finalPrompt, 'dynamic', {}, false);
+		let selectedTemplate: string;
+
+		try {
+			if (typeof llmResponse === 'string') {
+				const responseJson = JSON.parse(llmResponse);
+				selectedTemplate = responseJson.template;
+				const selectedSymbolKeywords: string[] = responseJson.symbols;
+
+				if (!selectedTemplate || !selectedSymbolKeywords || !Array.isArray(selectedSymbolKeywords) || selectedSymbolKeywords.length !== 3) {
+					throw new Error('Invalid or incomplete LLM response structure');
+				}
+				// Map LLM symbol keywords to symbol objects
+				symbolObjs = selectedSymbolKeywords.map(symbolName => {
+					const symbolObj = fuluController.getSymbolObjectByKeywords(symbolName);
+					if (!symbolObj) {
+						throw new Error(`Symbol "${symbolName}" not found`);
+					}
+					return symbolObj;
+				});
+			} else {
+				throw new Error('Unexpected non-string response from LLM');
+			}
+		} catch (parseError) {
+			console.error('Failed to parse LLM response as JSON:', parseError);
+			// Fallback: use pickRandomSymbol to select 3 symbols and pickRandomTemplate for template fallback
+			selectedTemplate = pickRandomTemplate(templates).keywords;
+			symbolObjs = pickRandomSymbol(3, symbols);
+			console.log('Using fallback random selections:', { selectedTemplate, selectedSymbols: symbolObjs.map(s => s.keywords) });
+		}
+
+		// Override AI's template choice with a random one to avoid observed biases
+		const templateObj = pickRandomTemplate(templates);
+		if (!templateObj) {
+			throw new Error(`Template "${selectedTemplate}" not found`);
+		}
+
+		// Assemble the Fulu using the selected template and symbols, with the header text
+		talismanText = fuluController.assemble(templateObj, symbolObjs, getTalismanFooter(codename));
+	} catch (error) {
+		console.error('Error in drawFulu main processing, falling back to random selections:', error);
+		// Fallback to ensure we always have a talisman to print
+		try {
+			const fallbackTemplates = fuluController.getAllTemplates();
+			const fallbackSymbols = fuluController.getAllSymbols();
+			const fallbackTemplate = pickRandomTemplate(fallbackTemplates);
+			const fallbackSymbolObjs = pickRandomSymbol(3, fallbackSymbols);
+			talismanText = fuluController.assemble(
+				fallbackTemplate,
+				fallbackSymbolObjs,
+				getTalismanFooter(codename)
+			);
+		} catch (fallbackError) {
+			console.error('Fallback also failed:', fallbackError);
+			talismanText = 'Default talisman text';
+		}
+	}
+	// Ensure the talisman is always printed
+	printText(talismanText);
+	return talismanText;
+}
+
+function pickRandomTemplate(templates: fuluController.Template[]): fuluController.Template {
+	return templates[Math.floor(Math.random() * templates.length)];
+}
+
+function pickRandomSymbol(howMany: number, symbols: fuluController.Symbol[]): fuluController.Symbol[] {
+	const shuffled = [...symbols].sort(() => 0.5 - Math.random());
+	return shuffled.slice(0, howMany);
+}

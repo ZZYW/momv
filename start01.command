@@ -45,7 +45,23 @@ SERVER_PID=$!
 
 # Open the station interface in Chrome kiosk mode after a short delay
 sleep 3
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk "http://localhost:3001/station1" &
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --app=http://localhost:3001/station1 &
+
+
+# Allow Chrome time to launch
+sleep 1
+
+# Embed AppleScript via osascript to activate Chrome and send the full screen shortcut
+osascript <<EOF
+tell application "Google Chrome"
+    activate
+end tell
+delay 0.5
+tell application "System Events"
+    keystroke "f" using {control down, command down}
+end tell
+EOF
+
 
 echo "=========================================================="
 echo "Station 1 is now running. To stop, close this terminal window."

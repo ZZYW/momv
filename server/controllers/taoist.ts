@@ -8,7 +8,7 @@ import {
 	getStoryBeforeBlockByPlayer,
 	getPlayerMetadata
 } from './storyRetriever.js';
-import { interpretDynamicBlock } from '../utils/dynamicBlockInterpreter.js';
+import { interpretDynamicBlock, getAnswer } from '../utils/dynamicBlockInterpreter.js';
 import pinyin from 'chinese-to-pinyin'
 
 
@@ -93,6 +93,41 @@ function getPinyin(chineseChars: string) {
 	return pinyin(chineseChars, { removeTone: true }).toUpperCase()
 }
 
+/**
+ * Processes any remaining answer placeholders in the text that weren't handled by interpretDynamicBlock
+ * @param text - The text containing placeholders
+ * @param playerId - The player's ID
+ * @returns The processed text with placeholders replaced
+ */
+async function processRemainingAnswerPlaceholders(text: string, playerId: string): Promise<string> {
+	console.log("Looking for remaining answer placeholders");
+	let processedText = text;
+	
+	// Regex to find {get answer of question#XXX from this player} placeholders
+	const answerRegex = /\{get\s+answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player\}/gi;
+	let match;
+	
+	// Process each match
+	while ((match = answerRegex.exec(text)) !== null) {
+		const fullMatch = match[0];
+		const questionId = match[1];
+		console.log(`Found remaining answer placeholder: ${fullMatch}, question ID: ${questionId}`);
+		
+		try {
+			// Use the getAnswer function from dynamicBlockInterpreter to get the answer
+			const answer = await getAnswer(questionId, playerId);
+			console.log(`Got answer for question ${questionId}: "${answer}"`);
+			
+			// Replace this instance of the placeholder
+			processedText = processedText.replace(fullMatch, answer || '');
+		} catch (error) {
+			console.error(`Error processing answer placeholder for question ${questionId}:`, error);
+		}
+	}
+	
+	return processedText;
+}
+
 export async function drawFulu(playerId: string): Promise<string> {
 	let talismanText: string = '';
 	let codename = 'Traveler';
@@ -145,6 +180,10 @@ export async function drawFulu(playerId: string): Promise<string> {
 			blockId: null,
 			storyId: "1,2" // Using a string instead of an array to match the expected type
 		});
+		
+		// Process any remaining answer placeholders that weren't handled by interpretDynamicBlock
+		hydratedPrompt = await processRemainingAnswerPlaceholders(hydratedPrompt, playerId);
+		
 		// Replace any remaining placeholders
 		hydratedPrompt = hydratedPrompt.replace(/\{get codename\}/g, codename);
 

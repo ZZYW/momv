@@ -57,9 +57,10 @@ interface DynamicBlockContext {
 /**
  * Regular expression to match dynamic query placeholders
  * Matches patterns like: {get compiled story for this player}
- * Using a more permissive pattern that should catch all instances
+ * Using a more specific pattern to correctly capture complete placeholders
  */
-const PLACEHOLDER_REGEX = /\{(get\s+.*?)\}/g;
+const PLACEHOLDER_REGEX = /\{(get\s+[^{}]*)\}/g;
+
 
 /**
  * Parse a single dynamic query placeholder and identify the query type and parameters
@@ -103,6 +104,22 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
   // Using \s+ to make the pattern more flexible with whitespace variations
   const answerRegex = /^answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player$/i;
   const answerMatch = queryText.match(answerRegex);
+  
+  
+  // Handle any inconsistent spacing in the format
+  if (!answerMatch) {
+    // Try an alternate matching approach for robustness
+    const altMatch = queryText.match(/answer.*question#([a-zA-Z0-9\-]+).*this player/i);
+    if (altMatch) {
+      console.log('Matched with alternate pattern:', altMatch);
+      const questionId = altMatch[1].trim();
+      return {
+        type: 'answer',
+        questionId,
+        target: 'thisPlayer'
+      };
+    }
+  }
 
   if (answerMatch) {
     console.log('Answer match found:', answerMatch);
@@ -413,6 +430,14 @@ async function interpretDynamicBlock(text: string, context: DynamicBlockContext 
 
     // Find all placeholders in the text
     console.log('Looking for placeholders...');
+    
+    // Debug: Check if there are any "answer" placeholders
+    const hasAnswerPlaceholders = text.includes('answer of question#');
+    console.log(`Text includes 'answer of question#': ${hasAnswerPlaceholders}`);
+    if (hasAnswerPlaceholders) {
+      console.log('Answer placeholder examples in text:', text.match(/\{get\s+answer\s+of\s+question#[^}]*\}/gi));
+    }
+    
     const placeholders = findPlaceholders(text);
 
     if (placeholders.length === 0) {

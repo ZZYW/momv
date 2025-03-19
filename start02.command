@@ -42,7 +42,7 @@ SERVER_PID=$!
 # 短暂延迟后在默认浏览器中打开服务器界面
 
 sleep 3
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk "http://localhost:3001/station1" &
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk "http://localhost:3001/station2" &
 
 echo "=========================================================="
 echo "Station 2 is now running. To stop, close this terminal window."

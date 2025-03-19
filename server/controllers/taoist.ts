@@ -89,6 +89,10 @@ function getFormattedDate(): string {
 }
 
 
+function getPinyin(chineseChars: string) {
+	return pinyin(chineseChars, { removeTone: true }).toUpperCase()
+}
+
 export async function drawFulu(playerId: string): Promise<string> {
 	let talismanText: string = '';
 	let codename = 'Traveler';
@@ -101,7 +105,8 @@ export async function drawFulu(playerId: string): Promise<string> {
 		}
 
 		if (!playerMeta.codename) playerMeta.codename = 'Traveler';
-		codename = pinyin(playerMeta.codename, { removeTone: true }).toUpperCase() || 'Traveler';
+		codename = playerMeta.codename || 'Traveler';
+
 
 		// Retrieve story and choice data
 		await compileStoryForPlayer(playerId, [1, 2]);
@@ -193,7 +198,7 @@ export async function drawFulu(playerId: string): Promise<string> {
 		}
 
 		// Assemble the Fulu using the selected template and symbols, with the header text
-		talismanText = fuluController.assemble(templateObj, symbolObjs, getTalismanFooter(codename));
+		talismanText = fuluController.assemble(templateObj, symbolObjs, getTalismanFooter(getPinyin(codename)));
 	} catch (error) {
 		console.error('Error in drawFulu main processing, falling back to random selections:', error);
 		// Fallback to ensure we always have a talisman to print
@@ -205,7 +210,7 @@ export async function drawFulu(playerId: string): Promise<string> {
 			talismanText = fuluController.assemble(
 				fallbackTemplate,
 				fallbackSymbolObjs,
-				getTalismanFooter(codename)
+				getTalismanFooter(getPinyin(codename))
 			);
 		} catch (fallbackError) {
 			console.error('Fallback also failed:', fallbackError);

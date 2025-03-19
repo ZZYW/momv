@@ -181,26 +181,26 @@ document.addEventListener("alpine:init", () => {
               if (this.config.stationId === "station2") {
                 // Hide the passage initially
                 firstPassage.style.display = "none";
-                
+
                 // Show loading animation
                 this.showLoadingAnimation();
-                
+
                 // Then load the dynamic content
                 this.loadDynamicContentForPassage(firstPassage).then(() => {
                   // Hide loading animation
                   this.hideLoadingAnimation();
-                  
+
                   // Process placeholders and adjust borders
                   this.processAllPlainBlockPlaceholders();
                   this.adjustVerticalBordersHeight(firstPassage);
-                  
+
                   // Now show the passage with fade-in effect
                   firstPassage.classList.add("active", "fade-in");
                   firstPassage.style.display = "block";
-                  
+
                   // Set up continue button
                   this.setupContinueButton(firstPassage);
-                  
+
                   // Remove animation class after completion
                   setTimeout(() => {
                     firstPassage.classList.remove("fade-in");
@@ -1480,20 +1480,102 @@ document.addEventListener("alpine:init", () => {
       const animationElement = document.querySelector('.llm-loading-animation');
       if (!animationElement) return;
 
-      // Define the loading frames
       const frames = [
-        "[>>>___________]",
-        "[_>>>__________]",
-        "[__>>>_________]",
-        "[___>>>________]",
-        "[____>>>_______]",
-        "[_____>>>______]",
-        "[______>>>_____]",
-        "[_______>>>____]",
-        "[________>>>___]",
-        "[_________>>>__]",
-        "[__________>>>_]",
-        "[___________>>>]",
+        // Frame 1: Arrow ↑ near the top
+        `         
+           ↑    
+                
+                
+                
+                
+                
+                
+                
+                `,
+        
+        // Frame 2: Arrow ↗ further down/right
+        `          
+                
+             ↗  
+                
+                
+                
+                
+                
+                
+                `,
+      
+        // Frame 3: Arrow → on the right side
+        `          
+                
+                
+                
+              → 
+                
+                
+                
+                
+                `,
+      
+        // Frame 4: Arrow ↘ closer to bottom-right
+        `          
+                
+                
+                
+                
+                
+             ↘  
+                
+                
+                `,
+      
+        // Frame 5: Arrow ↓ near the bottom
+        `          
+                
+                
+                
+                
+                
+                
+                
+           ↓    
+                `,
+      
+        // Frame 6: Arrow ↙ toward bottom-left
+        `          
+                
+                
+                
+                
+                
+         ↙      
+                
+                
+                `,
+      
+        // Frame 7: Arrow ← on the left side
+        `          
+                
+                
+                
+        ←       
+                
+                
+                
+                
+                `,
+      
+        // Frame 8: Arrow ↖ back toward top-left
+        `          
+                
+         ↖      
+                
+                
+                
+                
+                
+                
+                `,
       ];
 
       let frameIndex = 0;

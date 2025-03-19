@@ -500,7 +500,7 @@ document.addEventListener("alpine:init", () => {
               fuluMessage.className = "fulu-message";
               fuluMessage.style.marginTop = "10px";
               fuluMessage.style.fontSize = "0.9em";
-              fuluMessage.innerText = "请前往取回您的护身符";
+              fuluMessage.innerText = "--- 请转身领取您的符咒 ---";
               buttonContainer.appendChild(fuluMessage);
             }
             
@@ -518,7 +518,7 @@ document.addEventListener("alpine:init", () => {
             loadingContainer.className = "fulu-loading";
             loadingContainer.style.marginTop = "20px";
             loadingContainer.style.textAlign = "center";
-            loadingContainer.innerHTML = "正在生成护身符... <span class='loading'></span>";
+            loadingContainer.innerHTML = "...";
             passageEl.appendChild(loadingContainer);
             
             // Call the API to generate Fulu
@@ -559,13 +559,13 @@ document.addEventListener("alpine:init", () => {
               errorMessage.className = "error-message";
               errorMessage.style.color = "red";
               errorMessage.style.marginTop = "10px";
-              errorMessage.innerText = "护身符生成失败，请重试";
+              errorMessage.innerText = "----?";
               buttonContainer.appendChild(errorMessage);
               
               // Add button so user can continue anyway
               const newJourneyButton = document.createElement("button");
               newJourneyButton.className = "new-journey-button";
-              newJourneyButton.innerText = "开始新的旅程";
+              newJourneyButton.innerText = "故事结束";
               newJourneyButton.addEventListener("click", () => {
                 window.location.reload();
               });

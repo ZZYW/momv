@@ -11,7 +11,7 @@ import logger from './logger.js';
 /**
  * Placeholder query types
  */
-type QueryType = 'compiledStory' | 'decisions' | 'answer' | 'unknown';
+type QueryType = 'compiledStory' | 'decisions' | 'answer' | 'codename' | 'unknown';
 
 /**
  * Interface for a parsed placeholder query
@@ -97,6 +97,14 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
     return {
       type: 'compiledStory',
       target: 'nobody'
+    };
+  }
+  
+  // Check for codename query - we'll handle this server-side
+  if (queryText.match(/^codename$/i)) {
+    logger.info('Found codename placeholder - will be handled server-side');
+    return {
+      type: 'codename'
     };
   }
 
@@ -329,6 +337,33 @@ async function getAnswer(questionId: string, playerId: string): Promise<string> 
   }
 }
 
+/**
+ * Get a player's codename from the database
+ * @param playerId - The player's ID
+ * @returns Promise<string> - The player's codename as a string
+ */
+async function getCodename(playerId: string): Promise<string> {
+  logger.info(`Getting codename for player: ${playerId}`);
+
+  try {
+    // Import database dynamically to avoid circular dependencies
+    const db = (await import('../db.js')).default;
+    await db.read();
+    
+    if (!db.data.players || !db.data.players[playerId]) {
+      logger.warn(`No player found with ID: ${playerId}`);
+      return '';
+    }
+    
+    const codename = db.data.players[playerId].codename || '';
+    logger.info(`Retrieved codename for player ${playerId}: ${codename}`);
+    return codename;
+  } catch (error: any) {
+    logger.error('Error getting player codename:', error);
+    return `[Error retrieving codename: ${error.message}]`;
+  }
+}
+
 async function getDecisions(
   questionIds: string[],
   target: 'thisPlayer' | 'all',
@@ -488,6 +523,12 @@ async function interpretDynamicBlock(text: string, context: DynamicBlockContext 
         );
         logger.info('Decisions result length:', replacement.length);
       }
+      else if (query.type === 'codename') {
+        // Get the player's codename and replace the placeholder
+        logger.info('Getting codename for player...');
+        replacement = await getCodename(playerIdStr);
+        logger.info(`Replaced codename placeholder with: "${replacement}"`);
+      }
       else if (query.type === 'unknown') {
         // Unknown placeholder type - return the original text instead of an error message
         logger.error(`Placeholder parsing error: ${query.error}`);
@@ -534,7 +575,8 @@ export {
   interpretDynamicBlock,
   findPlaceholders,
   parsePlaceholder,
-  getAnswer
+  getAnswer,
+  getCodename
 };
 
 export default {

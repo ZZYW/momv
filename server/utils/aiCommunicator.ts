@@ -103,6 +103,11 @@ function cleanMessage(message: string): string {
  * @returns {string | string[]} - Parsed content (string, array, or raw text)
  */
 function parseResponse(reply: string, options: DynamicBlockOptions): string | string[] {
+    if (!reply || typeof reply !== 'string') {
+        logger.error("Invalid reply received:", reply);
+        return options.generateOptions ? ["选项 1", "选项 2", "选项 3"] : "无法解析内容";
+    }
+    
     try {
         // First attempt: try standard JSON parsing
         let jsonMatch = reply.match(/\{[\s\S]*\}/);
@@ -113,17 +118,20 @@ function parseResponse(reply: string, options: DynamicBlockOptions): string | st
 
                 // Check for deliverable field
                 if (parsed.deliverable) {
-                    console.log("Successfully parsed JSON response using standard parser");
+                    logger.info("Successfully parsed JSON response using standard parser");
                     return parsed.deliverable;
                 }
             } catch (standardParseError) {
-                console.log("Standard JSON parsing failed, falling back to robust parser");
+                logger.warn("Standard JSON parsing failed, falling back to robust parser", {
+                    error: standardParseError.message,
+                    jsonMatch: jsonMatch[0].substring(0, 100) // Log a snippet for debugging
+                });
                 // Continue to robust parsing
             }
         }
 
         // Second attempt: use robust regex-based parsing
-        console.log("Using robust regex-based parsing for LLM response");
+        logger.info("Using robust regex-based parsing for LLM response");
 
         // For options generation (array of options)
         if (options.generateOptions) {
@@ -144,8 +152,12 @@ function parseResponse(reply: string, options: DynamicBlockOptions): string | st
                     })
                     .filter(item => item); // Filter empty items
 
-                console.log(`Extracted ${optionsList.length} options via regex parser`);
-                return optionsList;
+                if (optionsList.length > 0) {
+                    logger.info(`Extracted ${optionsList.length} options via regex parser`);
+                    return optionsList;
+                } else {
+                    logger.warn("Extracted options list is empty, falling back to default options");
+                }
             }
         }
         // For standard text generation
@@ -158,19 +170,93 @@ function parseResponse(reply: string, options: DynamicBlockOptions): string | st
                     .replace(/\\n/g, '\n') // Replace escaped newlines
                     .trim();
 
-                console.log("Extracted text content via regex parser");
-                return extractedText;
+                if (extractedText && extractedText.length > 0) {
+                    logger.info("Extracted text content via regex parser");
+                    return extractedText;
+                } else {
+                    logger.warn("Extracted text is empty, falling back to alternative parsing");
+                }
             }
         }
 
-        // If we get here, both parsing attempts failed
-        logger.error("Both standard and robust parsing failed");
+        // Check for malformed JSON (common in LLM responses)
+        const fixedJsonResult = tryToFixMalformedJson(reply, options);
+        if (fixedJsonResult) {
+            logger.info("Successfully fixed and parsed malformed JSON");
+            return fixedJsonResult;
+        }
+
+        // If we get here, all parsing attempts failed
+        logger.error("All parsing methods failed, using fallback content extraction");
         return extractFallbackContent(reply, options);
 
     } catch (parseError) {
         logger.error("Error in parseResponse function:", parseError);
         logger.error("Raw reply:", reply);
         return extractFallbackContent(reply, options);
+    }
+}
+
+/**
+ * Attempts to fix and parse malformed JSON that's common in LLM responses
+ * @param {string} reply - The raw reply from the LLM
+ * @param {DynamicBlockOptions} options - Options for the dynamic block
+ * @returns {string | string[] | null} - Parsed content or null if parsing failed
+ */
+function tryToFixMalformedJson(reply: string, options: DynamicBlockOptions): string | string[] | null {
+    try {
+        // Common issues with LLM JSON responses:
+        // 1. Extra text before or after the JSON object
+        // 2. Single quotes instead of double quotes
+        // 3. Unquoted property names
+        // 4. Missing commas
+        // 5. Trailing commas
+        
+        // Try to extract what looks like a JSON object or array
+        let jsonContent = reply;
+        
+        // Remove markdown code blocks if present
+        jsonContent = jsonContent.replace(/```json\s+|```/g, '');
+        
+        // Fix single quotes to double quotes (but not within already double-quoted strings)
+        jsonContent = jsonContent.replace(/(?<!\")(')(?!.*?\".*?')/g, '"');
+        
+        // Try to extract just the JSON object or array
+        const objMatch = jsonContent.match(/\{[\s\S]*\}/);
+        const arrMatch = jsonContent.match(/\[[\s\S]*\]/);
+        
+        if (objMatch) {
+            const parsed = JSON.parse(objMatch[0]);
+            
+            if (parsed.deliverable !== undefined) {
+                return parsed.deliverable;
+            }
+            
+            // If we have options, try to extract them
+            if (options.generateOptions && Array.isArray(parsed.options || parsed.choices)) {
+                return parsed.options || parsed.choices;
+            }
+            
+            // For text content, look for common field names
+            if (!options.generateOptions) {
+                const textField = parsed.text || parsed.content || parsed.message || parsed.response;
+                if (textField && typeof textField === 'string') {
+                    return textField;
+                }
+            }
+        }
+        
+        if (arrMatch && options.generateOptions) {
+            const parsed = JSON.parse(arrMatch[0]);
+            if (Array.isArray(parsed)) {
+                return parsed.filter(item => item && typeof item === 'string');
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        logger.debug("Failed to fix malformed JSON:", error);
+        return null;
     }
 }
 

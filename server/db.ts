@@ -40,6 +40,51 @@ const dbPath = path.join(process.cwd(), 'database.json');
 
 // Initialize database with error handling
 let db;
+// Create a mutex for database operations to prevent race conditions
+const mutex = { locked: false, queue: [] };
+
+// Function to acquire the lock
+const acquireLock = () => {
+  return new Promise<void>((resolve) => {
+    if (!mutex.locked) {
+      mutex.locked = true;
+      resolve();
+    } else {
+      mutex.queue.push(resolve);
+    }
+  });
+};
+
+// Function to release the lock
+const releaseLock = () => {
+  if (mutex.queue.length > 0) {
+    const nextResolve = mutex.queue.shift();
+    nextResolve?.();
+  } else {
+    mutex.locked = false;
+  }
+};
+
+// Wrap write operations with mutex to prevent race conditions
+const createSafeDatabase = (database: any) => {
+  const originalWrite = database.write;
+  
+  // Override the write method with a thread-safe version
+  database.write = async () => {
+    try {
+      await acquireLock();
+      logger.info('Database write lock acquired');
+      const result = await originalWrite.call(database);
+      return result;
+    } finally {
+      logger.info('Database write lock released');
+      releaseLock();
+    }
+  };
+  
+  return database;
+};
+
 try {
   // Check if database file exists and is valid
   if (fs.existsSync(dbPath)) {
@@ -64,6 +109,9 @@ try {
 
   // Initialize DB with proper path and error handling
   db = await JSONFilePreset<Database>(dbPath, defaultData);
+  
+  // Apply thread safety to database operations
+  db = createSafeDatabase(db);
 
   // Verify database was loaded properly
   await db.read();

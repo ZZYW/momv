@@ -67,7 +67,7 @@
       "id": "234",
       "type": "dynamic",
       "blockName": "",
-      "prompt": "这是迄今为止的故事：\n\n{get story so far for this player}\n\n\n以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n\n\n{get decisions of question#1fb, 4fc,190 by this player, from story 1}\n\n请深入解析这个选择的象征含义，但不要在你的创作中直接引用这些原始选择！！根据玩家的选择，用荣格的心理分析法对玩家的潜意识做出分析，然后生成一句口号：\n\n",
+      "prompt": "这是迄今为止的故事：\n\n{get story so far for this player}\n\n\n以下是玩家之前做出的选择。请记住，这些选择表达的是隐喻和符号意义，而非字面意思。\n\n\n{get decisions of question#1fb,4fc,190 by this player, from story 1}\n\n请深入解析这个选择的象征含义，但不要在你的创作中直接引用这些原始选择！！根据玩家的选择，用荣格的心理分析法对玩家的潜意识做出分析，然后生成一句口号：\n\n",
       "generateOptions": false,
       "sceneId": 1
     },

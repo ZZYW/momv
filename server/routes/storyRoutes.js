@@ -27,7 +27,7 @@ router.get("/blocks", async (req, res) => {
     );
     res.json({ success: true, blocks });
   } catch (error) {
-    console.error("Error in /story/blocks:", error);
+    logger.error("Error in /story/blocks:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -44,7 +44,7 @@ router.get("/block/:blockId", async (req, res) => {
     
     res.json({ success: true, block });
   } catch (error) {
-    console.error("Error in /story/block/:blockId:", error);
+    logger.error("Error in /story/block/:blockId:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -59,7 +59,7 @@ router.get("/compile", async (req, res) => {
     );
     res.json({ success: true, compiledText });
   } catch (error) {
-    console.error("Error in /story/compile:", error);
+    logger.error("Error in /story/compile:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -70,7 +70,7 @@ router.get("/choices/:blockId", async (req, res) => {
     const summary = await compileChoiceSummaryForBlock(blockId);
     res.json({ success: true, summary });
   } catch (error) {
-    console.error("Error in /story/choices/:blockId:", error);
+    logger.error("Error in /story/choices/:blockId:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

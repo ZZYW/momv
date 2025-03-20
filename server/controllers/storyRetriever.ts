@@ -8,6 +8,7 @@
  */
 
 import fs from 'fs/promises';
+import logger from '../utils/logger.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from '../db.js';
@@ -80,7 +81,7 @@ async function loadStoryFile(storyId: number | string): Promise<StoryData> {
     const storyData = await fs.readFile(storyPath, 'utf8');
     return JSON.parse(storyData);
   } catch (error) {
-    console.error(`Error loading story file (ID: ${storyId}):`, error);
+    logger.error(`Error loading story file (ID: ${storyId}):`, error);
     return { blocks: [] };
   }
 }
@@ -106,7 +107,7 @@ async function loadMultipleStories(storyIds: Array<number | string>): Promise<St
     
     return { blocks: combinedBlocks };
   } catch (error) {
-    console.error(`Error loading multiple stories (IDs: ${storyIds}):`, error);
+    logger.error(`Error loading multiple stories (IDs: ${storyIds}):`, error);
     return { blocks: [] };
   }
 }
@@ -212,7 +213,7 @@ async function enhanceBlocksWithPlayerData(blocks: StoryBlock[], playerId: strin
       return enhancedBlock;
     });
   } catch (error) {
-    console.error('Error enhancing blocks with player data:', error);
+    logger.error('Error enhancing blocks with player data:', error);
     return blocks; // Return original blocks on error
   }
 }
@@ -248,7 +249,7 @@ async function getStoryBeforeBlockByPlayer(
     
     return enhancedBlocks;
   } catch (error) {
-    console.error('Error in getStoryBeforeBlockByPlayer:', error);
+    logger.error('Error in getStoryBeforeBlockByPlayer:', error);
     return [];
   }
 }
@@ -279,7 +280,7 @@ async function getBlockData(blockId: string, playerId: string | null = null): Pr
     const [enhancedBlock] = await enhanceBlocksWithPlayerData([block], playerId);
     return enhancedBlock;
   } catch (error) {
-    console.error('Error in getBlockData:', error);
+    logger.error('Error in getBlockData:', error);
     return null;
   }
 }
@@ -409,7 +410,7 @@ async function compileStoryForPlayer(
     // 2. Compile blocks into text
     return compileStoryText(blocks, { playerId });
   } catch (error) {
-    console.error('Error in compileStoryForPlayer:', error);
+    logger.error('Error in compileStoryForPlayer:', error);
     return "";
   }
 }
@@ -469,7 +470,7 @@ async function compileChoiceSummaryForBlock(blockId: string): Promise<string> {
     
     return summary;
   } catch (error) {
-    console.error('Error in compileChoiceSummaryForBlock:', error);
+    logger.error('Error in compileChoiceSummaryForBlock:', error);
     return `Error retrieving choice summary for block ${blockId}.`;
   }
 }
@@ -486,7 +487,7 @@ async function getStoryBlocks(storyId: string | number): Promise<StoryBlock[]> {
     const storyData = await getStoryData(storyId);
     return storyData.blocks || [];
   } catch (error) {
-    console.error(`Error in getStoryBlocks(${storyId}):`, error);
+    logger.error(`Error in getStoryBlocks(${storyId}):`, error);
     return [];
   }
 }
@@ -510,7 +511,7 @@ async function getPlayerMetadata(playerId: string): Promise<{exists: boolean, co
       codename: db.data.players[playerId].codename || null 
     };
   } catch (error) {
-    console.error('Error retrieving player metadata:', error);
+    logger.error('Error retrieving player metadata:', error);
     return { exists: false, codename: null };
   }
 }

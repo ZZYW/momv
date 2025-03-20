@@ -18,7 +18,7 @@ export const generateBox = (req, res) => {
     const boxedText = asciiBox(message, options);
     res.json({ result: boxedText });
   } catch (error) {
-    console.error('Error generating ASCII box:', error);
+    logger.error('Error generating ASCII box:', error);
     res.status(500).json({ error: 'Failed to generate ASCII box' });
   }
 };

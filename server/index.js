@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import dotenv from 'dotenv';
+import logger from './utils/logger.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -36,9 +37,9 @@ app.use(staticRoutes);
 if (!isProd) {
     // Development mode - use local routes
     app.use(editorRoutes);
-    console.log("Development mode: Editor and Control Panel are being served.");
+    logger.info("Development mode: Editor and Control Panel are being served.");
 } else {
-    console.log("Production mode: Editor and Control Panel are not being served.");
+    logger.info("Production mode: Editor and Control Panel are not being served.");
 }
 
 // Always mount the configuration endpoint for frontend routing
@@ -53,7 +54,7 @@ app.get('/server-config', (req, res) => {
 // In production, if a central backend URL is defined, proxy all API requests
 // (excluding editor and control panel routes) to the central backend.
 if (central_backend_url) {
-    console.log(`Proxying non-editor API routes to central backend at ${central_backend_url}`);
+    logger.info(`Proxying non-editor API routes to central backend at ${central_backend_url}`);
     app.use((req, res, next) => {
         // Check if the route is for the editor app or control panel
         if (req.path.startsWith("/editor") || req.path.startsWith("/cp") || 
@@ -76,8 +77,8 @@ if (central_backend_url) {
 // Start the server
 const server = app.listen(PORT, () => {
     const baseUrl = `http://localhost:${PORT}`;
-
-    // ASCII art header for the server
+    
+    // ASCII art header for the server (log to console for nice display)
     console.log(`
 
         ░▒▓██████████████▓▒░  ░▒▓██████▓▒░ ░▒▓██████████████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ 
@@ -92,8 +93,17 @@ const server = app.listen(PORT, () => {
         
     `);
 
-    // Welcome message with unicode support
+    // Log server startup to Winston
+    logger.info(`Server started on port ${PORT}`, { 
+        port: PORT, 
+        mode: isProd ? 'production' : 'development',
+        baseUrl,
+        hasCentralBackend: !!central_backend_url
+    });
+
+    // Welcome message with unicode support (console for display, logger for file)
     console.log("Welcome to MoMV 众鸣山 Server Room...\n");
+    logger.info("MoMV Server started successfully");
 
     console.log(`
     +==========================================================================+
@@ -111,8 +121,14 @@ const server = app.listen(PORT, () => {
     | Control Panel:     ${baseUrl}/cp                
     +--------------------------------------------------------------------------+
     `);
+        logger.info("Editor routes available", {
+            editorStation1: `${baseUrl}/editor/station1`,
+            editorStation2: `${baseUrl}/editor/station2`,
+            controlPanel: `${baseUrl}/cp`
+        });
     } else {
         console.log("- Editor routes are not available in production mode.\n");
+        logger.info("Editor routes disabled in production mode");
     }
 
     console.log(`
@@ -122,6 +138,11 @@ const server = app.listen(PORT, () => {
     | Station 2:         ${baseUrl}/station2          
     +--------------------------------------------------------------------------+
     `);
+    
+    logger.info("Public routes available", {
+        station1: `${baseUrl}/station1`,
+        station2: `${baseUrl}/station2`
+    });
 });
 
 // Handle graceful shutdown
@@ -129,15 +150,19 @@ process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 
 function gracefulShutdown() {
+    logger.info('Shutting down server gracefully');
     console.log('\nShutting down server gracefully...');
+    
     server.close(() => {
+        logger.info('Server closed successfully');
         console.log('Server closed successfully');
         process.exit(0);
     });
     
     // Force close after 5 seconds if server hasn't closed
     setTimeout(() => {
-        console.error('Could not close connections in time, forcefully shutting down');
+        logger.error('Could not close connections in time, forcefully shutting down');
+        logger.error('Could not close connections in time, forcefully shutting down');
         process.exit(1);
     }, 5000);
 }

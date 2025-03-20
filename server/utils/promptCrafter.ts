@@ -4,7 +4,8 @@
  * and append response format instructions including the JSON Schema.
  */
 
-import { interpretDynamicBlock } from './dynamicBlockInterpreter.ts';
+import { interpretDynamicBlock } from './dynamicBlockInterpreter.js';
+import logger from './logger.js';
 
 /**
  * Block types supported by the application
@@ -76,9 +77,9 @@ export const craftPrompt = async (
 
     return hydratedMessage + responseFormatInstructions;
   } catch (error) {
-    console.error('Error in craftPrompt:', error);
-    console.error('hydration failed');
-    console.error('raw message:\n' + rawMessage);
+    logger.error('Error in craftPrompt:', error);
+    logger.error('hydration failed');
+    logger.error('raw message:\n' + rawMessage);
 
     return '?';
   }

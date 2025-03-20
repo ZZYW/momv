@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import dotenv from 'dotenv';
+import logger from './logger.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -41,10 +42,10 @@ export const sendPromptToLLM = async (
     }
 
     for (let index = 0; index < 4; index++) {
-        console.log('..........................................................................................................')
+        logger.info('..........................................................................................................')
     }
 
-    console.log(prompt);
+    logger.info(prompt);
 
     const response = await openai.chat.completions.create({
         model: "qwen-max", // Change as needed
@@ -58,10 +59,10 @@ export const sendPromptToLLM = async (
     const reply = cleanMessage(response.choices?.[0]?.message?.content || "No reply received");
 
     for (let index = 0; index < 4; index++) {
-        console.log('..........................................................................................................')
+        logger.info('..........................................................................................................')
     }
 
-    console.log(`Returned result: ----\n${reply}\n----\n\n`);
+    logger.info(`Returned result: ----\n${reply}\n----\n\n`);
     if (returnParsed) {
         return parseResponse(reply, options);
     } else {
@@ -163,12 +164,12 @@ function parseResponse(reply: string, options: DynamicBlockOptions): string | st
         }
 
         // If we get here, both parsing attempts failed
-        console.error("Both standard and robust parsing failed");
+        logger.error("Both standard and robust parsing failed");
         return extractFallbackContent(reply, options);
 
     } catch (parseError) {
-        console.error("Error in parseResponse function:", parseError);
-        console.error("Raw reply:", reply);
+        logger.error("Error in parseResponse function:", parseError);
+        logger.error("Raw reply:", reply);
         return extractFallbackContent(reply, options);
     }
 }

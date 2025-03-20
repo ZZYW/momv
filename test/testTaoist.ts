@@ -1,6 +1,7 @@
 
 import { drawFulu } from '../server/controllers/taoist.js';
 import { interpretDynamicBlock, getAnswer } from '../server/utils/dynamicBlockInterpreter.js';
+import logger from '../server/utils/logger.js';
 
 // Main test
 async function testTaoist() {
@@ -32,7 +33,7 @@ async function testTaoist() {
     
     return result;
   } catch (error) {
-    console.error("Error in testTaoist:", error);
+    logger.error("Error in testTaoist:", error);
     throw error;
   }
 }
@@ -43,6 +44,6 @@ testTaoist()
     process.exit(0);
   })
   .catch((error) => {
-    console.error("Test failed:", error);
+    logger.error("Test failed:", error);
     process.exit(1);
   });

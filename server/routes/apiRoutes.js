@@ -68,7 +68,7 @@ router.get("/get-player-answer", async (req, res) => {
             return res.json({ answer: "" });
         }
     } catch (error) {
-        console.error("Error retrieving player answer:", error);
+        logger.error("Error retrieving player answer:", error);
         return res.status(500).json({ error: "Failed to retrieve answer" });
     }
 });
@@ -103,7 +103,7 @@ router.get("/get-player-selections", async (req, res) => {
         
         return res.json(formattedChoices);
     } catch (error) {
-        console.error("Error retrieving player selections:", error);
+        logger.error("Error retrieving player selections:", error);
         return res.status(500).json({ error: "Failed to retrieve player selections" });
     }
 });
@@ -126,7 +126,7 @@ router.get("/get-player-codename", async (req, res) => {
         const codename = db.data.players[playerId].codename || "";
         return res.json({ codename });
     } catch (error) {
-        console.error("Error retrieving player codename:", error);
+        logger.error("Error retrieving player codename:", error);
         return res.status(500).json({ error: "Failed to retrieve player codename" });
     }
 });
@@ -147,7 +147,7 @@ router.post("/draw-fulu", async (req, res) => {
         const fuluText = await drawFulu(playerId);
         return res.json({ success: true, fuluText });
     } catch (error) {
-        console.error("Error generating Fulu:", error);
+        logger.error("Error generating Fulu:", error);
         return res.status(500).json({ error: "Failed to generate Fulu", message: error.message });
     }
 });

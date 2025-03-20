@@ -9,7 +9,8 @@ import {
 	getPlayerMetadata
 } from './storyRetriever.js';
 import { interpretDynamicBlock, getAnswer } from '../utils/dynamicBlockInterpreter.js';
-import pinyin from 'chinese-to-pinyin'
+import pinyin from 'chinese-to-pinyin';
+import logger from '../utils/logger.js';
 
 
 const command = `
@@ -100,7 +101,7 @@ function getPinyin(chineseChars: string) {
  * @returns The processed text with placeholders replaced
  */
 async function processRemainingAnswerPlaceholders(text: string, playerId: string): Promise<string> {
-	console.log("Looking for remaining answer placeholders");
+	logger.debug("Looking for remaining answer placeholders", { playerId });
 	let processedText = text;
 	
 	// Regex to find {get answer of question#XXX from this player} placeholders
@@ -111,17 +112,22 @@ async function processRemainingAnswerPlaceholders(text: string, playerId: string
 	while ((match = answerRegex.exec(text)) !== null) {
 		const fullMatch = match[0];
 		const questionId = match[1];
-		console.log(`Found remaining answer placeholder: ${fullMatch}, question ID: ${questionId}`);
+		logger.debug(`Found remaining answer placeholder`, { fullMatch, questionId, playerId });
 		
 		try {
 			// Use the getAnswer function from dynamicBlockInterpreter to get the answer
 			const answer = await getAnswer(questionId, playerId);
-			console.log(`Got answer for question ${questionId}: "${answer}"`);
+			logger.debug(`Got answer for question`, { questionId, answer, playerId });
 			
 			// Replace this instance of the placeholder
 			processedText = processedText.replace(fullMatch, answer || '');
 		} catch (error) {
-			console.error(`Error processing answer placeholder for question ${questionId}:`, error);
+			logger.error(`Error processing answer placeholder`, { 
+				questionId, 
+				playerId, 
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined
+			});
 		}
 	}
 	
@@ -133,25 +139,29 @@ export async function drawFulu(playerId: string): Promise<string> {
 	let codename = 'Traveler';
 	let symbolObjs: fuluController.Symbol[] = [];
 	try {
+		logger.info('Starting drawFulu process', { playerId });
 		// Retrieve player metadata and verify existence
 		const playerMeta = await getPlayerMetadata(playerId);
 		if (!playerMeta.exists) {
+			logger.error(`Player not found`, { playerId });
 			throw new Error(`Player with ID ${playerId} not found`);
 		}
 
 		if (!playerMeta.codename) playerMeta.codename = 'Traveler';
 		codename = playerMeta.codename || 'Traveler';
-
+		logger.debug('Player metadata retrieved', { playerId, codename });
 
 		// Retrieve story and choice data
 		await compileStoryForPlayer(playerId, [1, 2]);
 		const enhancedBlocks = await getStoryBeforeBlockByPlayer(playerId, null, [1, 2]);
+		logger.debug('Story data compiled', { playerId, blockCount: enhancedBlocks.length });
 
 		// Filter to choice blocks that include a player choice
 		const choiceBlocks = enhancedBlocks.filter(block =>
 			(block.type === 'static' || (block.type === 'dynamic' && block.generateOptions)) &&
 			block.playerChoice
 		);
+		logger.debug('Choice blocks filtered', { playerId, choiceBlockCount: choiceBlocks.length });
 
 		// Compile summaries (for potential use in LLM prompt)
 		let playerChoicesSummary = '';
@@ -169,12 +179,18 @@ export async function drawFulu(playerId: string): Promise<string> {
 		// Get available templates and symbols
 		const templates = fuluController.getAllTemplates();
 		const symbols = fuluController.getAllSymbols();
+		logger.debug('Templates and symbols loaded', { 
+			playerId, 
+			templateCount: templates.length, 
+			symbolCount: symbols.length 
+		});
 
 		// Format the lists for the prompt
 		const allTemplateNames = templates.map(t => t.keywords).join(', ');
 		const allSymbolNames = symbols.map(s => s.keywords).join(', ');
 
 		// Hydrate the prompt dynamically
+		logger.debug('Starting dynamic prompt hydration', { playerId });
 		let hydratedPrompt = await interpretDynamicBlock(command, {
 			playerId,
 			blockId: null,
@@ -186,6 +202,7 @@ export async function drawFulu(playerId: string): Promise<string> {
 		
 		// Replace any remaining placeholders
 		hydratedPrompt = hydratedPrompt.replace(/\{get codename\}/g, codename);
+		logger.debug('Prompt hydration complete', { playerId });
 
 		// Construct the final prompt
 		const finalPrompt = [
@@ -199,6 +216,7 @@ export async function drawFulu(playerId: string): Promise<string> {
 		].join('\n');
 
 		// Send prompt to the LLM and process its response
+		logger.info('Sending prompt to LLM', { playerId });
 		const llmResponse = await sendPromptToLLM(finalPrompt, 'dynamic', {}, false);
 		let selectedTemplate: string;
 
@@ -207,56 +225,97 @@ export async function drawFulu(playerId: string): Promise<string> {
 				const responseJson = JSON.parse(llmResponse);
 				selectedTemplate = responseJson.template;
 				const selectedSymbolKeywords: string[] = responseJson.symbols;
+				logger.debug('Received valid response from LLM', { 
+					playerId, 
+					selectedTemplate, 
+					selectedSymbols: selectedSymbolKeywords 
+				});
 
 				if (!selectedTemplate || !selectedSymbolKeywords || !Array.isArray(selectedSymbolKeywords) || selectedSymbolKeywords.length !== 3) {
+					logger.warn('Invalid LLM response structure', { 
+						playerId, 
+						hasTemplate: !!selectedTemplate, 
+						hasSymbols: !!selectedSymbolKeywords,
+						symbolCount: selectedSymbolKeywords ? selectedSymbolKeywords.length : 0
+					});
 					throw new Error('Invalid or incomplete LLM response structure');
 				}
 				// Map LLM symbol keywords to symbol objects
 				symbolObjs = selectedSymbolKeywords.map(symbolName => {
 					const symbolObj = fuluController.getSymbolObjectByKeywords(symbolName);
 					if (!symbolObj) {
+						logger.warn(`Symbol not found`, { playerId, symbolName });
 						throw new Error(`Symbol "${symbolName}" not found`);
 					}
 					return symbolObj;
 				});
 			} else {
+				logger.warn('Non-string response from LLM', { playerId, responseType: typeof llmResponse });
 				throw new Error('Unexpected non-string response from LLM');
 			}
 		} catch (parseError) {
-			console.error('Failed to parse LLM response as JSON:', parseError);
+			logger.error('Failed to parse LLM response as JSON', { 
+				error: parseError instanceof Error ? parseError.message : String(parseError),
+				stack: parseError instanceof Error ? parseError.stack : undefined,
+				playerId 
+			});
 			// Fallback: use pickRandomSymbol to select 3 symbols and pickRandomTemplate for template fallback
 			selectedTemplate = pickRandomTemplate(templates).keywords;
 			symbolObjs = pickRandomSymbol(3, symbols);
-			console.log('Using fallback random selections:', { selectedTemplate, selectedSymbols: symbolObjs.map(s => s.keywords) });
+			logger.warn('Using fallback random selections', { 
+				playerId,
+				selectedTemplate, 
+				selectedSymbols: symbolObjs.map(s => s.keywords)
+			});
 		}
 
 		// Override AI's template choice with a random one to avoid observed biases
 		const templateObj = pickRandomTemplate(templates);
 		if (!templateObj) {
+			logger.error(`Template not found`, { playerId, template: selectedTemplate });
 			throw new Error(`Template "${selectedTemplate}" not found`);
 		}
 
 		// Assemble the Fulu using the selected template and symbols, with the header text
+		logger.info('Assembling Fulu talisman', { 
+			playerId,
+			template: templateObj.keywords,
+			symbols: symbolObjs.map(s => s.keywords)
+		});
 		talismanText = fuluController.assemble(templateObj, symbolObjs, getTalismanFooter(getPinyin(codename)));
 	} catch (error) {
-		console.error('Error in drawFulu main processing, falling back to random selections:', error);
+		logger.error('Error in drawFulu main processing, falling back to random selections', { 
+			playerId,
+			error: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : undefined
+		});
 		// Fallback to ensure we always have a talisman to print
 		try {
 			const fallbackTemplates = fuluController.getAllTemplates();
 			const fallbackSymbols = fuluController.getAllSymbols();
 			const fallbackTemplate = pickRandomTemplate(fallbackTemplates);
 			const fallbackSymbolObjs = pickRandomSymbol(3, fallbackSymbols);
+			logger.info('Using emergency fallback for talisman creation', { 
+				playerId,
+				template: fallbackTemplate.keywords,
+				symbolCount: fallbackSymbolObjs.length
+			});
 			talismanText = fuluController.assemble(
 				fallbackTemplate,
 				fallbackSymbolObjs,
 				getTalismanFooter(getPinyin(codename))
 			);
 		} catch (fallbackError) {
-			console.error('Fallback also failed:', fallbackError);
+			logger.error('Fallback also failed', { 
+				playerId,
+				error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+				stack: fallbackError instanceof Error ? fallbackError.stack : undefined
+			});
 			talismanText = 'Default talisman text';
 		}
 	}
 	// Ensure the talisman is always printed
+	logger.info('Printing talisman', { playerId, talismanLength: talismanText.length });
 	printText(talismanText);
 	return talismanText;
 }

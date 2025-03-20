@@ -19,7 +19,7 @@ export const printText = (text, options = { encoding: 'cp437' }) => {
   // Open the USB connection.
   device.open(async (err) => {
     if (err) {
-      console.error('Printer connection error:', err);
+      logger.error('Printer connection error:', err);
       return;
     }
 
@@ -40,7 +40,7 @@ export const printText = (text, options = { encoding: 'cp437' }) => {
 
       await printer.close();  // Ensure the connection is gracefully closed.
     } catch (printErr) {
-      console.error('Printing error:', printErr);
+      logger.error('Printing error:', printErr);
       printer.close();
     }
   });

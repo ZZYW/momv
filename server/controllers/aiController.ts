@@ -3,6 +3,7 @@ import {
     BlockType,
 } from '../utils/promptCrafter.js';
 import { sendPromptToLLM } from '../utils/aiCommunicator.js';
+import logger from '../utils/logger.js';
 import db from '../db.js';
 import { Request, Response } from 'express';
 import { Player, DynamicContent } from '../db.js';
@@ -48,7 +49,13 @@ export const askLLM = async (req: Request, res: Response): Promise<void> => {
         // if needed in the prompt
 
         // Step 2 & 3: Craft prompt - this now handles hydration of placeholders internally
-        console.log('Crafting prompt with potential placeholders...');
+        logger.debug('Crafting prompt with potential placeholders', { 
+            playerID, 
+            blockId, 
+            storyId,
+            messageLength: message.length,
+            generateOptions
+        });
         const prompt = await craftPrompt(
             message,
             { generateOptions },
@@ -63,7 +70,11 @@ export const askLLM = async (req: Request, res: Response): Promise<void> => {
         // The LLM response should already be processed
         // The placeholders are hydrated before sending to AI, so no need to process response
         let finalContent = llmResponse;
-        console.log('Response received from LLM');
+        logger.info('Response received from LLM', { 
+            blockId,
+            playerID,
+            responseLength: finalContent?.length || 0 
+        });
 
         // Step 7: Record dynamic block content in database
         await db.read();
@@ -87,8 +98,13 @@ export const askLLM = async (req: Request, res: Response): Promise<void> => {
         // Step 8: Return processed result to client
         res.json(finalContent);
     } catch (error: any) {
-        console.error("Error in askLLM:", error.message);
-        console.error("Stack trace:", error.stack);
+        logger.error("Error in askLLM", {
+            message: error.message,
+            stack: error.stack,
+            playerID,
+            blockId,
+            responseData: error.response?.data || "No additional details available"
+        });
 
         // Return error information to the client
         res.status(500).json({
@@ -123,7 +139,13 @@ export const previewAIPrompt = async (req: Request, res: Response): Promise<void
 
         // Step 2 & 3: Generate preview using the enhanced craftPrompt function
         // which now handles hydration of placeholders internally
-        console.log('Generating preview with potential placeholders...');
+        logger.debug('Generating preview with potential placeholders', {
+            playerID, 
+            blockId, 
+            storyId,
+            messageLength: message.length,
+            generateOptions
+        });
         const promptPreview = await craftPrompt(
             message,
             { generateOptions },
@@ -138,8 +160,13 @@ export const previewAIPrompt = async (req: Request, res: Response): Promise<void
             message: '这是将发送给AI的提示预览，供创作者参考'
         });
     } catch (error: any) {
-        console.error("Error generating prompt preview:", error.message);
-        console.error("Stack trace:", error.stack);
+        logger.error("Error generating prompt preview", {
+            message: error.message,
+            stack: error.stack,
+            playerID,
+            blockId,
+            storyId
+        });
 
         // Return error information to the client
         res.status(500).json({

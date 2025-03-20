@@ -46,7 +46,7 @@ router.post("/editor/save-story-json/:station", (req, res) => {
     const filePath = path.join(dirPath, `story.json`);
     fs.writeFile(filePath, JSON.stringify({ blocks }, null, 2), (err) => {
         if (err) {
-            console.error("Error writing story JSON file:", err);
+            logger.error("Error writing story JSON file:", err);
             return res.status(500).send("Error saving story");
         }
         res.json({ success: true, filePath });

@@ -5,7 +5,8 @@ import {
   getStoryBeforeBlockByPlayer,
   compileStoryText,
   StoryBlock
-} from '../controllers/storyRetriever.ts';
+} from '../controllers/storyRetriever.js';
+import logger from './logger.js';
 
 /**
  * Placeholder query types
@@ -68,7 +69,7 @@ const PLACEHOLDER_REGEX = /\{(get\s+[^{}]*)\}/g;
  * @returns Query information including type and parameters
  */
 function parsePlaceholder(placeholder: string): PlaceholderQuery {
-  console.log(`Parsing placeholder: ${placeholder}`);
+  logger.info(`Parsing placeholder: ${placeholder}`);
 
   // Normalize whitespace
   const normalizedText = placeholder.trim().replace(/\s+/g, ' ');
@@ -111,7 +112,7 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
     // Try an alternate matching approach for robustness
     const altMatch = queryText.match(/answer.*question#([a-zA-Z0-9\-]+).*this player/i);
     if (altMatch) {
-      console.log('Matched with alternate pattern:', altMatch);
+      logger.info('Matched with alternate pattern:', altMatch);
       const questionId = altMatch[1].trim();
       return {
         type: 'answer',
@@ -122,10 +123,10 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
   }
 
   if (answerMatch) {
-    console.log('Answer match found:', answerMatch);
+    logger.info('Answer match found:', answerMatch);
     const questionId = answerMatch[1].trim();
     
-    console.log('Parsed into:', {
+    logger.info('Parsed into:', {
       type: 'answer',
       questionId,
       target: 'thisPlayer'
@@ -137,7 +138,7 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
       target: 'thisPlayer'
     };
   } else {
-    console.log('No match for answer pattern');
+    logger.info('No match for answer pattern');
   }
 
   // Check for decisions query
@@ -145,18 +146,18 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
   // Updated to support both 3-digit IDs and legacy UUIDs
   const decisionsRegex = /^decisions of question#([a-zA-Z0-9\-\,]+) by (this player|all), from story ([0-9\,]+)$/i;
 
-  console.log('Query text:', queryText);
-  console.log('Testing against regex:', decisionsRegex.toString());
+  logger.info('Query text:', queryText);
+  logger.info('Testing against regex:', decisionsRegex.toString());
 
   const decisionsMatch = queryText.match(decisionsRegex);
 
   if (decisionsMatch) {
-    console.log('Match found:', decisionsMatch);
+    logger.info('Match found:', decisionsMatch);
     const questionIds = decisionsMatch[1].split(',').map(id => id.trim());
     const target = decisionsMatch[2].toLowerCase() === 'this player' ? 'thisPlayer' : 'all';
     const storyIds = decisionsMatch[3].split(',').map(id => id.trim());
 
-    console.log('Parsed into:', {
+    logger.info('Parsed into:', {
       type: 'decisions',
       questionIds,
       target,
@@ -172,12 +173,12 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
       isAll: questionIds.includes('all')
     };
   } else {
-    console.log('No match for decisions pattern');
+    logger.info('No match for decisions pattern');
   }
 
   // If no recognized pattern matches
   const errorMessage = `Unrecognized placeholder format. Got: "${queryText}". Expected formats: "story so far for this player", "story so far for nobody", "answer of question#[ID] from this player", or "decisions of question#[ID] by [this player|all], from story [ID]"`;
-  console.error(errorMessage);
+  logger.error(errorMessage);
 
   return {
     type: 'unknown',
@@ -192,17 +193,17 @@ function parsePlaceholder(placeholder: string): PlaceholderQuery {
  * @returns Array of found placeholders with their positions
  */
 function findPlaceholders(text: string): Placeholder[] {
-  console.log("Finding placeholders in text:", text);
-  console.log("Text type:", typeof text);
+  logger.info("Finding placeholders in text:", text);
+  logger.info("Text type:", typeof text);
 
   if (typeof text !== 'string') {
-    console.log("Not a string, returning empty array");
+    logger.info("Not a string, returning empty array");
     return [];
   }
 
   // Check if the text contains any curly braces
   if (!text.includes('{') || !text.includes('}')) {
-    console.log("Text doesn't contain curly braces, skipping regex search");
+    logger.info("Text doesn't contain curly braces, skipping regex search");
     return [];
   }
 
@@ -213,13 +214,13 @@ function findPlaceholders(text: string): Placeholder[] {
   PLACEHOLDER_REGEX.lastIndex = 0;
 
   // Log the regex pattern
-  console.log("Using regex pattern:", PLACEHOLDER_REGEX.toString());
+  logger.info("Using regex pattern:", PLACEHOLDER_REGEX.toString());
 
   try {
     while ((match = PLACEHOLDER_REGEX.exec(text)) !== null) {
-      console.log("Found match:", match[0]);
-      console.log("  at position:", match.index);
-      console.log("  with inner content:", match[1]);
+      logger.info("Found match:", match[0]);
+      logger.info("  at position:", match.index);
+      logger.info("  with inner content:", match[1]);
 
       placeholders.push({
         fullMatch: match[0],          // The full match including {}
@@ -229,10 +230,10 @@ function findPlaceholders(text: string): Placeholder[] {
       });
     }
 
-    console.log(`Found ${placeholders.length} placeholders in total`);
+    logger.info(`Found ${placeholders.length} placeholders in total`);
     return placeholders;
   } catch (error) {
-    console.error("Error in regex matching:", error);
+    logger.error("Error in regex matching:", error);
     return [];
   }
 }
@@ -245,7 +246,7 @@ function findPlaceholders(text: string): Placeholder[] {
  * @returns The compiled story text
  */
 async function getCompiledStory(playerId: string, blockId: string | null, target: 'thisPlayer' | 'nobody' = 'thisPlayer'): Promise<string> {
-  console.log(`Getting compiled story for ${target === 'nobody' ? 'nobody' : `player: ${playerId}`} up to block: ${blockId || 'end'}`);
+  logger.info(`Getting compiled story for ${target === 'nobody' ? 'nobody' : `player: ${playerId}`} up to block: ${blockId || 'end'}`);
 
   try {
     // If blockId is provided, get story only up to this point
@@ -257,7 +258,7 @@ async function getCompiledStory(playerId: string, blockId: string | null, target
         
         // Check if blocks were retrieved successfully and it's an array
         if (!storyBlocks || !Array.isArray(storyBlocks)) {
-          console.error('Failed to retrieve story blocks or result is not an array');
+          logger.error('Failed to retrieve story blocks or result is not an array');
           return "No story compiled yet.";
         }
         
@@ -270,7 +271,7 @@ async function getCompiledStory(playerId: string, blockId: string | null, target
 
         // Check if blocks were retrieved successfully and it's an array
         if (!storyBlocks || !Array.isArray(storyBlocks)) {
-          console.error('Failed to retrieve story blocks or result is not an array');
+          logger.error('Failed to retrieve story blocks or result is not an array');
           return "No story compiled yet.";
         }
 
@@ -291,7 +292,7 @@ async function getCompiledStory(playerId: string, blockId: string | null, target
       }
     }
   } catch (error: any) {
-    console.error('Error getting compiled story:', error);
+    logger.error('Error getting compiled story:', error);
     return `[Error compiling story: ${error.message}]`;
   }
 }
@@ -311,7 +312,7 @@ async function getCompiledStory(playerId: string, blockId: string | null, target
  * @returns Promise<string> - The player's answer as a string
  */
 async function getAnswer(questionId: string, playerId: string): Promise<string> {
-  console.log(`Getting answer for question: ${questionId}, player: ${playerId}`);
+  logger.info(`Getting answer for question: ${questionId}, player: ${playerId}`);
 
   try {
     const blockData = await getBlockData(questionId, playerId);
@@ -323,7 +324,7 @@ async function getAnswer(questionId: string, playerId: string): Promise<string> 
       return '';  // Return empty string if no answer is found
     }
   } catch (error: any) {
-    console.error('Error getting answer:', error);
+    logger.error('Error getting answer:', error);
     return `[Error retrieving answer: ${error.message}]`;
   }
 }
@@ -334,7 +335,7 @@ async function getDecisions(
   storyIds: string[],
   playerId: string
 ): Promise<string> {
-  console.log(`Getting decisions for questions: ${questionIds}, target: ${target}, stories: ${storyIds}`);
+  logger.info(`Getting decisions for questions: ${questionIds}, target: ${target}, stories: ${storyIds}`);
 
   try {
     // Handle 'all' questions special case
@@ -384,7 +385,7 @@ async function getDecisions(
 
     return result;
   } catch (error: any) {
-    console.error('Error getting decisions:', error);
+    logger.error('Error getting decisions:', error);
     return `[Error retrieving decisions: ${error.message}]`;
   }
 }
@@ -396,12 +397,12 @@ async function getDecisions(
  * @returns The processed text with placeholders replaced
  */
 async function interpretDynamicBlock(text: string, context: DynamicBlockContext = { playerId: null }): Promise<string> {
-  console.log('=== Starting interpretDynamicBlock ===');
-  console.log('Received text:', text);
-  console.log('Received context:', JSON.stringify(context));
+  logger.info('=== Starting interpretDynamicBlock ===');
+  logger.info('Received text:', text);
+  logger.info('Received context:', JSON.stringify(context));
 
   if (typeof text !== 'string') {
-    console.log('Text is not a string, returning as is:', typeof text, text);
+    logger.info('Text is not a string, returning as is:', typeof text, text);
     return text;
   }
 
@@ -412,7 +413,7 @@ async function interpretDynamicBlock(text: string, context: DynamicBlockContext 
     // Fix for playerId being an object
     if (typeof playerId === 'object' && playerId !== null) {
       // Use a default string value for playerId when it's an object
-      console.log('PlayerId is an object:', playerId);
+      logger.info('PlayerId is an object:', playerId);
       // Check if the object has a 'generateOptions' property (that means it's the playerId coming from context)
       if ('generateOptions' in playerId) {
         // This likely means playerId is not a real player ID but the context/settings object
@@ -426,78 +427,78 @@ async function interpretDynamicBlock(text: string, context: DynamicBlockContext 
     // Ensure playerId is a string
     const playerIdStr = String(playerId);
 
-    console.log(`Using playerId: ${playerIdStr}, blockId: ${blockId || 'not provided'}`);
+    logger.info(`Using playerId: ${playerIdStr}, blockId: ${blockId || 'not provided'}`);
 
     // Find all placeholders in the text
-    console.log('Looking for placeholders...');
+    logger.info('Looking for placeholders...');
     
     // Debug: Check if there are any "answer" placeholders
     const hasAnswerPlaceholders = text.includes('answer of question#');
-    console.log(`Text includes 'answer of question#': ${hasAnswerPlaceholders}`);
+    logger.info(`Text includes 'answer of question#': ${hasAnswerPlaceholders}`);
     if (hasAnswerPlaceholders) {
-      console.log('Answer placeholder examples in text:', text.match(/\{get\s+answer\s+of\s+question#[^}]*\}/gi));
+      logger.info('Answer placeholder examples in text:', text.match(/\{get\s+answer\s+of\s+question#[^}]*\}/gi));
     }
     
     const placeholders = findPlaceholders(text);
 
     if (placeholders.length === 0) {
-      console.log('No placeholders found, returning original text');
+      logger.info('No placeholders found, returning original text');
       return text; // No placeholders found, return original text
     }
 
-    console.log(`Found ${placeholders.length} placeholders to process:`, placeholders);
+    logger.info(`Found ${placeholders.length} placeholders to process:`, placeholders);
 
     // Process each placeholder and collect replacements
     const replacements: TextReplacement[] = [];
 
     for (const placeholder of placeholders) {
-      console.log(`Processing placeholder: ${placeholder.fullMatch}`);
+      logger.info(`Processing placeholder: ${placeholder.fullMatch}`);
       const query = parsePlaceholder(placeholder.innerContent);
-      console.log('Query parsed as:', query);
+      logger.info('Query parsed as:', query);
 
       // Default to passing through the original placeholder text if there's an error
       let replacement = placeholder.fullMatch;
 
       // Process based on query type
       if (query.type === 'compiledStory') {
-        console.log('Getting compiled story up to current block...');
+        logger.info('Getting compiled story up to current block...');
         if (query.target === 'nobody') {
           replacement = await getCompiledStory(playerIdStr, blockId, 'nobody');
-          console.log('Compiled story (for nobody) length:', replacement.length);
+          logger.info('Compiled story (for nobody) length:', replacement.length);
         } else {
           replacement = await getCompiledStory(playerIdStr, blockId, 'thisPlayer');
-          console.log('Compiled story length:', replacement.length);
+          logger.info('Compiled story length:', replacement.length);
         }
       }
       else if (query.type === 'answer' && query.questionId && query.target === 'thisPlayer') {
-        console.log('Getting answer for specific question...');
+        logger.info('Getting answer for specific question...');
         replacement = await getAnswer(
           query.questionId,
           playerIdStr
         );
-        console.log('Answer result:', replacement);
+        logger.info('Answer result:', replacement);
       }
       else if (query.type === 'decisions' && query.questionIds && query.storyIds && query.target) {
-        console.log('Getting decisions...');
+        logger.info('Getting decisions...');
         replacement = await getDecisions(
           query.questionIds,
           query.target,
           query.storyIds,
           playerIdStr
         );
-        console.log('Decisions result length:', replacement.length);
+        logger.info('Decisions result length:', replacement.length);
       }
       else if (query.type === 'unknown') {
         // Unknown placeholder type - return the original text instead of an error message
-        console.error(`Placeholder parsing error: ${query.error}`);
+        logger.error(`Placeholder parsing error: ${query.error}`);
         replacement = `{${placeholder.innerContent}}`;
-        console.log(`Keeping original placeholder: ${replacement}`);
+        logger.info(`Keeping original placeholder: ${replacement}`);
       }
       else {
         // Unknown placeholder type
-        console.error(`Unknown placeholder type: ${query.type}`);
+        logger.error(`Unknown placeholder type: ${query.type}`);
         replacement = `{${placeholder.innerContent}}`;
-        console.log(`Keeping original placeholder: ${replacement}`);
+        logger.info(`Keeping original placeholder: ${replacement}`);
       }
 
       replacements.push({
@@ -509,21 +510,21 @@ async function interpretDynamicBlock(text: string, context: DynamicBlockContext 
 
     // Sort replacements in reverse order so we can replace without affecting other indices
     replacements.sort((a, b) => b.start - a.start);
-    console.log('Sorted replacements:', replacements);
+    logger.info('Sorted replacements:', replacements);
 
     // Apply replacements
     let processedText = text;
     for (const { start, end, replacement } of replacements) {
-      console.log(`Replacing from positions ${start} to ${end} with content of length ${replacement.length}`);
+      logger.info(`Replacing from positions ${start} to ${end} with content of length ${replacement.length}`);
       processedText = processedText.substring(0, start) + replacement + processedText.substring(end);
     }
 
-    console.log('Final processed text length:', processedText.length);
-    console.log('=== Finished interpretDynamicBlock ===');
+    logger.info('Final processed text length:', processedText.length);
+    logger.info('=== Finished interpretDynamicBlock ===');
     return processedText;
   } catch (error: any) {
-    console.error('Error interpreting dynamic block:', error);
-    console.error('Stack trace:', error.stack);
+    logger.error('Error interpreting dynamic block:', error);
+    logger.error('Stack trace:', error.stack);
     return text; // Return original text on error
   }
 }

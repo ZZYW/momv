@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import logger from '../utils/logger.js'
 
 // -------------------------
 // Directory Setup
@@ -157,7 +158,7 @@ function processTemplateFile(file: string, fuluTemplateDir: string): Template {
         ({ bellyStartRow, bellyEndRow, bellyStartCol, bellyEndCol } = bellyData)
         content = bellyData.newBody
     } else {
-        console.warn(`No belly region found for ${file}. Using zeroed coords.`)
+        logger.warn(`No belly region found for template file`, { file, fileName: path.basename(file) })
     }
 
     return {
@@ -221,7 +222,10 @@ function readAsciiArts() {
         })
 
     } catch (error) {
-        console.error('Error reading ASCII arts:', error)
+        logger.error('Error reading ASCII arts', { 
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+        })
     }
 }
 
@@ -424,8 +428,15 @@ function assemble(template: Template, symbols: Symbol[], customText: string | nu
 // -------------------------
 try {
     readAsciiArts()
+    logger.info('fuluController initialized successfully', { 
+        templateCount: templates.length,
+        symbolCount: symbols.length
+    })
 } catch (err) {
-    console.error('Failed to initialize fuluController:', err)
+    logger.error('Failed to initialize fuluController', {
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined
+    })
 }
 
 export {

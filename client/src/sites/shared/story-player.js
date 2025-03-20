@@ -1500,7 +1500,7 @@ document.addEventListener("alpine:init", () => {
         // Create a simple loading bar
         const loadingBar = document.createElement('div');
         loadingBar.className = 'llm-loading-bar';
-        loadingBar.innerHTML = `<div class="llm-loading-animation">[.............?]</div>`;
+        loadingBar.innerHTML = `<div class="llm-loading-animation"></div>`;
 
         // Add to container
         loadingContainer.appendChild(loadingBar);

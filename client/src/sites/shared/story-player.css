@@ -367,6 +367,29 @@ h2 {
     color: #eaeaea;
 }
 
+/* ================== */
+/* = PERSISTENT BUTTON = */
+/* ================== */
+.persistent-new-story {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 50;
+    font-family: "CP437Courier", "FusionPixelFont", sans-serif;
+    color: #69801d;
+    background-color: #191b21;
+    border: 1px dotted #69801d;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.persistent-new-story:hover {
+    background-color: #69801d;
+    color: #191b21;
+}
+
 /* ============== */
 /* = ANIMATIONS = */
 /* ============== */

@@ -263,6 +263,9 @@ function initializeStoryPlayer() {
               
               <!-- Passages will be rendered here -->
             </div>
+            
+            <!-- Persistent New Story button -->
+            <button class="persistent-new-story" onclick="window.location.reload()">重新开始</button>
           </div>
         `;
         

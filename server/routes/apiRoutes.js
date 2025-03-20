@@ -8,6 +8,7 @@ import { getBlockData } from "../controllers/storyRetriever.ts";
 import { generateBox } from "../controllers/asciiBoxController.js";
 import { drawFulu } from "../controllers/taoist.ts";
 import db from "../db.js";
+import logger from '../utils/logger.js';
 
 const router = express.Router();
 
@@ -24,15 +25,32 @@ router.post("/preview-prompt", previewAIPrompt);
 
 // Printer endpoint
 router.post("/print", (req, res) => {
-    console.log("Received print request:", req.body);
+    logger.info("Received print request");
     const { text } = req.body;
 
     if (!text) {
+        logger.warn("Print request missing text parameter");
         return res.status(400).json({ error: "Missing text parameter" });
     }
 
-    printText(text);
-    res.json({ success: true });
+    try {
+        const printResult = printText(text);
+        if (printResult === false) {
+            // The printer function handled the error and returned false
+            return res.status(200).json({ 
+                success: false, 
+                message: "Print operation failed but was handled gracefully" 
+            });
+        }
+        logger.info("Print request processed successfully");
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        logger.error("Unexpected error in print endpoint:", error);
+        return res.status(500).json({ 
+            success: false, 
+            error: "Print operation failed with an unexpected error" 
+        });
+    }
 });
 
 // Codename endpoints
@@ -82,26 +100,43 @@ router.get("/get-player-selections", async (req, res) => {
     }
     
     try {
-        await db.read();
-        
-        if (!db.data || !db.data.players || !db.data.players[playerId] || !db.data.players[playerId].choices) {
-            return res.status(404).json({});
+        try {
+            await db.read();
+        } catch (dbReadError) {
+            logger.error("Database read error:", dbReadError);
+            return res.status(500).json({ error: "Database read error", message: "Failed to read player data" });
         }
         
-        // Format player choices for client-side storage
-        const playerChoices = db.data.players[playerId].choices;
-        const formattedChoices = {};
+        if (!db.data) {
+            logger.error("Database data is null or undefined");
+            return res.status(500).json({ error: "Database corruption", message: "Database appears to be corrupted" });
+        }
         
-        // Convert from DB format to the format expected by the client
-        Object.entries(playerChoices).forEach(([blockId, choiceData]) => {
-            formattedChoices[blockId] = {
-                chosenIndex: choiceData.chosenIndex,
-                chosenText: choiceData.chosenText,
-                availableOptions: choiceData.availableOptions || []
-            };
-        });
+        if (!db.data.players || !db.data.players[playerId] || !db.data.players[playerId].choices) {
+            // Not necessarily an error - could be a new player
+            logger.info(`No choices found for player: ${playerId}`);
+            return res.status(200).json({});
+        }
         
-        return res.json(formattedChoices);
+        try {
+            // Format player choices for client-side storage
+            const playerChoices = db.data.players[playerId].choices;
+            const formattedChoices = {};
+            
+            // Convert from DB format to the format expected by the client
+            Object.entries(playerChoices).forEach(([blockId, choiceData]) => {
+                formattedChoices[blockId] = {
+                    chosenIndex: choiceData.chosenIndex,
+                    chosenText: choiceData.chosenText,
+                    availableOptions: choiceData.availableOptions || []
+                };
+            });
+            
+            return res.json(formattedChoices);
+        } catch (formattingError) {
+            logger.error("Error formatting player choices:", formattingError);
+            return res.status(500).json({ error: "Data processing error", message: "Failed to process player choices" });
+        }
     } catch (error) {
         logger.error("Error retrieving player selections:", error);
         return res.status(500).json({ error: "Failed to retrieve player selections" });
@@ -117,9 +152,20 @@ router.get("/get-player-codename", async (req, res) => {
     }
     
     try {
-        await db.read();
+        try {
+            await db.read();
+        } catch (dbReadError) {
+            logger.error("Database read error in get-player-codename:", dbReadError);
+            return res.status(500).json({ error: "Database read error", message: "Failed to read player data" });
+        }
         
-        if (!db.data || !db.data.players || !db.data.players[playerId]) {
+        if (!db.data) {
+            logger.error("Database data is null or undefined in get-player-codename");
+            return res.status(500).json({ error: "Database corruption", message: "Database appears to be corrupted" });
+        }
+        
+        if (!db.data.players || !db.data.players[playerId]) {
+            logger.info(`No codename found for player: ${playerId}`);
             return res.json({ codename: "" });
         }
         

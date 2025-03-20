@@ -31,7 +31,7 @@ export function checkDatabaseAge() {
     if (ageInDays >= MAX_AGE_DAYS) {
       logger.info(`Database is ${ageInDays.toFixed(2)} days old; archiving...`);
 
-      const formatDate = (date) => date.toISOString().split('T')[0];
+      const formatDate = (date: any) => date.toISOString().split('T')[0];
       const archiveName = `database_${formatDate(dbCreationDate)}_to_${formatDate(currentDate)}.json`;
       const archivePath = path.join('./archives', archiveName);
 

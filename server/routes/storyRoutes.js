@@ -5,6 +5,7 @@ import {
   compileStoryForPlayer, 
   compileChoiceSummaryForBlock 
 } from "../controllers/storyRetriever.ts";
+import logger from '../utils/logger.js';
 
 const router = express.Router();
 

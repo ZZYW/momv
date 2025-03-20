@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import dotenv from 'dotenv';
 import logger from './utils/logger.js';
+import winston from 'winston'; // added for console transport in development
 
 // Load environment variables from .env file
 dotenv.config();
@@ -11,6 +12,12 @@ dotenv.config();
 // Set config from environment variables
 const PORT = process.env.PORT || 3001;
 const isProd = process.argv.includes("prod");
+
+// Add console transport for development logging
+if (!isProd) {
+    logger.add(new winston.transports.Console({ format: winston.format.simple() }));
+}
+
 const central_backend_url = process.env.CENTRAL_BACKEND_URL;
 
 // Import middleware

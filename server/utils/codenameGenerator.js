@@ -46,16 +46,16 @@ export async function generateCodename(db) {
 
   // Try to generate a unique codename
   do {
-    const prefix = components.first[Math.floor(Math.random() * components.first.length)];
-    const animal = components.second[Math.floor(Math.random() * components.second.length)];
-    const noun = components.third[Math.floor(Math.random() * components.third.length)];
+    const pre = components.first[Math.floor(Math.random() * components.first.length)];
+    const mid = components.second[Math.floor(Math.random() * components.second.length)];
+    const pos = components.third[Math.floor(Math.random() * components.third.length)];
 
-    codename = `${prefix}${animal}${noun}`;
+    codename = `${pre}${mid}${pos}`;
     attempts++;
 
     // Safety valve in case we somehow run out of combinations
-    if (attempts > 100) {
-      codename = `${prefix}${animal}${noun}${Math.floor(Math.random() * 100)}`;
+    if (attempts > 200) {
+      codename = `${pre}${mid}${pos}${Math.floor(Math.random() * 100)}`;
       break;
     }
   } while (generatedCodenames.has(codename));

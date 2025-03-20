@@ -5,9 +5,13 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import dotenv from 'dotenv';
 import logger from './utils/logger.js';
 import winston from 'winston'; // added for console transport in development
+import { checkDatabaseAge } from './utils/dbManager.js';
 
 // Load environment variables from .env file
 dotenv.config();
+
+// Check database age and archive if needed - do this before anything else loads
+checkDatabaseAge();
 
 // Set config from environment variables
 const PORT = process.env.PORT || 3001;

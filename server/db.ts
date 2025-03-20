@@ -22,9 +22,14 @@ export interface Player {
 export interface Database {
   players: Record<string, Player>;
   blocks: any[];
+  creationDate?: string;
 }
 
-const defaultData: Database = { players: {}, blocks: [] };
+const defaultData: Database = { 
+  players: {}, 
+  blocks: [],
+  creationDate: new Date().toISOString()
+};
 const db = await JSONFilePreset<Database>("./database.json", defaultData);
 
 export default db;

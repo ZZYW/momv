@@ -138,3 +138,9 @@ dist
 
 combined.txt
 database.json
+database.sqlite
+database.sqlite-shm
+database.sqlite-wal
+database.sqlite.backup-*
+database.json.backup-*
+archives/

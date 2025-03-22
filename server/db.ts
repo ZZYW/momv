@@ -1,8 +1,6 @@
-import { JSONFilePreset } from 'lowdb/node';
+import Database from 'better-sqlite3';
 import path from 'path';
-import fs from 'fs';
 import logger from './utils/logger.js';
-
 
 export interface PlayerChoice {
   chosenIndex?: number;
@@ -29,6 +27,12 @@ export interface Database {
   creationDate?: string;
 }
 
+export interface DbWrapper {
+  data: Database;
+  read: () => Promise<Database>;
+  write: () => Promise<boolean>;
+}
+
 const defaultData: Database = {
   players: {},
   blocks: [],
@@ -36,15 +40,13 @@ const defaultData: Database = {
 };
 
 // Get absolute path for database file
-const dbPath = path.join(process.cwd(), 'database.json');
+const dbPath = path.join(process.cwd(), 'database.sqlite');
 
-// Initialize database with error handling
-let db;
 // Create a mutex for database operations to prevent race conditions
-const mutex = { locked: false, queue: [] };
+const mutex = { locked: false, queue: [] as Array<() => void> };
 
 // Function to acquire the lock
-const acquireLock = () => {
+const acquireLock = (): Promise<void> => {
   return new Promise<void>((resolve) => {
     if (!mutex.locked) {
       mutex.locked = true;
@@ -56,79 +58,112 @@ const acquireLock = () => {
 };
 
 // Function to release the lock
-const releaseLock = () => {
+const releaseLock = (): void => {
   if (mutex.queue.length > 0) {
     const nextResolve = mutex.queue.shift();
-    nextResolve?.();
+    if (nextResolve) nextResolve();
   } else {
     mutex.locked = false;
   }
 };
 
-// Wrap write operations with mutex to prevent race conditions
-const createSafeDatabase = (database: any) => {
-  const originalWrite = database.write;
+// Initialize SQLite database
+let sqliteDb: any;
+let dbWrapper: DbWrapper;
+
+try {
+  logger.info(`Initializing SQLite database at: ${dbPath}`);
   
-  // Override the write method with a thread-safe version
-  database.write = async () => {
-    try {
-      await acquireLock();
-      logger.info('Database write lock acquired');
-      const result = await originalWrite.call(database);
-      return result;
-    } finally {
-      logger.info('Database write lock released');
-      releaseLock();
+  sqliteDb = new Database(dbPath, { fileMustExist: false });
+  
+  // Enable WAL mode for better performance
+  sqliteDb.pragma('journal_mode = WAL');
+  
+  // Create table if it doesn't exist
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS app_data (
+      id TEXT PRIMARY KEY,
+      data TEXT NOT NULL
+    )
+  `);
+  
+  // Create prepared statements for common operations
+  const getStmt = sqliteDb.prepare('SELECT data FROM app_data WHERE id = ?');
+  const setStmt = sqliteDb.prepare('INSERT OR REPLACE INTO app_data (id, data) VALUES (?, ?)');
+  
+  // Create a database wrapper with a consistent interface
+  dbWrapper = {
+    data: { ...defaultData },
+    
+    // Read method loads data from SQLite
+    read: async (): Promise<Database> => {
+      try {
+        await acquireLock();
+        logger.info('Database read lock acquired');
+        
+        const row = getStmt.get('app_data');
+        
+        if (row) {
+          dbWrapper.data = JSON.parse(row.data);
+          logger.info('Data loaded from SQLite database');
+        } else {
+          // First time use, no data in database yet
+          logger.info('No data found in database, using default data');
+          await dbWrapper.write();
+        }
+        
+        return dbWrapper.data;
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        logger.error(`Error reading from database: ${errorMsg}`);
+        throw error;
+      } finally {
+        logger.info('Database read lock released');
+        releaseLock();
+      }
+    },
+    
+    // Write method saves data to SQLite
+    write: async (): Promise<boolean> => {
+      try {
+        await acquireLock();
+        logger.info('Database write lock acquired');
+        
+        const dataJson = JSON.stringify(dbWrapper.data);
+        setStmt.run('app_data', dataJson);
+        
+        logger.info('Data successfully written to SQLite database');
+        return true;
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        logger.error(`Error writing to database: ${errorMsg}`);
+        throw error;
+      } finally {
+        logger.info('Database write lock released');
+        releaseLock();
+      }
     }
   };
   
-  return database;
-};
-
-try {
-  // Check if database file exists and is valid
-  if (fs.existsSync(dbPath)) {
-    try {
-      // Validate JSON file is readable
-      const content = fs.readFileSync(dbPath, 'utf8');
-      JSON.parse(content); // Just to check if it's valid JSON
-      logger.info(`Database file found and validated at: ${dbPath}`);
-    } catch (validationError) {
-      logger.error(`Database file exists but is corrupted: ${validationError.message}`);
-      // Create backup of corrupted file
-      const backupPath = `${dbPath}.corrupted.${Date.now()}.bak`;
-      fs.copyFileSync(dbPath, backupPath);
-      logger.info(`Corrupted database backed up to: ${backupPath}`);
-      // Remove corrupted file to allow fresh start
-      fs.unlinkSync(dbPath);
-      logger.info('Corrupted database file removed, will create fresh database');
-    }
-  } else {
-    logger.info(`No database file found at path: ${dbPath}, will create new one`);
-  }
-
-  // Initialize DB with proper path and error handling
-  db = await JSONFilePreset<Database>(dbPath, defaultData);
+  // Initialize the database - read data or create default
+  dbWrapper.read().catch((err: Error) => {
+    logger.error(`Error during initial database read: ${err.message}`);
+  });
   
-  // Apply thread safety to database operations
-  db = createSafeDatabase(db);
-
-  // Verify database was loaded properly
-  await db.read();
-  logger.info('Database loaded successfully');
+  logger.info('SQLite database wrapper initialized successfully');
 } catch (error) {
-  logger.error(`Critical error initializing database: ${error.message}`);
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  logger.error(`Critical error initializing database: ${errorMsg}`);
   // Create emergency fallback in-memory database
   logger.warn('Creating emergency in-memory database (data will not persist!)');
-  // @ts-ignore: Creating a minimal compatible interface
-  db = {
+  dbWrapper = {
     data: { ...defaultData },
-    read: async () => { },
+    read: async () => defaultData,
     write: async () => {
       logger.warn('Write attempted on emergency in-memory database (no data was persisted)');
-      return Promise.resolve();
+      return true;
     }
   };
 }
 
-export default db;
+export default dbWrapper;

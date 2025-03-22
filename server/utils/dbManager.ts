@@ -3,7 +3,7 @@ import path from 'path';
 import logger from './logger.js';
 import db from '../db.js';
 
-const DB_FILE_PATH = './database.json';
+const DB_FILE_PATH = './database.sqlite';
 const MAX_AGE_DAYS = 5;
 
 /**
@@ -32,7 +32,7 @@ export function checkDatabaseAge() {
       logger.info(`Database is ${ageInDays.toFixed(2)} days old; archiving...`);
 
       const formatDate = (date: any) => date.toISOString().split('T')[0];
-      const archiveName = `database_${formatDate(dbCreationDate)}_to_${formatDate(currentDate)}.json`;
+      const archiveName = `database_${formatDate(dbCreationDate)}_to_${formatDate(currentDate)}.sqlite`;
       const archivePath = path.join('./archives', archiveName);
 
       // Ensure the archives directory exists

@@ -21,10 +21,20 @@ export interface Player {
   codenameId?: string;
 }
 
+export interface CleanupState {
+  lastCompletedMonday: string | null;
+  currentOperation: {
+    status: 'idle' | 'in_progress' | 'failed';
+    startedAt: string | null;
+    error: string | null;
+  };
+}
+
 export interface Database {
   players: Record<string, Player>;
   blocks: any[];
   creationDate?: string;
+  cleanup?: CleanupState;
 }
 
 export interface DbWrapper {
@@ -36,7 +46,15 @@ export interface DbWrapper {
 const defaultData: Database = {
   players: {},
   blocks: [],
-  creationDate: new Date().toISOString()
+  creationDate: new Date().toISOString(),
+  cleanup: {
+    lastCompletedMonday: null,
+    currentOperation: {
+      status: 'idle',
+      startedAt: null,
+      error: null
+    }
+  }
 };
 
 // Get absolute path for database file

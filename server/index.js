@@ -11,7 +11,15 @@ import { checkDatabaseAge } from './utils/dbManager.js';
 dotenv.config();
 
 // Check database age and archive if needed - do this before anything else loads
-checkDatabaseAge();
+// checkDatabaseAge is now async but we need to make sure it completes before continuing
+(async function() {
+  try {
+    await checkDatabaseAge();
+    logger.info('Database maintenance completed successfully');
+  } catch (error) {
+    logger.error('Error during database maintenance check', { error });
+  }
+})();
 
 // Set config from environment variables
 const PORT = process.env.PORT || 3001;

@@ -1,7 +1,6 @@
 document.addEventListener("alpine:init", () => {
   // Create a global flag for Alpine data initialization
   if (window._storyPlayerDataInitialized) {
-    console.warn('[ALPINE] storyPlayer data already initialized! Skipping duplicate initialization');
     return;
   }
   window._storyPlayerDataInitialized = true;
@@ -35,8 +34,6 @@ document.addEventListener("alpine:init", () => {
     }
   }, 100);
 
-  console.log('[ALPINE] Initializing storyPlayer data component');
-
   Alpine.data("storyPlayer", () => ({
     // ===== CONFIGURATION =====
     config: {
@@ -50,7 +47,7 @@ document.addEventListener("alpine:init", () => {
           "_" +
           Math.random().toString(36).substring(2, 9)),
       storyPath: "input/story.json",
-      debug: true, // Enable debug logging
+      debug: window.STORY_DEBUG || false, // Enable debug only when STORY_DEBUG flag is set
       // Determine which station this is - used for localStorage namespacing and storyId
       stationId: window.location.pathname.includes("station2") ? "station2" : "station1",
       // Numeric station ID for API calls
@@ -73,19 +70,12 @@ document.addEventListener("alpine:init", () => {
 
     // ===== INITIALIZATION =====
     init() {
-      console.log("Initializing story player...");
-
       // Check if server config is already loaded from codename verification
       if (this.config.serverConfigLoaded) {
-        console.log("[INIT] Using pre-loaded server configuration");
-        console.log("[INIT] API Server URL:", this.config.serverUrl);
-        console.log("[INIT] Has Central Backend:", this.config.hasCentralBackend);
-
         // Proceed directly with story loading
         this.loadStory();
       } else {
         // Otherwise, fetch server configuration first
-        console.log("[INIT] No pre-loaded server configuration, fetching from server...");
         this.fetchServerConfig().then(() => {
           // After server config is loaded, proceed with story loading
           this.loadStory();
@@ -107,8 +97,6 @@ document.addEventListener("alpine:init", () => {
 
     // Fetch server configuration to determine API endpoints
     fetchServerConfig() {
-      console.log("[CONFIG] Fetching server configuration...");
-
       // Use the current origin to fetch the initial config
       const initialUrl = window.location.origin + "/server-config";
 
@@ -120,12 +108,9 @@ document.addEventListener("alpine:init", () => {
           return response.json();
         })
         .then(config => {
-          console.log("[CONFIG] Server configuration received:", config);
-
           // Update the server URL if a central backend is specified
           if (config.apiServerUrl) {
             this.config.serverUrl = config.apiServerUrl;
-            console.log(`[CONFIG] Using API server URL: ${this.config.serverUrl}`);
           }
 
           this.config.hasCentralBackend = config.hasCentralBackend;
@@ -134,9 +119,11 @@ document.addEventListener("alpine:init", () => {
           return config;
         })
         .catch(error => {
-          console.error("[CONFIG] Error fetching server configuration:", error);
-          console.log("[CONFIG] Falling back to default server URL:", this.config.serverUrl);
-
+          // Log error only if debug is enabled
+          if (this.config.debug) {
+            console.error("[CONFIG] Error fetching server configuration:", error);
+          }
+          
           // Still mark as loaded even if it failed, so we continue with defaults
           this.config.serverConfigLoaded = true;
         });
@@ -204,12 +191,8 @@ document.addEventListener("alpine:init", () => {
 
     // ===== STORY LOADING & PARSING =====
     loadStory() {
-      console.log(`[STORY] Starting loadStory with playerId: ${this.config.playerId}`);
-      console.log(`[STORY] Station ID: ${this.config.stationId}, Station Number: ${this.config.stationNumber}`);
-
-      // Add debug info to indicate exact execution context
-      console.log(`[STORY] Alpine data loading - time: ${new Date().toISOString()}`);
-      console.log(`[STORY] Window validated player ID: ${window.VALIDATED_PLAYER_ID}`);
+      this.log(`[STORY] Starting loadStory with playerId: ${this.config.playerId}`);
+      this.log(`[STORY] Station ID: ${this.config.stationId}, Station Number: ${this.config.stationNumber}`);
 
       this.state.isLoading = true;
       fetch(`${this.config.storyPath}?nocache=${new Date().getTime()}`)
@@ -217,11 +200,11 @@ document.addEventListener("alpine:init", () => {
           if (!response.ok) {
             throw new Error(`Failed to load story (${response.status})`);
           }
-          console.log(`[STORY] Story response received, parsing JSON`);
+          this.log(`[STORY] Story response received, parsing JSON`);
           return response.json();
         })
         .then((data) => {
-          console.log(`[STORY] Story data loaded, processing blocks`);
+          this.log(`[STORY] Story data loaded, processing blocks`);
           if (data.blocks && Array.isArray(data.blocks)) {
             this.state.projectBlocks = data.blocks;
             this.groupBlocksIntoPassages();
@@ -280,7 +263,9 @@ document.addEventListener("alpine:init", () => {
           }
         })
         .catch((error) => {
-          this.log("Error loading story:", error);
+          if (this.config.debug) {
+            console.error("Error loading story:", error);
+          }
           this.state.error = error.message;
           document.getElementById(
             "passage-container"
@@ -293,18 +278,18 @@ document.addEventListener("alpine:init", () => {
 
     // Process all plain blocks in the current passage to replace placeholders
     processAllPlainBlockPlaceholders() {
-      console.log("Processing all plain blocks for placeholders...");
+      this.log("Processing all plain blocks for placeholders...");
       const plainBlocks = document.querySelectorAll('.plain');
 
       plainBlocks.forEach((block, index) => {
-        console.log(`Processing plain block ${index}`);
+        this.log(`Processing plain block ${index}`);
         const originalContent = block.innerHTML;
         let processedContent = originalContent;
         let contentChanged = false;
 
         // Check for answer placeholders
         if (originalContent.includes('{get answer of question#')) {
-          console.log(`Block ${index} contains answer placeholders, processing...`);
+          this.log(`Block ${index} contains answer placeholders, processing...`);
 
           // Use regex to find all question IDs in the content
           const regex = /\{get\s+answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player\}/gi;
@@ -318,25 +303,25 @@ document.addEventListener("alpine:init", () => {
             const fullMatch = match[0];
             const questionId = match[1];
 
-            console.log(`Found placeholder for question ${questionId}`);
+            this.log(`Found placeholder for question ${questionId}`);
 
             // Get the answer
             const answer = this.getPlayerAnswerForQuestion(questionId);
 
             if (answer) {
-              console.log(`Retrieved answer: "${answer}", replacing placeholder`);
+              this.log(`Retrieved answer: "${answer}", replacing placeholder`);
               // Replace this specific instance
               processedContent = processedContent.replace(fullMatch, answer);
               contentChanged = true;
             } else {
-              console.log(`No answer found for question ${questionId}`);
+              this.log(`No answer found for question ${questionId}`);
             }
           }
         }
 
         // Check for codename placeholders
         if (originalContent.includes('{get codename}')) {
-          console.log(`Block ${index} contains codename placeholder, processing...`);
+          this.log(`Block ${index} contains codename placeholder, processing...`);
 
           // Use regex to find all codename placeholders
           const regex = /\{get\s+codename\}/gi;
@@ -348,18 +333,18 @@ document.addEventListener("alpine:init", () => {
           const codename = this.getPlayerCodename();
 
           if (codename) {
-            console.log(`Retrieved codename: "${codename}", replacing placeholder`);
+            this.log(`Retrieved codename: "${codename}", replacing placeholder`);
             // Replace all instances
             processedContent = processedContent.replace(regex, codename);
             contentChanged = true;
           } else {
-            console.log(`No codename found for player ${this.config.playerId}`);
+            this.log(`No codename found for player ${this.config.playerId}`);
           }
         }
 
         // Update the block content if changes were made
         if (contentChanged) {
-          console.log(`Updating block ${index} with processed content`);
+          this.log(`Updating block ${index} with processed content`);
           block.innerHTML = processedContent;
         }
       });
@@ -388,21 +373,23 @@ document.addEventListener("alpine:init", () => {
 
     // ===== RENDERING =====
     renderPassage(passageIndex) {
-      console.log(`[RENDER] Starting renderPassage for passage index ${passageIndex}`);
+      this.log(`[RENDER] Starting renderPassage for passage index ${passageIndex}`);
 
       if (passageIndex >= this.state.passages.length) {
-        console.warn(`[RENDER] Invalid passage index: ${passageIndex}, max: ${this.state.passages.length - 1}`);
+        if (this.config.debug) {
+          console.warn(`[RENDER] Invalid passage index: ${passageIndex}, max: ${this.state.passages.length - 1}`);
+        }
         return;
       }
 
       // Check if passage already exists
       const existingPassage = document.getElementById(`passage-${passageIndex}`);
       if (existingPassage) {
-        console.warn(`[RENDER] Passage ${passageIndex} already exists! Skipping render.`);
+        this.log(`[RENDER] Passage ${passageIndex} already exists! Skipping render.`);
         return existingPassage;
       }
 
-      console.log(`[RENDER] Creating new passage element for index ${passageIndex}`);
+      this.log(`[RENDER] Creating new passage element for index ${passageIndex}`);
       const container = document.getElementById("passage-container");
       const blocks = this.state.passages[passageIndex];
       const passageEl = document.createElement("div");
@@ -603,7 +590,7 @@ document.addEventListener("alpine:init", () => {
 
           // Function to generate Fulu
           const generateFulu = () => {
-            console.log("Generating Fulu for player:", this.config.playerId);
+            this.log("Generating Fulu for player:", this.config.playerId);
 
             // Add loading message
             const loadingContainer = document.createElement("div");
@@ -626,7 +613,7 @@ document.addEventListener("alpine:init", () => {
                 return response.json();
               })
               .then(data => {
-                console.log("Fulu generated successfully:", data);
+                this.log("Fulu generated successfully:", data);
 
                 // Remove loading message
                 loadingContainer.remove();
@@ -635,7 +622,9 @@ document.addEventListener("alpine:init", () => {
                 const { buttonContainer } = addNewJourneyButton(true);
               })
               .catch(error => {
-                console.error("Error generating Fulu:", error);
+                if (this.config.debug) {
+                  console.error("Error generating Fulu:", error);
+                }
 
                 // Remove loading message
                 loadingContainer.remove();
@@ -754,8 +743,8 @@ document.addEventListener("alpine:init", () => {
       loadingElement.innerHTML = "生成代号中... <span class='loading'></span>";
       codenameContainer.appendChild(loadingElement);
 
-      console.log("Requesting codename options for player:", this.config.playerId);
-      console.log("Server URL:", this.config.serverUrl);
+      this.log("Requesting codename options for player:", this.config.playerId);
+      this.log("Server URL:", this.config.serverUrl);
 
       // Request codenames from server - we'll modify to get three options
       fetch(`${this.config.serverUrl}/assign-codename`, {
@@ -767,12 +756,12 @@ document.addEventListener("alpine:init", () => {
         })
       })
         .then(response => {
-          console.log("Server response status:", response.status);
+          this.log("Server response status:", response.status);
           if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
           }
           return response.json().then(data => {
-            console.log("Received codename data:", data);
+            this.log("Received codename data:", data);
             return data;
           });
         })
@@ -905,7 +894,9 @@ document.addEventListener("alpine:init", () => {
           codenameContainer.appendChild(optionsContainer);
         })
         .catch(error => {
-          console.error("Error generating codename options:", error);
+          if (this.config.debug) {
+            console.error("Error generating codename options:", error);
+          }
           codenameContainer.innerHTML = "<div class='error'>无法生成代号，请刷新页面重试。</div>";
         });
     },
@@ -922,22 +913,26 @@ document.addEventListener("alpine:init", () => {
       })
         .then(response => {
           if (!response.ok) {
-            console.error("Error saving codename:", response.status);
+            if (this.config.debug) {
+              console.error("Error saving codename:", response.status);
+            }
           }
         })
         .catch(error => {
-          console.error("Error saving codename:", error);
+          if (this.config.debug) {
+            console.error("Error saving codename:", error);
+          }
         });
     },
 
     // ===== DYNAMIC CONTENT =====
     loadDynamicContentForPassage(passageElement) {
-      console.log(`[LOAD-DYNAMIC] Starting loadDynamicContentForPassage for passage ${passageElement.id}`);
-      console.log(`[LOAD-DYNAMIC] Player ID: ${this.config.playerId}`);
+      this.log(`[LOAD-DYNAMIC] Starting loadDynamicContentForPassage for passage ${passageElement.id}`);
+      this.log(`[LOAD-DYNAMIC] Player ID: ${this.config.playerId}`);
 
       // Track if we're already loading this passage
       if (passageElement._dynamicContentLoading) {
-        console.warn(`[LOAD-DYNAMIC] Already loading dynamic content for ${passageElement.id}! Returning existing promise.`);
+        this.log(`[LOAD-DYNAMIC] Already loading dynamic content for ${passageElement.id}! Returning existing promise.`);
         return passageElement._dynamicContentLoadingPromise;
       }
 
@@ -945,10 +940,10 @@ document.addEventListener("alpine:init", () => {
         ".dynamic-options-container, .dynamic-text-container, .dynamic-word-container"
       );
 
-      console.log(`[LOAD-DYNAMIC] Found ${dynamicContainers.length} dynamic containers in passage ${passageElement.id}`);
+      this.log(`[LOAD-DYNAMIC] Found ${dynamicContainers.length} dynamic containers in passage ${passageElement.id}`);
 
       if (dynamicContainers.length === 0) {
-        console.log(`[LOAD-DYNAMIC] No dynamic content to load for passage ${passageElement.id}`);
+        this.log(`[LOAD-DYNAMIC] No dynamic content to load for passage ${passageElement.id}`);
         // Even if there's no dynamic content, we should adjust vertical borders
         this.adjustVerticalBordersHeight(passageElement);
         return Promise.resolve();
@@ -961,11 +956,11 @@ document.addEventListener("alpine:init", () => {
         let blockType = this.getDynamicContainerType(container);
         let blockId = container.dataset.uuid;
 
-        console.log(`[LOAD-DYNAMIC] Will load ${blockType} with ID ${blockId}`);
+        this.log(`[LOAD-DYNAMIC] Will load ${blockType} with ID ${blockId}`);
 
         // Check if this container was already processed
         if (container._dynamicContentLoaded) {
-          console.warn(`[LOAD-DYNAMIC] Container for block ${blockId} already loaded!`);
+          this.log(`[LOAD-DYNAMIC] Container for block ${blockId} already loaded!`);
           return Promise.resolve();
         }
 
@@ -978,13 +973,15 @@ document.addEventListener("alpine:init", () => {
       // Store the promise for future reference
       passageElement._dynamicContentLoadingPromise = Promise.all(promises)
         .then(results => {
-          console.log(`[LOAD-DYNAMIC] All dynamic content loaded for passage ${passageElement.id}`);
+          this.log(`[LOAD-DYNAMIC] All dynamic content loaded for passage ${passageElement.id}`);
           // After all dynamic content is loaded, adjust vertical borders height
           this.adjustVerticalBordersHeight(passageElement);
           return results;
         })
         .catch(err => {
-          console.error(`[LOAD-DYNAMIC] Error loading dynamic content for passage ${passageElement.id}:`, err);
+          if (this.config.debug) {
+            console.error(`[LOAD-DYNAMIC] Error loading dynamic content for passage ${passageElement.id}:`, err);
+          }
           throw err;
         });
 
@@ -993,18 +990,18 @@ document.addEventListener("alpine:init", () => {
 
     // Adjust the width of horizontal divider under scene header
     adjustHorizontalDivider(passageElement) {
-      console.log(`[BORDERS] Adjusting horizontal divider for passage ${passageElement.id}`);
+      this.log(`[BORDERS] Adjusting horizontal divider for passage ${passageElement.id}`);
 
       // Find the scene header divider in this passage
       const divider = passageElement.querySelector('.scene-header-divider');
       if (!divider) {
-        console.warn('[BORDERS] Could not find scene header divider');
+        this.log('[BORDERS] Could not find scene header divider');
         return;
       }
 
       // Calculate available width
       const containerWidth = divider.offsetWidth;
-      console.log(`[BORDERS] Container width: ${containerWidth}px`);
+      this.log(`[BORDERS] Container width: ${containerWidth}px`);
 
       // Create divider content based on available width
       // Each dash-space unit takes approximately 2ch of width
@@ -1013,7 +1010,7 @@ document.addEventListener("alpine:init", () => {
       const dashSpacePairWidth = charWidth; // Width of "- " in pixels
       const pairs = Math.floor(containerWidth / dashSpacePairWidth);
 
-      console.log(`[BORDERS] Creating divider with ${pairs} dash-space pairs`);
+      this.log(`[BORDERS] Creating divider with ${pairs} dash-space pairs`);
 
       // Create the divider content
       let dividerContent = '';
@@ -1024,23 +1021,23 @@ document.addEventListener("alpine:init", () => {
       // Set the content for the divider
       divider.textContent = dividerContent;
 
-      console.log('[BORDERS] Horizontal divider width adjusted');
+      this.log('[BORDERS] Horizontal divider width adjusted');
     },
 
     // Adjust the height of vertical borders based on passage content height
     adjustVerticalBordersHeight(passageElement) {
-      console.log(`[BORDERS] Adjusting vertical borders height for passage ${passageElement.id}`);
+      this.log(`[BORDERS] Adjusting vertical borders height for passage ${passageElement.id}`);
 
       // Get the passage height
       const passageHeight = passageElement.offsetHeight;
-      console.log(`[BORDERS] Passage height: ${passageHeight}px`);
+      this.log(`[BORDERS] Passage height: ${passageHeight}px`);
 
       // Get the vertical borders
       const leftBorder = document.querySelector('.static-vertical-border.left-border');
       const rightBorder = document.querySelector('.static-vertical-border.right-border');
 
       if (!leftBorder || !rightBorder) {
-        console.warn('[BORDERS] Could not find vertical borders');
+        this.log('[BORDERS] Could not find vertical borders');
         return;
       }
 
@@ -1050,7 +1047,7 @@ document.addEventListener("alpine:init", () => {
       const lineHeight = 18; // This is an approximation
       const linesNeeded = Math.ceil(passageHeight / lineHeight);
 
-      console.log(`[BORDERS] Creating border with ${linesNeeded} lines`);
+      this.log(`[BORDERS] Creating border with ${linesNeeded} lines`);
 
       // Create the border content
       let borderContent = '|<br>|<br>|<br>'; // Start with 3 solid lines
@@ -1067,7 +1064,7 @@ document.addEventListener("alpine:init", () => {
       // Also adjust the horizontal divider
       this.adjustHorizontalDivider(passageElement);
 
-      console.log('[BORDERS] Vertical borders height adjusted');
+      this.log('[BORDERS] Vertical borders height adjusted');
     },
 
     getDynamicContainerType(container) {
@@ -1087,14 +1084,16 @@ document.addEventListener("alpine:init", () => {
     },
 
     fetchDynamicBlock(blockID, blockType, container) {
-      console.log(`[FETCH] Starting fetchDynamicBlock for ${blockID} of type ${blockType}`);
+      this.log(`[FETCH] Starting fetchDynamicBlock for ${blockID} of type ${blockType}`);
 
       const blockData = this.state.projectBlocks.find(
         (b) => b.id === blockID
       );
 
       if (!blockData) {
-        console.error(`[FETCH] No block data found for ID: ${blockID}`);
+        if (this.config.debug) {
+          console.error(`[FETCH] No block data found for ID: ${blockID}`);
+        }
         container.innerText = "No block data found";
         return Promise.resolve();
       }
@@ -1103,8 +1102,8 @@ document.addEventListener("alpine:init", () => {
         .closest(".dynamic-container")
         .querySelector(".loading-indicator");
 
-      console.log(`[FETCH] Preparing request for block ${blockID} with player ID: ${this.config.playerId}`);
-      console.log(`[FETCH] Station ID: ${this.config.stationId}, Station Number: ${this.config.stationNumber}`);
+      this.log(`[FETCH] Preparing request for block ${blockID} with player ID: ${this.config.playerId}`);
+      this.log(`[FETCH] Station ID: ${this.config.stationId}, Station Number: ${this.config.stationNumber}`);
 
       // Determine the blockType to send to the server
       let serverBlockType = 'dynamic'; // Always use the unified 'dynamic' block type for server
@@ -1136,7 +1135,7 @@ document.addEventListener("alpine:init", () => {
         _fetchTimestamp: new Date().getTime() // Add timestamp to identify unique requests
       };
 
-      console.log(`[FETCH] Sending request for block ${blockID}`, payload);
+      this.log(`[FETCH] Sending request for block ${blockID}`);
 
       return fetch(`${this.config.serverUrl}/generate-dynamic`, {
         method: "POST",
@@ -1157,7 +1156,9 @@ document.addEventListener("alpine:init", () => {
           this.checkPassageChoicesStatus();
         })
         .catch((err) => {
-          console.error("Error in fetchDynamicBlock:", err);
+          if (this.config.debug) {
+            console.error("Error in fetchDynamicBlock:", err);
+          }
           container.innerText = `Error loading dynamic content: ${err.message}`;
           if (loadingIndicator) loadingIndicator.style.display = "none";
         });
@@ -1352,11 +1353,13 @@ document.addEventListener("alpine:init", () => {
           };
         }
       } catch (err) {
-        console.error('Error saving selection to localStorage:', err);
+        if (this.config.debug) {
+          console.error('Error saving selection to localStorage:', err);
+        }
       }
 
       // Log the player ID being used in the request
-      console.log("Recording choice with player ID:", this.config.playerId);
+      this.log("Recording choice with player ID:", this.config.playerId);
 
       fetch(`${this.config.serverUrl}/record-choice`, {
         method: "POST",
@@ -1381,28 +1384,28 @@ document.addEventListener("alpine:init", () => {
 
     // Update any plain blocks that might be using the answer
     updatePlainBlocksWithAnswer(questionId, answer) {
-      console.log(`Updating plain blocks with answer for question ${questionId}: "${answer}"`);
+      this.log(`Updating plain blocks with answer for question ${questionId}: "${answer}"`);
 
       // Find all plain blocks currently displayed
       const plainBlocks = document.querySelectorAll('.plain');
-      console.log(`Found ${plainBlocks.length} plain blocks to check`);
+      this.log(`Found ${plainBlocks.length} plain blocks to check`);
 
       // Check each plain block for placeholders using this question ID
       plainBlocks.forEach((block, index) => {
-        console.log(`Checking plain block ${index} content:`, block.innerHTML);
+        this.log(`Checking plain block ${index} content:`, block.innerHTML);
 
         // Use a more flexible pattern to match placeholders
         const pattern = new RegExp(`\\{get\\s+answer\\s+of\\s+question#${questionId}\\s+from\\s+this\\s+player\\}`, 'gi');
 
         // If the block contains a placeholder for this question
         if (pattern.test(block.innerHTML)) {
-          console.log(`Found placeholder in block ${index}, replacing with "${answer}"`);
+          this.log(`Found placeholder in block ${index}, replacing with "${answer}"`);
 
           // Replace the placeholder with the answer
           block.innerHTML = block.innerHTML.replace(pattern, answer);
-          console.log(`Block updated. New content:`, block.innerHTML);
+          this.log(`Block updated. New content:`, block.innerHTML);
         } else {
-          console.log(`No placeholder found in block ${index}`);
+          this.log(`No placeholder found in block ${index}`);
         }
       });
     },
@@ -1736,11 +1739,11 @@ document.addEventListener("alpine:init", () => {
         return text; // Return original text if not a string
       }
 
-      console.log("Processing plain block text:", text);
+      this.log("Processing plain block text:", text);
 
       // Check if the text contains any placeholders
       if (!text.includes('{get')) {
-        console.log("No placeholders found");
+        this.log("No placeholders found");
         return text;
       }
 
@@ -1749,71 +1752,73 @@ document.addEventListener("alpine:init", () => {
       // 1. Look for {get answer of question#xxx from this player} pattern
       const answer_regex = /\{get\s+answer\s+of\s+question#([a-zA-Z0-9\-]+)\s+from\s+this\s+player\}/gi;
 
-      console.log("Looking for answer placeholders with regex:", answer_regex.toString());
+      this.log("Looking for answer placeholders with regex:", answer_regex.toString());
 
       // Replace each answer placeholder with the actual answer
       processedText = processedText.replace(answer_regex, (match, questionId) => {
-        console.log(`Found answer placeholder: ${match}, extracting question ID: ${questionId}`);
+        this.log(`Found answer placeholder: ${match}, extracting question ID: ${questionId}`);
         // Try to get the answer from localStorage or other client-side storage
         const answer = this.getPlayerAnswerForQuestion(questionId);
-        console.log(`Answer for ${questionId}: "${answer}"`);
+        this.log(`Answer for ${questionId}: "${answer}"`);
         return answer || match; // Return answer if found, otherwise keep original placeholder
       });
 
       // 2. Look for {get codename} pattern
       const codename_regex = /\{get\s+codename\}/gi;
 
-      console.log("Looking for codename placeholders with regex:", codename_regex.toString());
+      this.log("Looking for codename placeholders with regex:", codename_regex.toString());
 
       // Replace each codename placeholder with the player's codename
       processedText = processedText.replace(codename_regex, (match) => {
-        console.log(`Found codename placeholder: ${match}`);
+        this.log(`Found codename placeholder: ${match}`);
         // Try to get the codename from localStorage or other client-side storage
         const codename = this.getPlayerCodename();
-        console.log(`Codename: "${codename}"`);
+        this.log(`Codename: "${codename}"`);
         return codename || match; // Return codename if found, otherwise keep original placeholder
       });
 
-      console.log("Processed text:", processedText);
+      this.log("Processed text:", processedText);
       return processedText;
     },
 
     // Get player's answer for a specific question from client-side storage
     getPlayerAnswerForQuestion(questionId) {
-      console.log(`Trying to get answer for question ID: ${questionId}`);
+      this.log(`Trying to get answer for question ID: ${questionId}`);
 
       // First check localStorage
       try {
         const selections = localStorage.getItem(`selections_${this.config.playerId}`) || '{}';
         const parsedSelections = JSON.parse(selections);
         if (parsedSelections[questionId]) {
-          console.log(`Found answer in localStorage: ${parsedSelections[questionId].chosenText}`);
+          this.log(`Found answer in localStorage: ${parsedSelections[questionId].chosenText}`);
           return parsedSelections[questionId].chosenText || '';
         }
       } catch (err) {
-        console.error('Error parsing selections from localStorage:', err);
+        if (this.config.debug) {
+          console.error('Error parsing selections from localStorage:', err);
+        }
       }
 
       // Next, check if the block exists and check for playerChoice in block data
       const blockData = this.state.projectBlocks.find(b => b.id === questionId);
       if (blockData) {
-        console.log(`Found block with ID ${questionId}`, blockData);
+        this.log(`Found block with ID ${questionId}`);
 
         // Check if it has playerChoice from server data
         if (blockData.playerChoice && blockData.playerChoice.chosenText) {
-          console.log(`Found playerChoice in block data: ${blockData.playerChoice.chosenText}`);
+          this.log(`Found playerChoice in block data: ${blockData.playerChoice.chosenText}`);
           return blockData.playerChoice.chosenText;
         }
 
         // Check for _selectedOption from client-side selection
         if (blockData._selectedOption && blockData._selectedOption.text) {
-          console.log(`Found _selectedOption in block data: ${blockData._selectedOption.text}`);
+          this.log(`Found _selectedOption in block data: ${blockData._selectedOption.text}`);
           return blockData._selectedOption.text;
         }
       }
 
       // Get directly from server
-      console.log(`Fetching answer for question ${questionId} from server`);
+      this.log(`Fetching answer for question ${questionId} from server`);
       this.fetchPlayerAnswerFromServer(questionId);
 
       // Return empty for now, will be updated on the next render
@@ -1823,18 +1828,20 @@ document.addEventListener("alpine:init", () => {
     // Fetch player's answer from server if not available client-side
     fetchPlayerAnswerFromServer(questionId) {
       const url = `${this.config.serverUrl}/get-player-answer?playerId=${this.config.playerId}&questionId=${questionId}`;
-      console.log(`Fetching player answer from: ${url}`);
+      this.log(`Fetching player answer from: ${url}`);
 
       fetch(url)
         .then(response => {
           if (!response.ok) {
-            console.error(`Server returned error: ${response.status}`);
+            if (this.config.debug) {
+              console.error(`Server returned error: ${response.status}`);
+            }
             throw new Error('Failed to fetch answer');
           }
           return response.json();
         })
         .then(data => {
-          console.log(`Server response for question ${questionId}:`, data);
+          this.log(`Server response for question ${questionId}:`, data);
 
           if (data && data.answer) {
             // Save the answer to localStorage for future use
@@ -1842,47 +1849,53 @@ document.addEventListener("alpine:init", () => {
               const selections = JSON.parse(localStorage.getItem(`selections_${this.config.playerId}`) || '{}');
               selections[questionId] = { chosenText: data.answer };
               localStorage.setItem(`selections_${this.config.playerId}`, JSON.stringify(selections));
-              console.log(`Saved answer to localStorage: ${data.answer}`);
+              this.log(`Saved answer to localStorage: ${data.answer}`);
 
               // Update UI for all matching plain blocks
               const plainBlocks = document.querySelectorAll('.plain');
-              console.log(`Found ${plainBlocks.length} plain blocks to check for updates`);
+              this.log(`Found ${plainBlocks.length} plain blocks to check for updates`);
 
               plainBlocks.forEach((block, index) => {
-                console.log(`Checking plain block ${index} content:`, block.innerHTML);
+                this.log(`Checking plain block ${index} content:`, block.innerHTML);
 
                 // Use a more flexible pattern for replacement to match the original pattern 
                 // that might have different spacing and casing
                 const pattern = new RegExp(`\\{get\\s+answer\\s+of\\s+question#${questionId}\\s+from\\s+this\\s+player\\}`, 'gi');
 
                 if (pattern.test(block.innerHTML)) {
-                  console.log(`Block ${index} contains placeholder for question ${questionId}, replacing with "${data.answer}"`);
+                  this.log(`Block ${index} contains placeholder for question ${questionId}, replacing with "${data.answer}"`);
                   block.innerHTML = block.innerHTML.replace(pattern, data.answer);
                 }
               });
             } catch (err) {
-              console.error('Error updating localStorage with fetched answer:', err);
+              if (this.config.debug) {
+                console.error('Error updating localStorage with fetched answer:', err);
+              }
             }
           }
         })
         .catch(err => {
-          console.error('Error fetching player answer:', err);
+          if (this.config.debug) {
+            console.error('Error fetching player answer:', err);
+          }
         });
     },
 
     // Get player's codename from client-side storage or server
     getPlayerCodename() {
-      console.log(`Trying to get codename for player: ${this.config.playerId}`);
+      this.log(`Trying to get codename for player: ${this.config.playerId}`);
 
       // First check localStorage
       try {
         const codenameData = localStorage.getItem(`codename_${this.config.playerId}`);
         if (codenameData) {
-          console.log(`Found codename in localStorage: ${codenameData}`);
+          this.log(`Found codename in localStorage: ${codenameData}`);
           return codenameData;
         }
       } catch (err) {
-        console.error('Error retrieving codename from localStorage:', err);
+        if (this.config.debug) {
+          console.error('Error retrieving codename from localStorage:', err);
+        }
       }
 
       // Fetch from server if not in localStorage
@@ -1895,47 +1908,53 @@ document.addEventListener("alpine:init", () => {
     // Fetch player's codename from server
     fetchPlayerCodenameFromServer() {
       const url = `${this.config.serverUrl}/get-player-codename?playerId=${this.config.playerId}`;
-      console.log(`Fetching player codename from: ${url}`);
+      this.log(`Fetching player codename from: ${url}`);
 
       fetch(url)
         .then(response => {
           if (!response.ok) {
-            console.error(`Server returned error: ${response.status}`);
+            if (this.config.debug) {
+              console.error(`Server returned error: ${response.status}`);
+            }
             throw new Error('Failed to fetch codename');
           }
           return response.json();
         })
         .then(data => {
-          console.log(`Server response for codename:`, data);
+          this.log(`Server response for codename:`, data);
 
           if (data && data.codename) {
             // Save the codename to localStorage for future use
             try {
               localStorage.setItem(`codename_${this.config.playerId}`, data.codename);
-              console.log(`Saved codename to localStorage: ${data.codename}`);
+              this.log(`Saved codename to localStorage: ${data.codename}`);
 
               // Update UI for all matching plain blocks
               const plainBlocks = document.querySelectorAll('.plain');
-              console.log(`Found ${plainBlocks.length} plain blocks to check for updates`);
+              this.log(`Found ${plainBlocks.length} plain blocks to check for updates`);
 
               plainBlocks.forEach((block, index) => {
-                console.log(`Checking plain block ${index} content:`, block.innerHTML);
+                this.log(`Checking plain block ${index} content:`, block.innerHTML);
 
                 // Use a flexible pattern for codename placeholder
                 const pattern = /\{get\s+codename\}/gi;
 
                 if (pattern.test(block.innerHTML)) {
-                  console.log(`Block ${index} contains codename placeholder, replacing with "${data.codename}"`);
+                  this.log(`Block ${index} contains codename placeholder, replacing with "${data.codename}"`);
                   block.innerHTML = block.innerHTML.replace(pattern, data.codename);
                 }
               });
             } catch (err) {
-              console.error('Error updating localStorage with fetched codename:', err);
+              if (this.config.debug) {
+                console.error('Error updating localStorage with fetched codename:', err);
+              }
             }
           }
         })
         .catch(err => {
-          console.error('Error fetching player codename:', err);
+          if (this.config.debug) {
+            console.error('Error fetching player codename:', err);
+          }
         });
     }
   }));
